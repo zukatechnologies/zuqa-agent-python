@@ -192,7 +192,7 @@ class Client(object):
             self._metrics.register(path)
         if self.config.breakdown_metrics:
             self._metrics.register("elasticapm.metrics.sets.breakdown.BreakdownMetricSet")
-        self._thread_managers["metrics"] = self._metrics
+        # self._thread_managers["metrics"] = self._metrics
         compat.atexit_register(self.close)
         if self.config.central_config:
             self._thread_managers["config"] = self.config
@@ -274,6 +274,7 @@ class Client(object):
         :param start: override the start timestamp, mostly useful for testing
         :return: the started transaction object
         """
+        self._metrics.start_thread(self)
         if self.config.is_recording:
             return self.tracer.begin_transaction(transaction_type, trace_parent=trace_parent, start=start)
 
@@ -286,6 +287,7 @@ class Client(object):
         :param duration: override duration, mostly useful for testing
         :return: the ended transaction object
         """
+        self._metrics.stop_thread(self)
         transaction = self.tracer.end_transaction(result, name, duration=duration)
         return transaction
 
