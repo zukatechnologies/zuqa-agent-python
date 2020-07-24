@@ -44,6 +44,8 @@ DISTINCT_LABEL_LIMIT = 1000
 
 
 class MetricsRegistry(ThreadManager):
+    metric_data = {}
+
     def __init__(self, client, tags=None):
         """
         Creates a new metric registry
@@ -84,12 +86,14 @@ class MetricsRegistry(ThreadManager):
         """
         if self.client.config.is_recording:
             logger.debug("Collecting metrics")
-
+            time = 0
             for _, metricset in compat.iteritems(self._metricsets):
                 for data in metricset.collect():
-                    self.client.queue(constants.METRICSET, data)
+                    self.metric_data[str(time)] = data
+                    time += self.collect_interval
 
     def start_thread(self, pid=None):
+        self.metric_data = {}
         super(MetricsRegistry, self).start_thread(pid=pid)
         if self.client.config.metrics_interval:
             self._collect_timer = IntervalTimer(
@@ -103,6 +107,7 @@ class MetricsRegistry(ThreadManager):
             logger.debug("Cancelling collect timer")
             self._collect_timer.cancel()
             self._collect_timer = None
+            self.client.queue(constants.METRICSET, self.metric_data)
 
     @property
     def collect_interval(self):
@@ -114,6 +119,8 @@ class MetricsRegistry(ThreadManager):
 
 
 class MetricsSet(object):
+    metrics_data = {}
+
     def __init__(self, registry):
         self._lock = threading.Lock()
         self._counters = {}
