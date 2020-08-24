@@ -31,6 +31,8 @@
 import threading
 import time
 from collections import defaultdict
+import urllib as urllib2
+import json
 
 from elasticapm.conf import constants
 from elasticapm.utils import compat
@@ -44,7 +46,8 @@ DISTINCT_LABEL_LIMIT = 1000
 
 
 class MetricsRegistry(ThreadManager):
-    metric_data = {}
+    metric_data = []
+    time_ms = 0
 
     def __init__(self, client, tags=None):
         """
@@ -86,14 +89,17 @@ class MetricsRegistry(ThreadManager):
         """
         if self.client.config.is_recording:
             logger.debug("Collecting metrics")
-            time = 0
             for _, metricset in compat.iteritems(self._metricsets):
                 for data in metricset.collect():
-                    self.metric_data[str(time)] = data
-                    time += self.collect_interval
+                    samples = data['samples']
+                    if samples.__len__() >= 3:
+                        samples['time_ms'] = self.time_ms
+                        self.time_ms += self.collect_interval
+                        self.metric_data.append(data)
 
     def start_thread(self, pid=None):
-        self.metric_data = {}
+        self.time_ms = 0
+        self.metric_data = []
         super(MetricsRegistry, self).start_thread(pid=pid)
         if self.client.config.metrics_interval:
             self._collect_timer = IntervalTimer(
@@ -102,12 +108,34 @@ class MetricsRegistry(ThreadManager):
             logger.debug("Starting metrics collect timer")
             self._collect_timer.start()
 
-    def stop_thread(self):
+    def stop_thread(self, url):
         if self._collect_timer and self._collect_timer.is_alive():
             logger.debug("Cancelling collect timer")
             self._collect_timer.cancel()
             self._collect_timer = None
-            self.client.queue(constants.METRICSET, self.metric_data)
+            self.send_metrics_to_apm(metricset=str(self.metric_data), url=url)
+
+    def send_metrics_to_apm(self, metricset, url):
+        data = dict(metricset=metricset, url=url)
+        json_data = json.dumps(data)
+        encode_json_data = json_data.encode('utf-8')
+        req = urllib2.request.Request("http://0.0.0.0:8200/v1/metrics/save")
+        req.add_header('Content-Type', 'application/json; charset=utf-8')
+        req.add_header('Content-Length', len(encode_json_data))
+        result = urllib2.request.urlopen(req, data=encode_json_data)
+        print(result.readlines())
+
+        # connection = http.client.HTTPSConnection('http://0.0.0.0', 8200)
+
+        # headers = {'Content-type': 'application/json'}
+
+        # dict = {'metricset': metricset,
+        #         'url': url}
+        # json_foo = json.dumps(dict)
+
+        # connection.request('POST', '/v1/metrics/save', json_foo, headers)
+        # response = connection.getresponse()
+        # print(response.read().decode())
 
     @property
     def collect_interval(self):
@@ -119,8 +147,6 @@ class MetricsRegistry(ThreadManager):
 
 
 class MetricsSet(object):
-    metrics_data = {}
-
     def __init__(self, registry):
         self._lock = threading.Lock()
         self._counters = {}

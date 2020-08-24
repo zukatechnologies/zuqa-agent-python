@@ -1,6 +1,7 @@
 from flask import Flask
 # or configure to use ELASTIC_APM in your application's settings
 from flask_cors import CORS
+import time
 
 from elasticapm.contrib.flask import ElasticAPM
 
@@ -22,4 +23,5 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/hello')
 def hello_world():
+    time.sleep(4)
     return 'Hello, World!'

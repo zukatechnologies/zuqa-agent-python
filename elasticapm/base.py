@@ -281,14 +281,13 @@ class Client(object):
     def end_transaction(self, name=None, result="", duration=None):
         """
         End the current transaction.
-
         :param name: optional name of the transaction
         :param result: result of the transaction, e.g. "OK" or "HTTP 2xx"
         :param duration: override duration, mostly useful for testing
         :return: the ended transaction object
         """
-        self._metrics.stop_thread(self)
         transaction = self.tracer.end_transaction(result, name, duration=duration)
+        self._metrics.stop_thread(transaction.name.split(" ")[1])
         return transaction
 
     def close(self):

@@ -537,6 +537,7 @@ class Tracer(object):
 
         :returns the Transaction object
         """
+
         if trace_parent:
             is_sampled = bool(trace_parent.trace_options.recorded)
         else:
