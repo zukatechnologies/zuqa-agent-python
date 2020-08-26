@@ -36,7 +36,7 @@ from flask import Flask, Response, make_response, render_template, signals
 from pytest_localserver.http import WSGIServer
 
 import zuqa
-from zuqa.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ZUQA
 
 
 @pytest.fixture()
@@ -79,9 +79,9 @@ def flask_app():
 
 
 @pytest.fixture()
-def flask_wsgi_server(request, flask_app, elasticapm_client):
+def flask_wsgi_server(request, flask_app, zuqa_client):
     server = WSGIServer(application=flask_app)
-    apm_client = ElasticAPM(app=flask_app, client=elasticapm_client)
+    apm_client = ZUQA(app=flask_app, client=zuqa_client)
     flask_app.apm_client = apm_client
     server.start()
     try:
@@ -92,11 +92,11 @@ def flask_wsgi_server(request, flask_app, elasticapm_client):
 
 
 @pytest.fixture()
-def flask_apm_client(request, flask_app, elasticapm_client):
+def flask_apm_client(request, flask_app, zuqa_client):
     client_config = getattr(request, "param", {})
     client_config.setdefault("app", flask_app)
-    client_config.setdefault("client", elasticapm_client)
-    client = ElasticAPM(**client_config)
+    client_config.setdefault("client", zuqa_client)
+    client = ZUQA(**client_config)
     try:
         yield client
     finally:
@@ -110,11 +110,11 @@ def flask_apm_client(request, flask_app, elasticapm_client):
 
 
 @pytest.fixture()
-def sending_flask_apm_client(request, flask_app, sending_elasticapm_client):
+def sending_flask_apm_client(request, flask_app, sending_zuqa_client):
     client_config = getattr(request, "param", {})
     client_config.setdefault("app", flask_app)
-    client_config.setdefault("client", sending_elasticapm_client)
-    client = ElasticAPM(**client_config)
+    client_config.setdefault("client", sending_zuqa_client)
+    client = ZUQA(**client_config)
     try:
         yield client
     finally:

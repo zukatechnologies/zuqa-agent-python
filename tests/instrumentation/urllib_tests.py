@@ -51,21 +51,21 @@ except ImportError:
     getresponse_method = "httplib.HTTPConnection.getresponse"
 
 
-def test_urllib(instrument, elasticapm_client, waiting_httpserver):
+def test_urllib(instrument, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
     parsed_url = urlparse.urlparse(url)
-    elasticapm_client.begin_transaction("transaction")
+    zuqa_client.begin_transaction("transaction")
     expected_sig = "GET {0}".format(parsed_url.netloc)
     with capture_span("test_name", "test_type"):
 
         url = "http://{0}/hello_world".format(parsed_url.netloc)
         r = urlopen(url)
 
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     expected_signatures = {"test_name", expected_sig}
 
@@ -91,20 +91,20 @@ def test_urllib(instrument, elasticapm_client, waiting_httpserver):
 
 @mock.patch(request_method)
 @mock.patch(getresponse_method)
-def test_urllib_standard_port(mock_getresponse, mock_request, instrument, elasticapm_client):
+def test_urllib_standard_port(mock_getresponse, mock_request, instrument, zuqa_client):
     # "code" is needed for Python 3, "status" for Python 2
     mock_getresponse.return_value = mock.Mock(code=200, status=200)
 
     url = "http://example.com/"
     parsed_url = urlparse.urlparse(url)
-    elasticapm_client.begin_transaction("transaction")
+    zuqa_client.begin_transaction("transaction")
     expected_sig = "GET {0}".format(parsed_url.netloc)
     r = urlopen(url)
 
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     assert spans[0]["name"] == expected_sig
     assert spans[0]["type"] == "external"
@@ -114,21 +114,21 @@ def test_urllib_standard_port(mock_getresponse, mock_request, instrument, elasti
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [
         pytest.param({"use_elastic_traceparent_header": True}, id="use_elastic_traceparent_header-True"),
         pytest.param({"use_elastic_traceparent_header": False}, id="use_elastic_traceparent_header-False"),
     ],
     indirect=True,
 )
-def test_trace_parent_propagation_sampled(instrument, elasticapm_client, waiting_httpserver):
+def test_trace_parent_propagation_sampled(instrument, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    elasticapm_client.begin_transaction("transaction")
+    zuqa_client.begin_transaction("transaction")
     urlopen(url)
-    elasticapm_client.end_transaction("MyView")
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    zuqa_client.end_transaction("MyView")
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     headers = waiting_httpserver.requests[0].headers
     assert constants.TRACEPARENT_HEADER_NAME in headers
@@ -137,7 +137,7 @@ def test_trace_parent_propagation_sampled(instrument, elasticapm_client, waiting
     assert trace_parent.span_id == spans[0]["id"]
     assert trace_parent.trace_options.recorded
 
-    if elasticapm_client.config.use_elastic_traceparent_header:
+    if zuqa_client.config.use_elastic_traceparent_header:
         assert constants.TRACEPARENT_LEGACY_HEADER_NAME in headers
         assert headers[constants.TRACEPARENT_HEADER_NAME] == headers[constants.TRACEPARENT_LEGACY_HEADER_NAME]
     else:
@@ -145,22 +145,22 @@ def test_trace_parent_propagation_sampled(instrument, elasticapm_client, waiting
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [
         pytest.param({"use_elastic_traceparent_header": True}, id="use_elastic_traceparent_header-True"),
         pytest.param({"use_elastic_traceparent_header": False}, id="use_elastic_traceparent_header-False"),
     ],
     indirect=True,
 )
-def test_trace_parent_propagation_unsampled(instrument, elasticapm_client, waiting_httpserver):
+def test_trace_parent_propagation_unsampled(instrument, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    transaction_object = elasticapm_client.begin_transaction("transaction")
+    transaction_object = zuqa_client.begin_transaction("transaction")
     transaction_object.is_sampled = False
     urlopen(url)
-    elasticapm_client.end_transaction("MyView")
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    zuqa_client.end_transaction("MyView")
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     assert not spans
 
@@ -171,7 +171,7 @@ def test_trace_parent_propagation_unsampled(instrument, elasticapm_client, waiti
     assert trace_parent.span_id == transaction_object.id
     assert not trace_parent.trace_options.recorded
 
-    if elasticapm_client.config.use_elastic_traceparent_header:
+    if zuqa_client.config.use_elastic_traceparent_header:
         assert constants.TRACEPARENT_LEGACY_HEADER_NAME in headers
         assert headers[constants.TRACEPARENT_HEADER_NAME] == headers[constants.TRACEPARENT_LEGACY_HEADER_NAME]
     else:
@@ -181,31 +181,31 @@ def test_trace_parent_propagation_unsampled(instrument, elasticapm_client, waiti
 @pytest.mark.parametrize(
     "is_sampled", [pytest.param(True, id="is_sampled-True"), pytest.param(False, id="is_sampled-False")]
 )
-def test_tracestate_propagation(instrument, elasticapm_client, waiting_httpserver, is_sampled):
+def test_tracestate_propagation(instrument, zuqa_client, waiting_httpserver, is_sampled):
     traceparent = TraceParent.from_string(
         "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-03", "foo=bar,baz=bazzinga"
     )
 
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    transaction_object = elasticapm_client.begin_transaction("transaction", trace_parent=traceparent)
+    transaction_object = zuqa_client.begin_transaction("transaction", trace_parent=traceparent)
     transaction_object.is_sampled = is_sampled
     urlopen(url)
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
     headers = waiting_httpserver.requests[0].headers
     assert headers[constants.TRACESTATE_HEADER_NAME] == "foo=bar,baz=bazzinga"
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"transaction_max_spans": 1}], indirect=True)
-def test_span_only_dropped(instrument, elasticapm_client, waiting_httpserver):
+@pytest.mark.parametrize("zuqa_client", [{"transaction_max_spans": 1}], indirect=True)
+def test_span_only_dropped(instrument, zuqa_client, waiting_httpserver):
     """test that urllib instrumentation does not fail if no parent span can be found"""
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    transaction_object = elasticapm_client.begin_transaction("transaction")
+    transaction_object = zuqa_client.begin_transaction("transaction")
     for i in range(2):
         with capture_span("test", "test"):
             urlopen(url)
-    elasticapm_client.end_transaction("bla", "OK")
+    zuqa_client.end_transaction("bla", "OK")
     trace_parent_1 = TraceParent.from_string(waiting_httpserver.requests[0].headers[constants.TRACEPARENT_HEADER_NAME])
     trace_parent_2 = TraceParent.from_string(waiting_httpserver.requests[1].headers[constants.TRACEPARENT_HEADER_NAME])
 
@@ -214,16 +214,16 @@ def test_span_only_dropped(instrument, elasticapm_client, waiting_httpserver):
     assert trace_parent_2.span_id == transaction_object.id
 
 
-def test_url_sanitization(instrument, elasticapm_client, waiting_httpserver):
+def test_url_sanitization(instrument, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
     url = url.replace("http://", "http://user:pass@")
-    transaction_object = elasticapm_client.begin_transaction("transaction")
+    transaction_object = zuqa_client.begin_transaction("transaction")
     with pytest.raises(URLError):
         urlopen(url)
-    elasticapm_client.end_transaction("MyView")
-    transactions = elasticapm_client.events[TRANSACTION]
-    span = elasticapm_client.spans_for_transaction(transactions[0])[0]
+    zuqa_client.end_transaction("MyView")
+    transactions = zuqa_client.events[TRANSACTION]
+    span = zuqa_client.spans_for_transaction(transactions[0])[0]
 
     assert "pass" not in span["context"]["http"]["url"]
     assert constants.MASK in span["context"]["http"]["url"]

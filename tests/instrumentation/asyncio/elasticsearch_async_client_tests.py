@@ -59,13 +59,13 @@ async def elasticsearch_async(request):
         await client.transport.close()
 
 
-async def test_ping(instrument, elasticapm_client, elasticsearch_async):
-    elasticapm_client.begin_transaction("test")
+async def test_ping(instrument, zuqa_client, elasticsearch_async):
+    zuqa_client.begin_transaction("test")
     result = await elasticsearch_async.ping()
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    transaction = zuqa_client.events[TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert span["name"] == "ES HEAD /"
@@ -75,14 +75,14 @@ async def test_ping(instrument, elasticapm_client, elasticsearch_async):
     assert span["sync"] is False
 
 
-async def test_info(instrument, elasticapm_client, elasticsearch_async):
-    elasticapm_client.begin_transaction("test")
+async def test_info(instrument, zuqa_client, elasticsearch_async):
+    zuqa_client.begin_transaction("test")
     result = await elasticsearch_async.info()
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
 
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert span["name"] == "ES GET /"
@@ -92,8 +92,8 @@ async def test_info(instrument, elasticapm_client, elasticsearch_async):
     assert span["sync"] is False
 
 
-async def test_create(instrument, elasticapm_client, elasticsearch_async):
-    elasticapm_client.begin_transaction("test")
+async def test_create(instrument, zuqa_client, elasticsearch_async):
+    zuqa_client.begin_transaction("test")
     if ES_VERSION[0] < 5:
         r1 = await elasticsearch_async.create("tweets", document_type, {"user": "kimchy", "text": "hola"}, 1)
     elif ES_VERSION[0] < 7:
@@ -103,11 +103,11 @@ async def test_create(instrument, elasticapm_client, elasticsearch_async):
     r2 = await elasticsearch_async.create(
         index="tweets", doc_type=document_type, id=2, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
 
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 2
 
     for i, span in enumerate(spans):
@@ -122,18 +122,18 @@ async def test_create(instrument, elasticapm_client, elasticsearch_async):
         assert "statement" not in span["context"]["db"]
 
 
-async def test_search_body(instrument, elasticapm_client, elasticsearch_async):
+async def test_search_body(instrument, zuqa_client, elasticsearch_async):
     await elasticsearch_async.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     search_query = {"query": {"term": {"user": "kimchy"}}}
     result = await elasticsearch_async.search(body=search_query, params=None)
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert result["hits"]["hits"][0]["_source"] == {"user": "kimchy", "text": "hola"}
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     # Depending on ES_VERSION, could be /_all/_search or /_search, and GET or POST
@@ -146,18 +146,18 @@ async def test_search_body(instrument, elasticapm_client, elasticsearch_async):
     assert span["sync"] is False
 
 
-async def test_count_body(instrument, elasticapm_client, elasticsearch_async):
+async def test_count_body(instrument, zuqa_client, elasticsearch_async):
     await elasticsearch_async.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     search_query = {"query": {"term": {"user": "kimchy"}}}
     result = await elasticsearch_async.count(body=search_query)
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert result["count"] == 1
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert span["name"] in ("ES GET /_count", "ES POST /_count", "ES GET /_all/_count")
@@ -170,16 +170,16 @@ async def test_count_body(instrument, elasticapm_client, elasticsearch_async):
 
 
 @pytest.mark.skipif(ES_VERSION[0] < 5, reason="unsupported method")
-async def test_delete_by_query_body(instrument, elasticapm_client, elasticsearch_async):
+async def test_delete_by_query_body(instrument, zuqa_client, elasticsearch_async):
     await elasticsearch_async.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     result = await elasticsearch_async.delete_by_query(index="tweets", body={"query": {"term": {"user": "kimchy"}}})
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    transaction = zuqa_client.events[TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
 
     span = spans[0]
     assert span["name"] == "ES POST /tweets/_delete_by_query"

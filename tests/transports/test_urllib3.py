@@ -47,9 +47,9 @@ except ImportError:
     from urllib import parse as urlparse
 
 
-def test_send(waiting_httpserver, elasticapm_client):
+def test_send(waiting_httpserver, zuqa_client):
     waiting_httpserver.serve_content(code=202, content="", headers={"Location": "http://example.com/foo"})
-    transport = Transport(waiting_httpserver.url, client=elasticapm_client)
+    transport = Transport(waiting_httpserver.url, client=zuqa_client)
     transport.start_thread()
     try:
         url = transport.send(compat.b("x"))
@@ -59,8 +59,8 @@ def test_send(waiting_httpserver, elasticapm_client):
 
 
 @mock.patch("urllib3.poolmanager.PoolManager.urlopen")
-def test_timeout(mock_urlopen, elasticapm_client):
-    transport = Transport("http://localhost", timeout=5, client=elasticapm_client)
+def test_timeout(mock_urlopen, zuqa_client):
+    transport = Transport("http://localhost", timeout=5, client=zuqa_client)
     transport.start_thread()
     mock_urlopen.side_effect = MaxRetryError(None, None, reason=TimeoutError())
     try:
@@ -71,9 +71,9 @@ def test_timeout(mock_urlopen, elasticapm_client):
         transport.close()
 
 
-def test_http_error(waiting_httpserver, elasticapm_client):
+def test_http_error(waiting_httpserver, zuqa_client):
     waiting_httpserver.serve_content(code=418, content="I'm a teapot")
-    transport = Transport(waiting_httpserver.url, client=elasticapm_client)
+    transport = Transport(waiting_httpserver.url, client=zuqa_client)
     transport.start_thread()
     try:
         with pytest.raises(TransportException) as exc_info:
@@ -85,9 +85,9 @@ def test_http_error(waiting_httpserver, elasticapm_client):
 
 
 @mock.patch("urllib3.poolmanager.PoolManager.urlopen")
-def test_generic_error(mock_urlopen, elasticapm_client):
+def test_generic_error(mock_urlopen, zuqa_client):
     url, status, message, body = ("http://localhost:9999", 418, "I'm a teapot", "Nothing")
-    transport = Transport(url, client=elasticapm_client)
+    transport = Transport(url, client=zuqa_client)
     transport.start_thread()
     mock_urlopen.side_effect = Exception("Oopsie")
     try:
@@ -129,14 +129,14 @@ def test_no_proxy_host():
         assert not isinstance(transport.http, urllib3.poolmanager.ProxyManager)
 
 
-def test_header_encodings(elasticapm_client):
+def test_header_encodings(zuqa_client):
     """
     Tests that headers are encoded as bytestrings. If they aren't,
     urllib assumes it needs to encode the data as well, which is already a zlib
     encoded bytestring, and explodes.
     """
     headers = {compat.text_type("X"): compat.text_type("V")}
-    transport = Transport("http://localhost:9999", headers=headers, client=elasticapm_client)
+    transport = Transport("http://localhost:9999", headers=headers, client=zuqa_client)
     transport.start_thread()
     try:
         with mock.patch("zuqa.transport.http.urllib3.PoolManager.urlopen") as mock_urlopen:
@@ -152,9 +152,9 @@ def test_header_encodings(elasticapm_client):
         transport.close()
 
 
-def test_ssl_verify_fails(waiting_httpsserver, elasticapm_client):
+def test_ssl_verify_fails(waiting_httpsserver, zuqa_client):
     waiting_httpsserver.serve_content(code=202, content="", headers={"Location": "http://example.com/foo"})
-    transport = Transport(waiting_httpsserver.url, client=elasticapm_client)
+    transport = Transport(waiting_httpsserver.url, client=zuqa_client)
     transport.start_thread()
     try:
         with pytest.raises(TransportException) as exc_info:
@@ -165,9 +165,9 @@ def test_ssl_verify_fails(waiting_httpsserver, elasticapm_client):
 
 
 @pytest.mark.filterwarnings("ignore:Unverified HTTPS")
-def test_ssl_verify_disable(waiting_httpsserver, elasticapm_client):
+def test_ssl_verify_disable(waiting_httpsserver, zuqa_client):
     waiting_httpsserver.serve_content(code=202, content="", headers={"Location": "https://example.com/foo"})
-    transport = Transport(waiting_httpsserver.url, verify_server_cert=False, client=elasticapm_client)
+    transport = Transport(waiting_httpsserver.url, verify_server_cert=False, client=zuqa_client)
     transport.start_thread()
     try:
         url = transport.send(compat.b("x"))
@@ -176,13 +176,13 @@ def test_ssl_verify_disable(waiting_httpsserver, elasticapm_client):
         transport.close()
 
 
-def test_ssl_verify_disable_http(waiting_httpserver, elasticapm_client):
+def test_ssl_verify_disable_http(waiting_httpserver, zuqa_client):
     """
     Make sure that ``assert_hostname`` isn't passed in for http requests, even
     with verify_server_cert=False
     """
     waiting_httpserver.serve_content(code=202, content="", headers={"Location": "http://example.com/foo"})
-    transport = Transport(waiting_httpserver.url, verify_server_cert=False, client=elasticapm_client)
+    transport = Transport(waiting_httpserver.url, verify_server_cert=False, client=zuqa_client)
     transport.start_thread()
     try:
         url = transport.send(compat.b("x"))
@@ -191,7 +191,7 @@ def test_ssl_verify_disable_http(waiting_httpserver, elasticapm_client):
         transport.close()
 
 
-def test_ssl_cert_pinning_http(waiting_httpserver, elasticapm_client):
+def test_ssl_cert_pinning_http(waiting_httpserver, zuqa_client):
     """
     Won't fail, as with the other cert pinning test, since certs aren't relevant
     for http, only https.
@@ -201,7 +201,7 @@ def test_ssl_cert_pinning_http(waiting_httpserver, elasticapm_client):
         waiting_httpserver.url,
         server_cert=os.path.join(os.path.dirname(__file__), "wrong_cert.pem"),
         verify_server_cert=True,
-        client=elasticapm_client,
+        client=zuqa_client,
     )
     transport.start_thread()
     try:
@@ -211,14 +211,14 @@ def test_ssl_cert_pinning_http(waiting_httpserver, elasticapm_client):
         transport.close()
 
 
-def test_ssl_cert_pinning(waiting_httpsserver, elasticapm_client):
+def test_ssl_cert_pinning(waiting_httpsserver, zuqa_client):
     waiting_httpsserver.serve_content(code=202, content="", headers={"Location": "https://example.com/foo"})
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     transport = Transport(
         waiting_httpsserver.url,
         server_cert=os.path.join(cur_dir, "..", "ca/server.pem"),
         verify_server_cert=True,
-        client=elasticapm_client,
+        client=zuqa_client,
     )
     transport.start_thread()
     try:
@@ -228,7 +228,7 @@ def test_ssl_cert_pinning(waiting_httpsserver, elasticapm_client):
         transport.close()
 
 
-def test_ssl_cert_pinning_fails(waiting_httpsserver, elasticapm_client):
+def test_ssl_cert_pinning_fails(waiting_httpsserver, zuqa_client):
     if compat.PY3:
         waiting_httpsserver.serve_content(code=202, content="", headers={"Location": "https://example.com/foo"})
         url = waiting_httpsserver.url
@@ -244,7 +244,7 @@ def test_ssl_cert_pinning_fails(waiting_httpsserver, elasticapm_client):
         url,
         server_cert=os.path.join(os.path.dirname(__file__), "wrong_cert.pem"),
         verify_server_cert=True,
-        client=elasticapm_client,
+        client=zuqa_client,
     )
     transport.start_thread()
     try:
@@ -261,14 +261,14 @@ def test_config_url():
     assert transport._config_url == "http://example.com/" + constants.AGENT_CONFIG_PATH
 
 
-def test_get_config(waiting_httpserver, elasticapm_client):
+def test_get_config(waiting_httpserver, zuqa_client):
     waiting_httpserver.serve_content(
         code=200, content=b'{"x": "y"}', headers={"Cache-Control": "max-age=5", "Etag": "2"}
     )
     url = waiting_httpserver.url
     transport = Transport(
         url + "/" + constants.EVENTS_API_PATH,
-        client=elasticapm_client,
+        client=zuqa_client,
         headers={"Content-Type": "application/x-ndjson", "Content-Encoding": "gzip"},
     )
     version, data, max_age = transport.get_config("1", {})
@@ -281,8 +281,8 @@ def test_get_config(waiting_httpserver, elasticapm_client):
 
 
 @mock.patch("urllib3.poolmanager.PoolManager.urlopen")
-def test_get_config_handle_exception(mock_urlopen, caplog, elasticapm_client):
-    transport = Transport("http://example.com/" + constants.EVENTS_API_PATH, client=elasticapm_client)
+def test_get_config_handle_exception(mock_urlopen, caplog, zuqa_client):
+    transport = Transport("http://example.com/" + constants.EVENTS_API_PATH, client=zuqa_client)
     mock_urlopen.side_effect = urllib3.exceptions.RequestError(transport.http, "http://example.com/", "boom")
     with caplog.at_level("DEBUG", "zuqa.transport.http"):
         version, data, max_age = transport.get_config("1", {})
@@ -292,10 +292,10 @@ def test_get_config_handle_exception(mock_urlopen, caplog, elasticapm_client):
     assert "HTTP error" in record.msg
 
 
-def test_get_config_cache_headers_304(waiting_httpserver, caplog, elasticapm_client):
+def test_get_config_cache_headers_304(waiting_httpserver, caplog, zuqa_client):
     waiting_httpserver.serve_content(code=304, content=b"", headers={"Cache-Control": "max-age=5"})
     url = waiting_httpserver.url
-    transport = Transport(url + "/" + constants.EVENTS_API_PATH, client=elasticapm_client)
+    transport = Transport(url + "/" + constants.EVENTS_API_PATH, client=zuqa_client)
     with caplog.at_level("DEBUG", "zuqa.transport.http"):
         version, data, max_age = transport.get_config("1", {})
     assert waiting_httpserver.requests[0].headers["If-None-Match"] == "1"
@@ -306,12 +306,12 @@ def test_get_config_cache_headers_304(waiting_httpserver, caplog, elasticapm_cli
     assert "Configuration unchanged" in record.msg
 
 
-def test_get_config_bad_cache_control_header(waiting_httpserver, caplog, elasticapm_client):
+def test_get_config_bad_cache_control_header(waiting_httpserver, caplog, zuqa_client):
     waiting_httpserver.serve_content(
         code=200, content=b'{"x": "y"}', headers={"Cache-Control": "max-age=fifty", "Etag": "2"}
     )
     url = waiting_httpserver.url
-    transport = Transport(url + "/" + constants.EVENTS_API_PATH, client=elasticapm_client)
+    transport = Transport(url + "/" + constants.EVENTS_API_PATH, client=zuqa_client)
     with caplog.at_level("DEBUG", "zuqa.transport.http"):
         version, data, max_age = transport.get_config("1", {})
     assert version == "2"
@@ -321,10 +321,10 @@ def test_get_config_bad_cache_control_header(waiting_httpserver, caplog, elastic
     assert record.message == "Could not parse Cache-Control header: max-age=fifty"
 
 
-def test_get_config_empty_response(waiting_httpserver, caplog, elasticapm_client):
+def test_get_config_empty_response(waiting_httpserver, caplog, zuqa_client):
     waiting_httpserver.serve_content(code=200, content=b"", headers={"Cache-Control": "max-age=5"})
     url = waiting_httpserver.url
-    transport = Transport(url + "/" + constants.EVENTS_API_PATH, client=elasticapm_client)
+    transport = Transport(url + "/" + constants.EVENTS_API_PATH, client=zuqa_client)
     with caplog.at_level("DEBUG", "zuqa.transport.http"):
         version, data, max_age = transport.get_config("1", {})
     assert version == "1"

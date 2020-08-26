@@ -34,15 +34,15 @@ import pytest
 import webob
 
 from zuqa.conf.constants import ERROR
-from zuqa.middleware import ElasticAPM
+from zuqa.middleware import ZUQA
 
 
 def example_app(environ, start_response):
     raise ValueError("hello world")
 
 
-def test_error_handler(elasticapm_client):
-    middleware = ElasticAPM(example_app, client=elasticapm_client)
+def test_error_handler(zuqa_client):
+    middleware = ZUQA(example_app, client=zuqa_client)
 
     request = webob.Request.blank("/an-error?foo=bar")
     response = middleware(request.environ, lambda *args: None)
@@ -50,8 +50,8 @@ def test_error_handler(elasticapm_client):
     with pytest.raises(ValueError):
         list(response)
 
-    assert len(elasticapm_client.events) == 1
-    event = elasticapm_client.events[ERROR][0]
+    assert len(zuqa_client.events) == 1
+    event = zuqa_client.events[ERROR][0]
 
     assert "exception" in event
     exc = event["exception"]

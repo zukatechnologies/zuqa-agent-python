@@ -37,7 +37,7 @@ from multidict import MultiDict
 
 from zuqa import async_capture_span
 from zuqa.conf import constants
-from zuqa.contrib.aiohttp import ElasticAPM
+from zuqa.contrib.aiohttp import ZUQA
 from zuqa.contrib.aiohttp.middleware import AioHttpTraceParent
 from zuqa.utils.disttracing import TraceParent
 
@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.aiohttp]
 
 
 @pytest.fixture
-def aioeapm(elasticapm_client):
+def aioeapm(zuqa_client):
     async def hello(request):
         with async_capture_span("test"):
             pass
@@ -57,20 +57,20 @@ def aioeapm(elasticapm_client):
     app = aiohttp.web.Application()
     app.router.add_route("GET", "/", hello)
     app.router.add_route("GET", "/boom", boom)
-    apm = ElasticAPM(app, elasticapm_client)
+    apm = ZUQA(app, zuqa_client)
     yield apm
 
 
 async def test_get(aiohttp_client, aioeapm):
     app = aioeapm.app
     client = await aiohttp_client(app)
-    elasticapm_client = aioeapm.client
+    zuqa_client = aioeapm.client
     resp = await client.get("/")
     assert resp.status == 200
 
-    assert len(elasticapm_client.events[constants.TRANSACTION]) == 1
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    assert len(zuqa_client.events[constants.TRANSACTION]) == 1
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
 
@@ -88,13 +88,13 @@ async def test_get(aiohttp_client, aioeapm):
 async def test_exception(aiohttp_client, aioeapm):
     app = aioeapm.app
     client = await aiohttp_client(app)
-    elasticapm_client = aioeapm.client
+    zuqa_client = aioeapm.client
     resp = await client.get("/boom")
     assert resp.status == 500
 
-    assert len(elasticapm_client.events[constants.TRANSACTION]) == 1
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    assert len(zuqa_client.events[constants.TRANSACTION]) == 1
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 0
 
     assert transaction["name"] == "GET /boom"
@@ -105,8 +105,8 @@ async def test_exception(aiohttp_client, aioeapm):
     assert request["socket"] == {"remote_address": "127.0.0.1", "encrypted": False}
     assert transaction["context"]["response"]["status_code"] == 500
 
-    assert len(elasticapm_client.events[constants.ERROR]) == 1
-    error = elasticapm_client.events[constants.ERROR][0]
+    assert len(zuqa_client.events[constants.ERROR]) == 1
+    error = zuqa_client.events[constants.ERROR][0]
     assert error["transaction_id"] == transaction["id"]
     assert error["exception"]["type"] == "HTTPInternalServerError"
     assert error["context"]["request"] == transaction["context"]["request"]
@@ -115,28 +115,28 @@ async def test_exception(aiohttp_client, aioeapm):
 async def test_capture_headers_is_dynamic(aiohttp_client, aioeapm):
     app = aioeapm.app
     client = await aiohttp_client(app)
-    elasticapm_client = aioeapm.client
+    zuqa_client = aioeapm.client
 
-    elasticapm_client.config.update("1", capture_headers=True)
+    zuqa_client.config.update("1", capture_headers=True)
     await client.get("/boom")
 
-    elasticapm_client.config.update("2", capture_headers=False)
+    zuqa_client.config.update("2", capture_headers=False)
     await client.get("/boom")
-    assert elasticapm_client.config.capture_headers is False
+    assert zuqa_client.config.capture_headers is False
 
-    assert "headers" in elasticapm_client.events[constants.TRANSACTION][0]["context"]["request"]
-    assert "headers" in elasticapm_client.events[constants.TRANSACTION][0]["context"]["response"]
-    assert "headers" in elasticapm_client.events[constants.ERROR][0]["context"]["request"]
+    assert "headers" in zuqa_client.events[constants.TRANSACTION][0]["context"]["request"]
+    assert "headers" in zuqa_client.events[constants.TRANSACTION][0]["context"]["response"]
+    assert "headers" in zuqa_client.events[constants.ERROR][0]["context"]["request"]
 
-    assert "headers" not in elasticapm_client.events[constants.TRANSACTION][1]["context"]["request"]
-    assert "headers" not in elasticapm_client.events[constants.TRANSACTION][1]["context"]["response"]
-    assert "headers" not in elasticapm_client.events[constants.ERROR][1]["context"]["request"]
+    assert "headers" not in zuqa_client.events[constants.TRANSACTION][1]["context"]["request"]
+    assert "headers" not in zuqa_client.events[constants.TRANSACTION][1]["context"]["response"]
+    assert "headers" not in zuqa_client.events[constants.ERROR][1]["context"]["request"]
 
 
 async def test_traceparent_handling(aiohttp_client, aioeapm):
     app = aioeapm.app
     client = await aiohttp_client(app)
-    elasticapm_client = aioeapm.client
+    zuqa_client = aioeapm.client
     with mock.patch(
         "zuqa.contrib.aiohttp.middleware.TraceParent.from_string", wraps=TraceParent.from_string
     ) as wrapped_from_string:
@@ -149,7 +149,7 @@ async def test_traceparent_handling(aiohttp_client, aioeapm):
             ),
         )
 
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
 
     assert transaction["trace_id"] == "0af7651916cd43dd8448eb211c80319c"
     assert transaction["parent_id"] == "b7ad6b7169203331"

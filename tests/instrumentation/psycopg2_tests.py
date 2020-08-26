@@ -62,7 +62,7 @@ has_postgres_configured = "POSTGRES_DB" in os.environ
 
 def connect_kwargs():
     return {
-        "database": os.environ.get("POSTGRES_DB", "elasticapm_test"),
+        "database": os.environ.get("POSTGRES_DB", "zuqa_test"),
         "user": os.environ.get("POSTGRES_USER", "postgres"),
         "password": os.environ.get("POSTGRES_PASSWORD", "postgres"),
         "host": os.environ.get("POSTGRES_HOST", None),
@@ -266,13 +266,13 @@ def test_fully_qualified_table_name():
 
 @pytest.mark.integrationtest
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
-def test_destination(instrument, postgres_connection, elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_destination(instrument, postgres_connection, zuqa_client):
+    zuqa_client.begin_transaction("test")
     cursor = postgres_connection.cursor()
     cursor.execute("SELECT 1")
-    elasticapm_client.end_transaction("test")
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    span = elasticapm_client.spans_for_transaction(transaction)[0]
+    zuqa_client.end_transaction("test")
+    transaction = zuqa_client.events[TRANSACTION][0]
+    span = zuqa_client.spans_for_transaction(transaction)[0]
     assert span["context"]["destination"] == {
         "address": os.environ.get("POSTGRES_HOST", None),
         "port": default_ports["postgresql"],
@@ -282,31 +282,31 @@ def test_destination(instrument, postgres_connection, elasticapm_client):
 
 @pytest.mark.integrationtest
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
-def test_psycopg2_register_type(instrument, postgres_connection, elasticapm_client):
+def test_psycopg2_register_type(instrument, postgres_connection, zuqa_client):
     import psycopg2.extras
 
-    elasticapm_client.begin_transaction("web.django")
+    zuqa_client.begin_transaction("web.django")
     new_type = psycopg2.extras.register_uuid(None, postgres_connection)
-    elasticapm_client.end_transaction(None, "test-transaction")
+    zuqa_client.end_transaction(None, "test-transaction")
 
     assert new_type is not None
 
 
 @pytest.mark.integrationtest
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
-def test_psycopg2_register_json(instrument, postgres_connection, elasticapm_client):
+def test_psycopg2_register_json(instrument, postgres_connection, zuqa_client):
     # register_json bypasses register_type, so we have to test unwrapping
     # separately
     import psycopg2.extras
 
-    elasticapm_client.begin_transaction("web.django")
+    zuqa_client.begin_transaction("web.django")
     # as arg
     new_type = psycopg2.extras.register_json(postgres_connection, loads=lambda x: x)
     assert new_type is not None
     # as kwarg
     new_type = psycopg2.extras.register_json(conn_or_curs=postgres_connection, loads=lambda x: x)
     assert new_type is not None
-    elasticapm_client.end_transaction(None, "test-transaction")
+    zuqa_client.end_transaction(None, "test-transaction")
 
 
 @pytest.mark.integrationtest
@@ -314,10 +314,10 @@ def test_psycopg2_register_json(instrument, postgres_connection, elasticapm_clie
 @pytest.mark.skipif(
     not hasattr(psycopg2.extensions, "quote_ident"), reason="psycopg2 driver doesn't have quote_ident extension"
 )
-def test_psycopg2_quote_ident(instrument, postgres_connection, elasticapm_client):
-    elasticapm_client.begin_transaction("web.django")
+def test_psycopg2_quote_ident(instrument, postgres_connection, zuqa_client):
+    zuqa_client.begin_transaction("web.django")
     ident = psycopg2.extensions.quote_ident("x'x", postgres_connection)
-    elasticapm_client.end_transaction(None, "test-transaction")
+    zuqa_client.end_transaction(None, "test-transaction")
 
     assert ident == '"x\'x"'
 
@@ -332,32 +332,32 @@ def test_psycopg2_quote_ident(instrument, postgres_connection, elasticapm_client
     hasattr(psycopg2, "__libpq_version__") and psycopg2.__libpq_version__ < 100000,
     reason="test code requires libpq >= 10",
 )
-def test_psycopg2_encrypt_password(instrument, postgres_connection, elasticapm_client):
-    elasticapm_client.begin_transaction("web.django")
+def test_psycopg2_encrypt_password(instrument, postgres_connection, zuqa_client):
+    zuqa_client.begin_transaction("web.django")
     pw1 = psycopg2.extensions.encrypt_password("user", "password", postgres_connection)
     pw2 = psycopg2.extensions.encrypt_password("user", "password", postgres_connection, None)
     pw3 = psycopg2.extensions.encrypt_password("user", "password", postgres_connection, algorithm=None)
     pw4 = psycopg2.extensions.encrypt_password("user", "password", scope=postgres_connection, algorithm=None)
-    elasticapm_client.end_transaction(None, "test-transaction")
+    zuqa_client.end_transaction(None, "test-transaction")
 
     assert pw1.startswith("md5") and (pw1 == pw2 == pw3 == pw4)
 
 
 @pytest.mark.integrationtest
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
-def test_psycopg2_tracing_outside_of_elasticapm_transaction(instrument, postgres_connection, elasticapm_client):
+def test_psycopg2_tracing_outside_of_zuqa_transaction(instrument, postgres_connection, zuqa_client):
     cursor = postgres_connection.cursor()
     # check that the cursor is a proxy, even though we're not in an zuqa
     # transaction
     assert isinstance(cursor, PGCursorProxy)
     cursor.execute("SELECT 1")
-    transactions = elasticapm_client.events[TRANSACTION]
+    transactions = zuqa_client.events[TRANSACTION]
     assert not transactions
 
 
 @pytest.mark.integrationtest
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
-def test_psycopg2_select_LIKE(instrument, postgres_connection, elasticapm_client):
+def test_psycopg2_select_LIKE(instrument, postgres_connection, zuqa_client):
     """
     Check that we pass queries with %-notation but without parameters
     properly to the dbapi backend
@@ -366,14 +366,14 @@ def test_psycopg2_select_LIKE(instrument, postgres_connection, elasticapm_client
     query = "SELECT * FROM test WHERE name LIKE 't%'"
 
     try:
-        elasticapm_client.begin_transaction("web.django")
+        zuqa_client.begin_transaction("web.django")
         cursor.execute(query)
         cursor.fetchall()
-        elasticapm_client.end_transaction(None, "test-transaction")
+        zuqa_client.end_transaction(None, "test-transaction")
     finally:
         # make sure we've cleared out the spans for the other tests.
-        transactions = elasticapm_client.events[TRANSACTION]
-        spans = elasticapm_client.spans_for_transaction(transactions[0])
+        transactions = zuqa_client.events[TRANSACTION]
+        spans = zuqa_client.spans_for_transaction(transactions[0])
         span = spans[0]
         assert span["name"] == "SELECT FROM test"
         assert span["type"] == "db"
@@ -387,7 +387,7 @@ def test_psycopg2_select_LIKE(instrument, postgres_connection, elasticapm_client
 @pytest.mark.integrationtest
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
 @pytest.mark.skipif(not has_sql_module, reason="psycopg2.sql module missing")
-def test_psycopg2_composable_query_works(instrument, postgres_connection, elasticapm_client):
+def test_psycopg2_composable_query_works(instrument, postgres_connection, zuqa_client):
     """
     Check that we parse queries that are psycopg2.sql.Composable correctly
     """
@@ -398,15 +398,15 @@ def test_psycopg2_composable_query_works(instrument, postgres_connection, elasti
     baked_query = query.as_string(cursor.__wrapped__)
     result = None
     try:
-        elasticapm_client.begin_transaction("web.django")
+        zuqa_client.begin_transaction("web.django")
         cursor.execute(query)
         result = cursor.fetchall()
-        elasticapm_client.end_transaction(None, "test-transaction")
+        zuqa_client.end_transaction(None, "test-transaction")
     finally:
         # make sure we've cleared out the spans for the other tests.
         assert [(2, "two"), (3, "three")] == result
-        transactions = elasticapm_client.events[TRANSACTION]
-        spans = elasticapm_client.spans_for_transaction(transactions[0])
+        transactions = zuqa_client.events[TRANSACTION]
+        spans = zuqa_client.spans_for_transaction(transactions[0])
         span = spans[0]
         assert span["name"] == "SELECT FROM test"
         assert "db" in span["context"]
@@ -416,7 +416,7 @@ def test_psycopg2_composable_query_works(instrument, postgres_connection, elasti
 
 @pytest.mark.integrationtest
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
-def test_psycopg2_call_stored_procedure(instrument, postgres_connection, elasticapm_client):
+def test_psycopg2_call_stored_procedure(instrument, postgres_connection, zuqa_client):
     cursor = postgres_connection.cursor()
     cursor.execute(
         """
@@ -428,28 +428,28 @@ def test_psycopg2_call_stored_procedure(instrument, postgres_connection, elastic
         $$;
         """
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     cursor.callproc("squareme", [2])
     result = cursor.fetchall()
     assert result[0][0] == 4
-    elasticapm_client.end_transaction("test", "OK")
-    transactions = elasticapm_client.events[TRANSACTION]
-    span = elasticapm_client.spans_for_transaction(transactions[0])[0]
+    zuqa_client.end_transaction("test", "OK")
+    transactions = zuqa_client.events[TRANSACTION]
+    span = zuqa_client.spans_for_transaction(transactions[0])[0]
     assert span["name"] == "squareme()"
     assert span["action"] == "exec"
 
 
 @pytest.mark.integrationtest
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
-def test_psycopg_context_manager(instrument, elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_psycopg_context_manager(instrument, zuqa_client):
+    zuqa_client.begin_transaction("test")
     with psycopg2.connect(**connect_kwargs()) as conn:
         with conn.cursor() as curs:
             curs.execute("SELECT 1;")
             curs.fetchall()
-    elasticapm_client.end_transaction("test", "OK")
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    zuqa_client.end_transaction("test", "OK")
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
     assert len(spans) == 2
     assert spans[0]["subtype"] == "postgresql"
     assert spans[0]["action"] == "connect"
@@ -460,18 +460,18 @@ def test_psycopg_context_manager(instrument, elasticapm_client):
 
 @pytest.mark.integrationtest
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
-def test_psycopg2_rows_affected(instrument, postgres_connection, elasticapm_client):
+def test_psycopg2_rows_affected(instrument, postgres_connection, zuqa_client):
     cursor = postgres_connection.cursor()
     try:
-        elasticapm_client.begin_transaction("web.django")
+        zuqa_client.begin_transaction("web.django")
         cursor.execute("INSERT INTO test VALUES (4, 'four')")
         cursor.execute("SELECT * FROM test")
         cursor.execute("UPDATE test SET name = 'five' WHERE  id = 4")
         cursor.execute("DELETE FROM test WHERE  id = 4")
-        elasticapm_client.end_transaction(None, "test-transaction")
+        zuqa_client.end_transaction(None, "test-transaction")
     finally:
-        transactions = elasticapm_client.events[TRANSACTION]
-        spans = elasticapm_client.spans_for_transaction(transactions[0])
+        transactions = zuqa_client.events[TRANSACTION]
+        spans = zuqa_client.spans_for_transaction(transactions[0])
 
         assert spans[0]["name"] == "INSERT INTO test"
         assert spans[0]["context"]["db"]["rows_affected"] == 1

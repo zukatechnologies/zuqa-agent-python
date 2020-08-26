@@ -43,46 +43,46 @@ import mock
 from zuqa.conf.constants import ERROR
 
 
-def test_chained_cause_exception(elasticapm_client):
+def test_chained_cause_exception(zuqa_client):
     try:
         try:
             1 / 0
         except ZeroDivisionError as zde:
             raise ValueError("bla") from zde
     except ValueError:
-        elasticapm_client.capture_exception()
-    error = elasticapm_client.events[ERROR][0]
+        zuqa_client.capture_exception()
+    error = zuqa_client.events[ERROR][0]
     assert error["exception"]["type"] == "ValueError"
     assert error["exception"]["cause"][0]["type"] == "ZeroDivisionError"
 
 
-def test_chained_context_exception(elasticapm_client):
+def test_chained_context_exception(zuqa_client):
     try:
         try:
             1 / 0
         except ZeroDivisionError:
             int("zero")
     except ValueError:
-        elasticapm_client.capture_exception()
-    error = elasticapm_client.events[ERROR][0]
+        zuqa_client.capture_exception()
+    error = zuqa_client.events[ERROR][0]
     assert error["exception"]["type"] == "ValueError"
     assert error["exception"]["cause"][0]["type"] == "ZeroDivisionError"
 
 
-def test_chained_context_exception_suppressed(elasticapm_client):
+def test_chained_context_exception_suppressed(zuqa_client):
     try:
         try:
             1 / 0
         except ZeroDivisionError:
             raise ValueError("bla") from None
     except ValueError:
-        elasticapm_client.capture_exception()
-    error = elasticapm_client.events[ERROR][0]
+        zuqa_client.capture_exception()
+    error = zuqa_client.events[ERROR][0]
     assert error["exception"]["type"] == "ValueError"
     assert "cause" not in error["exception"]
 
 
-def test_chained_context_exception_max(elasticapm_client):
+def test_chained_context_exception_max(zuqa_client):
     with mock.patch("zuqa.events.EXCEPTION_CHAIN_MAX_DEPTH", 1):
         try:
             try:
@@ -93,8 +93,8 @@ def test_chained_context_exception_max(elasticapm_client):
                 except TypeError as e:
                     raise ValueError("bla") from e
         except ValueError:
-            elasticapm_client.capture_exception()
-        error = elasticapm_client.events[ERROR][0]
+            zuqa_client.capture_exception()
+        error = zuqa_client.events[ERROR][0]
         assert error["exception"]["type"] == "ValueError"
         assert error["exception"]["cause"][0]["type"] == "TypeError"
         assert "cause" not in error["exception"]["cause"][0]

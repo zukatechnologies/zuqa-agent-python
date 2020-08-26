@@ -64,18 +64,18 @@ def mysql_connector_connection(request):
 
 
 @pytest.mark.integrationtest
-def test_mysql_connector_select(instrument, mysql_connector_connection, elasticapm_client):
+def test_mysql_connector_select(instrument, mysql_connector_connection, zuqa_client):
     cursor = mysql_connector_connection.cursor()
     query = "SELECT * FROM test WHERE name LIKE 't%' ORDER BY id"
 
     try:
-        elasticapm_client.begin_transaction("web.django")
+        zuqa_client.begin_transaction("web.django")
         cursor.execute(query)
         assert cursor.fetchall() == [(2, "two"), (3, "three")]
-        elasticapm_client.end_transaction(None, "test-transaction")
+        zuqa_client.end_transaction(None, "test-transaction")
     finally:
-        transactions = elasticapm_client.events[TRANSACTION]
-        spans = elasticapm_client.spans_for_transaction(transactions[0])
+        transactions = zuqa_client.events[TRANSACTION]
+        spans = zuqa_client.spans_for_transaction(transactions[0])
         span = spans[0]
         assert span["name"] == "SELECT FROM test"
         assert span["type"] == "db"

@@ -53,13 +53,13 @@ except ImportError:
 
 
 @pytest.fixture()
-def tracer(elasticapm_client):
-    yield Tracer(client_instance=elasticapm_client)
+def tracer(zuqa_client):
+    yield Tracer(client_instance=zuqa_client)
 
 
-def test_tracer_with_instantiated_client(elasticapm_client):
-    tracer = Tracer(client_instance=elasticapm_client)
-    assert tracer._agent is elasticapm_client
+def test_tracer_with_instantiated_client(zuqa_client):
+    tracer = Tracer(client_instance=zuqa_client)
+    assert tracer._agent is zuqa_client
 
 
 def test_tracer_with_config():
@@ -72,14 +72,14 @@ def test_tracer_with_config():
         tracer._agent.close()
 
 
-def test_tracer_instrument(elasticapm_client):
+def test_tracer_instrument(zuqa_client):
     with mock.patch("zuqa.contrib.opentracing.tracer.instrument") as mock_instrument:
-        elasticapm_client.config.instrument = False
-        Tracer(client_instance=elasticapm_client)
+        zuqa_client.config.instrument = False
+        Tracer(client_instance=zuqa_client)
         assert mock_instrument.call_count == 0
 
-        elasticapm_client.config.instrument = True
-        Tracer(client_instance=elasticapm_client)
+        zuqa_client.config.instrument = True
+        Tracer(client_instance=zuqa_client)
         assert mock_instrument.call_count == 1
 
 
@@ -166,7 +166,7 @@ def test_span_tags(tracer):
     assert span2["context"]["tags"] == {"something_else": "bar"}
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"transaction_max_spans": 1}], indirect=True)
+@pytest.mark.parametrize("zuqa_client", [{"transaction_max_spans": 1}], indirect=True)
 def test_dropped_spans(tracer):
     assert tracer._agent.config.transaction_max_spans == 1
     with tracer.start_active_span("transaction") as ot_scope_t:
@@ -265,7 +265,7 @@ def test_tracer_extract_corrupted(tracer):
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [
         pytest.param({"use_elastic_traceparent_header": True}, id="use_elastic_traceparent_header-True"),
         pytest.param({"use_elastic_traceparent_header": False}, id="use_elastic_traceparent_header-False"),
@@ -284,7 +284,7 @@ def test_tracer_inject_http(tracer):
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [
         pytest.param({"use_elastic_traceparent_header": True}, id="use_elastic_traceparent_header-True"),
         pytest.param({"use_elastic_traceparent_header": False}, id="use_elastic_traceparent_header-False"),

@@ -37,12 +37,12 @@ from zuqa.context.base import BaseContext
 
 
 class ContextVarsContext(BaseContext):
-    elasticapm_transaction_var = contextvars.ContextVar("elasticapm_transaction_var")
-    elasticapm_span_var = contextvars.ContextVar("elasticapm_span_var")
+    zuqa_transaction_var = contextvars.ContextVar("zuqa_transaction_var")
+    zuqa_span_var = contextvars.ContextVar("zuqa_span_var")
 
     def get_transaction(self, clear=False):
         try:
-            transaction = self.elasticapm_transaction_var.get()
+            transaction = self.zuqa_transaction_var.get()
             if clear:
                 self.set_transaction(None)
             return transaction
@@ -50,16 +50,16 @@ class ContextVarsContext(BaseContext):
             return None
 
     def set_transaction(self, transaction):
-        self.elasticapm_transaction_var.set(transaction)
+        self.zuqa_transaction_var.set(transaction)
 
     def get_span(self):
         try:
-            return self.elasticapm_span_var.get()
+            return self.zuqa_span_var.get()
         except LookupError:
             return None
 
     def set_span(self, span):
-        self.elasticapm_span_var.set(span)
+        self.zuqa_span_var.set(span)
 
 
 execution_context = ContextVarsContext()

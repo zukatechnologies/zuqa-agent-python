@@ -41,17 +41,17 @@ pytestmark = pytest.mark.boto3
 
 
 @mock.patch("botocore.endpoint.Endpoint.make_request")
-def test_botocore_instrumentation(mock_make_request, instrument, elasticapm_client):
+def test_botocore_instrumentation(mock_make_request, instrument, zuqa_client):
     mock_response = mock.Mock()
     mock_response.status_code = 200
     mock_make_request.return_value = (mock_response, {})
 
-    elasticapm_client.begin_transaction("transaction.test")
+    zuqa_client.begin_transaction("transaction.test")
     session = boto3.Session(aws_access_key_id="foo", aws_secret_access_key="bar", region_name="us-west-2")
     ec2 = session.client("ec2")
     ec2.describe_instances()
-    elasticapm_client.end_transaction("MyView")
-    span = elasticapm_client.events[constants.SPAN][0]
+    zuqa_client.end_transaction("MyView")
+    span = zuqa_client.events[constants.SPAN][0]
 
     assert span["name"] == "ec2:DescribeInstances"
     assert span["type"] == "aws"
@@ -59,7 +59,7 @@ def test_botocore_instrumentation(mock_make_request, instrument, elasticapm_clie
     assert span["action"] == "DescribeInstances"
 
 
-def test_botocore_http_instrumentation(instrument, elasticapm_client, waiting_httpserver):
+def test_botocore_http_instrumentation(instrument, zuqa_client, waiting_httpserver):
     # use a real http connection to ensure that our http instrumentation doesn't break anything
     list_bucket_response_body = b"""
 <?xml version="1.0" encoding="UTF-8"?>\n
@@ -87,12 +87,12 @@ def test_botocore_http_instrumentation(instrument, elasticapm_client, waiting_ht
 
     waiting_httpserver.headers = list_bucket_response_headers
     waiting_httpserver.content = list_bucket_response_body
-    elasticapm_client.begin_transaction("transaction.test")
+    zuqa_client.begin_transaction("transaction.test")
     session = boto3.Session(aws_access_key_id="foo", aws_secret_access_key="bar", region_name="us-west-2")
     s3 = session.client("s3", endpoint_url=waiting_httpserver.url.replace("127.0.0.1", "localhost"))
     s3.list_buckets()
-    elasticapm_client.end_transaction("MyView")
-    span = elasticapm_client.events[constants.SPAN][0]
+    zuqa_client.end_transaction("MyView")
+    span = zuqa_client.events[constants.SPAN][0]
 
     assert span["name"] == "localhost:ListBuckets"
     assert span["type"] == "aws"
@@ -102,13 +102,13 @@ def test_botocore_http_instrumentation(instrument, elasticapm_client, waiting_ht
     assert constants.TRACEPARENT_HEADER_NAME in waiting_httpserver.requests[0].headers
 
 
-def test_nonstandard_endpoint_url(instrument, elasticapm_client):
+def test_nonstandard_endpoint_url(instrument, zuqa_client):
     instrument = BotocoreInstrumentation()
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     module, method = BotocoreInstrumentation.instrument_list[0]
     instance = mock.Mock(_endpoint=mock.Mock(host="https://example"))
     instrument.call(module, method, lambda *args, **kwargs: None, instance, ("DescribeInstances",), {})
-    transaction = elasticapm_client.end_transaction("test", "test")
-    span = elasticapm_client.events[constants.SPAN][0]
+    transaction = zuqa_client.end_transaction("test", "test")
+    span = zuqa_client.events[constants.SPAN][0]
 
     assert span["name"] == "example:DescribeInstances"

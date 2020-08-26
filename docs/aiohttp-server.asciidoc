@@ -1,14 +1,14 @@
 [[aiohttp-server-support]]
 === Aiohttp Server support
 
-Getting Elastic APM set up for your Aiohttp Server project is easy,
+Getting ZUQA set up for your Aiohttp Server project is easy,
 and there are various ways you can tweak it to fit to your needs.
 
 [float]
 [[aiohttp-server-installation]]
 ==== Installation
 
-Install the Elastic APM agent using pip:
+Install the ZUQA agent using pip:
 
 [source,bash]
 ----
@@ -35,28 +35,28 @@ To initialize the agent for your application using environment variables:
 ----
 from aiohttp import web
 
-from zuqa.contrib.aiohttp import ElasticAPM
+from zuqa.contrib.aiohttp import ZUQA
 
 app = web.Application()
 
-apm = ElasticAPM(app)
+apm = ZUQA(app)
 ----
 
-To configure the agent using `ELASTIC_APM` in your application's settings:
+To configure the agent using `ZUQA` in your application's settings:
 
 [source,python]
 ----
 from aiohttp import web
 
-from zuqa.contrib.aiohttp import ElasticAPM
+from zuqa.contrib.aiohttp import ZUQA
 
 app = web.Application()
 
-app['ELASTIC_APM'] = {
+app['ZUQA'] = {
     'SERVICE_NAME': '<SERVICE-NAME>',
     'SECRET_TOKEN': '<SECRET-TOKEN>',
 }
-apm = ElasticAPM(app)
+apm = ZUQA(app)
 ----
 
 [float]
@@ -103,7 +103,7 @@ The list given should be a list of regular expressions which are matched against
 
 [source,python]
 ----
-app['ELASTIC_APM'] = {
+app['ZUQA'] = {
     # ...
     'TRANSACTIONS_IGNORE_PATTERNS': ['^OPTIONS ', '/api/']
     # ...
@@ -121,4 +121,4 @@ and any requests containing `/api/`.
 
 A list of supported <<supported-aiohttp,aiohttp>> and <<supported-python,Python>> versions can be found on our <<supported-technologies,Supported Technologies>> page.  
 
-NOTE: Elastic APM only supports `asyncio` when using Python 3.7+ 
+NOTE: ZUQA only supports `asyncio` when using Python 3.7+ 

@@ -46,7 +46,7 @@ class MyException(Exception):
 
 
 class IgnoredException(Exception):
-    skip_elasticapm = True
+    skip_zuqa = True
 
 
 def no_error(request, id=None):

@@ -1,10 +1,10 @@
 [[sanitizing-data]]
 === Sanitizing data
 
-Sometimes it is necessary to sanitize the data sent to Elastic APM,
+Sometimes it is necessary to sanitize the data sent to ZUQA,
 e.g. remove sensitive data.
 
-To do this with the Elastic APM module, you create a processor.
+To do this with the ZUQA module, you create a processor.
 A processor is a function that takes a `client` instance as well as an event (an error, a transaction, a span, or a metricset),
 and returns the modified event.
 
@@ -26,13 +26,13 @@ def my_processor(client, event):
 
 You can use the `@for_events` decorator to limit for which event type the processor should be called.
 Possible choices are `ERROR`, `TRANSACTION`, `SPAN` and `METRICSET`,
-all of which are defined in `elasticapm.conf.constants`.
+all of which are defined in `zuqa.conf.constants`.
 
-To use this processor, update your `ELASTIC_APM` settings like this:
+To use this processor, update your `ZUQA` settings like this:
 
 [source,python]
 ----
-ELASTIC_APM = {
+ZUQA = {
     'APP_NAME': '<APP-NAME>',
     'SECRET_TOKEN': '<SECRET-TOKEN>',
     'PROCESSORS': (

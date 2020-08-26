@@ -59,13 +59,13 @@ def elasticsearch(request):
 
 
 @pytest.mark.integrationtest
-def test_ping(instrument, elasticapm_client, elasticsearch):
-    elasticapm_client.begin_transaction("test")
+def test_ping(instrument, zuqa_client, elasticsearch):
+    zuqa_client.begin_transaction("test")
     result = elasticsearch.ping()
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    transaction = zuqa_client.events[TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert span["name"] == "ES HEAD /"
@@ -79,14 +79,14 @@ def test_ping(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_info(instrument, elasticapm_client, elasticsearch):
-    elasticapm_client.begin_transaction("test")
+def test_info(instrument, zuqa_client, elasticsearch):
+    zuqa_client.begin_transaction("test")
     result = elasticsearch.info()
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
 
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert span["name"] == "ES GET /"
@@ -96,8 +96,8 @@ def test_info(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_create(instrument, elasticapm_client, elasticsearch):
-    elasticapm_client.begin_transaction("test")
+def test_create(instrument, zuqa_client, elasticsearch):
+    zuqa_client.begin_transaction("test")
     if ES_VERSION[0] < 7:
         r1 = elasticsearch.create(index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"})
     else:
@@ -105,11 +105,11 @@ def test_create(instrument, elasticapm_client, elasticsearch):
     r2 = elasticsearch.create(
         index="tweets", doc_type=document_type, id=2, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
 
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 2
 
     for i, span in enumerate(spans):
@@ -125,8 +125,8 @@ def test_create(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_index(instrument, elasticapm_client, elasticsearch):
-    elasticapm_client.begin_transaction("test")
+def test_index(instrument, zuqa_client, elasticsearch):
+    zuqa_client.begin_transaction("test")
     if ES_VERSION[0] < 7:
         r1 = elasticsearch.index("tweets", document_type, {"user": "kimchy", "text": "hola"})
     else:
@@ -134,11 +134,11 @@ def test_index(instrument, elasticapm_client, elasticsearch):
     r2 = elasticsearch.index(
         index="tweets", doc_type=document_type, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
 
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 2
 
     for span in spans:
@@ -151,17 +151,17 @@ def test_index(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_exists(instrument, elasticapm_client, elasticsearch):
+def test_exists(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     result = elasticsearch.exists(id=1, index="tweets", doc_type=document_type)
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert result
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert span["name"] == "ES HEAD /tweets/%s/1" % document_type
@@ -173,21 +173,21 @@ def test_exists(instrument, elasticapm_client, elasticsearch):
 
 @pytest.mark.skipif(ES_VERSION[0] < 5, reason="unsupported method")
 @pytest.mark.integrationtest
-def test_exists_source(instrument, elasticapm_client, elasticsearch):
+def test_exists_source(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     if ES_VERSION[0] < 7:
         assert elasticsearch.exists_source("tweets", document_type, 1) is True
     else:
         assert elasticsearch.exists_source(index="tweets", id=1, doc_type=document_type) is True
     assert elasticsearch.exists_source(index="tweets", doc_type=document_type, id=1) is True
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
 
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 2
 
     for span in spans:
@@ -200,11 +200,11 @@ def test_exists_source(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_get(instrument, elasticapm_client, elasticsearch):
+def test_get(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     # this is a fun one. Order pre-6x was (index, id, doc_type), changed to (index, doc_type, id) in 6.x, and reverted
     # to (index, id, doc_type) in 7.x. OK then.
     if ES_VERSION[0] == 6:
@@ -212,13 +212,13 @@ def test_get(instrument, elasticapm_client, elasticsearch):
     else:
         r1 = elasticsearch.get(index="tweets", id=1, doc_type=document_type)
     r2 = elasticsearch.get(index="tweets", doc_type=document_type, id=1)
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     for r in (r1, r2):
         assert r["found"]
         assert r["_source"] == {"user": "kimchy", "text": "hola"}
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 2
 
     for span in spans:
@@ -231,24 +231,24 @@ def test_get(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_get_source(instrument, elasticapm_client, elasticsearch):
+def test_get_source(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     if ES_VERSION[0] < 7:
         r1 = elasticsearch.get_source("tweets", document_type, 1)
     else:
         r1 = elasticsearch.get_source(index="tweets", id=1, doc_type=document_type)
     r2 = elasticsearch.get_source(index="tweets", doc_type=document_type, id=1)
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
 
     for r in (r1, r2):
         assert r == {"user": "kimchy", "text": "hola"}
 
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 2
 
     for span in spans:
@@ -262,21 +262,21 @@ def test_get_source(instrument, elasticapm_client, elasticsearch):
 
 @pytest.mark.skipif(ES_VERSION[0] < 5, reason="unsupported method")
 @pytest.mark.integrationtest
-def test_update_script(instrument, elasticapm_client, elasticsearch):
+def test_update_script(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     r1 = elasticsearch.update(
         index="tweets", id=1, doc_type=document_type, body={"script": "ctx._source.text = 'adios'"}, refresh=True
     )
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     r2 = elasticsearch.get(index="tweets", doc_type=document_type, id=1)
     assert r1["result"] == "updated"
     assert r2["_source"] == {"user": "kimchy", "text": "adios"}
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
 
     span = spans[0]
@@ -289,20 +289,20 @@ def test_update_script(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_update_document(instrument, elasticapm_client, elasticsearch):
+def test_update_document(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     r1 = elasticsearch.update(
         index="tweets", id=1, doc_type=document_type, body={"doc": {"text": "adios"}}, refresh=True
     )
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     r2 = elasticsearch.get(index="tweets", doc_type=document_type, id=1)
     assert r2["_source"] == {"user": "kimchy", "text": "adios"}
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
 
     span = spans[0]
@@ -315,18 +315,18 @@ def test_update_document(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_search_body(instrument, elasticapm_client, elasticsearch):
+def test_search_body(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     search_query = {"query": {"term": {"user": "kimchy"}}}
     result = elasticsearch.search(body=search_query, params=None)
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert result["hits"]["hits"][0]["_source"] == {"user": "kimchy", "text": "hola"}
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     # Depending on ES_VERSION, could be /_all/_search or /_search, and GET or POST
@@ -339,18 +339,18 @@ def test_search_body(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_search_querystring(instrument, elasticapm_client, elasticsearch):
+def test_search_querystring(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     search_query = "user:kimchy"
     result = elasticsearch.search(q=search_query, index="tweets")
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert result["hits"]["hits"][0]["_source"] == {"user": "kimchy", "text": "hola"}
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     # Starting in 7.5.1, these turned into POST instead of GET. That detail is
@@ -364,20 +364,20 @@ def test_search_querystring(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_search_both(instrument, elasticapm_client, elasticsearch):
+def test_search_both(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     search_querystring = "text:hola"
     search_query = {"query": {"term": {"user": "kimchy"}}}
     result = elasticsearch.search(body=search_query, q=search_querystring, index="tweets")
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert len(result["hits"]["hits"]) == 1
     assert result["hits"]["hits"][0]["_source"] == {"user": "kimchy", "text": "hola"}
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     # Starting in 7.6.0, these turned into POST instead of GET. That detail is
@@ -391,18 +391,18 @@ def test_search_both(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_count_body(instrument, elasticapm_client, elasticsearch):
+def test_count_body(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     search_query = {"query": {"term": {"user": "kimchy"}}}
     result = elasticsearch.count(body=search_query)
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert result["count"] == 1
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     # Depending on ES_VERSION, could be /_all/_count or /_count, and either GET
@@ -417,18 +417,18 @@ def test_count_body(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_count_querystring(instrument, elasticapm_client, elasticsearch):
+def test_count_querystring(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     search_query = "user:kimchy"
     result = elasticsearch.count(q=search_query, index="tweets")
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert result["count"] == 1
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     # Starting in 7.5.1, these turned into POST instead of GET. That detail is
@@ -442,16 +442,16 @@ def test_count_querystring(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_delete(instrument, elasticapm_client, elasticsearch):
+def test_delete(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     result = elasticsearch.delete(id=1, index="tweets", doc_type=document_type)
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    transaction = zuqa_client.events[TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
 
     span = spans[0]
     assert span["name"] == "ES DELETE /tweets/%s/1" % document_type
@@ -463,16 +463,16 @@ def test_delete(instrument, elasticapm_client, elasticsearch):
 
 @pytest.mark.skipif(ES_VERSION[0] < 5, reason="unsupported method")
 @pytest.mark.integrationtest
-def test_delete_by_query_body(instrument, elasticapm_client, elasticsearch):
+def test_delete_by_query_body(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(
         index="tweets", doc_type=document_type, id=1, body={"user": "kimchy", "text": "hola"}, refresh=True
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     result = elasticsearch.delete_by_query(index="tweets", body={"query": {"term": {"user": "kimchy"}}})
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    transaction = zuqa_client.events[TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
 
     span = spans[0]
     assert span["name"] == "ES POST /tweets/_delete_by_query"
@@ -484,15 +484,15 @@ def test_delete_by_query_body(instrument, elasticapm_client, elasticsearch):
 
 
 @pytest.mark.integrationtest
-def test_multiple_indexes(instrument, elasticapm_client, elasticsearch):
+def test_multiple_indexes(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(index="tweets", doc_type="users", id=1, body={"user": "kimchy", "text": "hola"}, refresh=True)
     elasticsearch.create(index="snaps", doc_type="posts", id=1, body={"user": "kimchy", "text": "hola"}, refresh=True)
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     result = elasticsearch.search(index=["tweets", "snaps"], q="user:kimchy")
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    transaction = zuqa_client.events[TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     # Starting in 7.6.0, these turned into POST instead of GET. That detail is
@@ -506,15 +506,15 @@ def test_multiple_indexes(instrument, elasticapm_client, elasticsearch):
 
 @pytest.mark.skipif(ES_VERSION[0] >= 7, reason="doc_type unsupported")
 @pytest.mark.integrationtest
-def test_multiple_indexes_doctypes(instrument, elasticapm_client, elasticsearch):
+def test_multiple_indexes_doctypes(instrument, zuqa_client, elasticsearch):
     elasticsearch.create(index="tweets", doc_type="users", id=1, body={"user": "kimchy", "text": "hola"}, refresh=True)
     elasticsearch.create(index="snaps", doc_type="posts", id=1, body={"user": "kimchy", "text": "hola"}, refresh=True)
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     result = elasticsearch.search(index=["tweets", "snaps"], doc_type=["users", "posts"], q="user:kimchy")
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    transaction = zuqa_client.events[TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert span["name"] == "ES GET /tweets,snaps/users,posts/_search"

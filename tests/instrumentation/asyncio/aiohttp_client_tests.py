@@ -40,9 +40,9 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.aiohttp]
 
 
 @pytest.mark.parametrize("use_yarl", [True, False])
-async def test_http_get(instrument, event_loop, elasticapm_client, waiting_httpserver, use_yarl):
+async def test_http_get(instrument, event_loop, zuqa_client, waiting_httpserver, use_yarl):
     assert event_loop.is_running()
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
 
     url = waiting_httpserver.url
     url = yarl.URL(url) if use_yarl else url
@@ -52,9 +52,9 @@ async def test_http_get(instrument, event_loop, elasticapm_client, waiting_https
             status = resp.status
             text = await resp.text()
 
-    elasticapm_client.end_transaction()
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    zuqa_client.end_transaction()
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert span["name"] == "GET %s:%s" % waiting_httpserver.server_address
@@ -70,24 +70,24 @@ async def test_http_get(instrument, event_loop, elasticapm_client, waiting_https
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [
         pytest.param({"use_elastic_traceparent_header": True}, id="use_elastic_traceparent_header-True"),
         pytest.param({"use_elastic_traceparent_header": False}, id="use_elastic_traceparent_header-False"),
     ],
     indirect=True,
 )
-async def test_trace_parent_propagation_sampled(instrument, event_loop, elasticapm_client, waiting_httpserver):
+async def test_trace_parent_propagation_sampled(instrument, event_loop, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    elasticapm_client.begin_transaction("transaction")
+    zuqa_client.begin_transaction("transaction")
     async with aiohttp.ClientSession() as session:
         async with session.get(waiting_httpserver.url) as resp:
             status = resp.status
             text = await resp.text()
-    elasticapm_client.end_transaction("MyView")
-    transactions = elasticapm_client.events[constants.TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    zuqa_client.end_transaction("MyView")
+    transactions = zuqa_client.events[constants.TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     headers = waiting_httpserver.requests[0].headers
     assert constants.TRACEPARENT_HEADER_NAME in headers
@@ -96,7 +96,7 @@ async def test_trace_parent_propagation_sampled(instrument, event_loop, elastica
     assert trace_parent.span_id == spans[0]["id"]
     assert trace_parent.trace_options.recorded
 
-    if elasticapm_client.config.use_elastic_traceparent_header:
+    if zuqa_client.config.use_elastic_traceparent_header:
         assert constants.TRACEPARENT_LEGACY_HEADER_NAME in headers
         assert headers[constants.TRACEPARENT_HEADER_NAME] == headers[constants.TRACEPARENT_LEGACY_HEADER_NAME]
     else:
@@ -105,22 +105,22 @@ async def test_trace_parent_propagation_sampled(instrument, event_loop, elastica
 
 @pytest.mark.parametrize("sampled", [True, False])
 async def test_trace_parent_propagation_sampled_headers_none(
-    instrument, event_loop, elasticapm_client, waiting_httpserver, sampled
+    instrument, event_loop, zuqa_client, waiting_httpserver, sampled
 ):
     """
     Test that we don't blow up if headers are explicitly set to None
     """
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    transaction = elasticapm_client.begin_transaction("transaction")
+    transaction = zuqa_client.begin_transaction("transaction")
     transaction.is_sampled = sampled
     async with aiohttp.ClientSession() as session:
         async with session.get(waiting_httpserver.url, headers=None) as resp:
             status = resp.status
             text = await resp.text()
-    elasticapm_client.end_transaction("MyView")
-    transactions = elasticapm_client.events[constants.TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    zuqa_client.end_transaction("MyView")
+    transactions = zuqa_client.events[constants.TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     headers = waiting_httpserver.requests[0].headers
     assert constants.TRACEPARENT_HEADER_NAME in headers
@@ -133,25 +133,25 @@ async def test_trace_parent_propagation_sampled_headers_none(
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [
         pytest.param({"use_elastic_traceparent_header": True}, id="use_elastic_traceparent_header-True"),
         pytest.param({"use_elastic_traceparent_header": False}, id="use_elastic_traceparent_header-False"),
     ],
     indirect=True,
 )
-async def test_trace_parent_propagation_unsampled(instrument, event_loop, elasticapm_client, waiting_httpserver):
+async def test_trace_parent_propagation_unsampled(instrument, event_loop, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    transaction_object = elasticapm_client.begin_transaction("transaction")
+    transaction_object = zuqa_client.begin_transaction("transaction")
     transaction_object.is_sampled = False
     async with aiohttp.ClientSession() as session:
         async with session.get(waiting_httpserver.url) as resp:
             status = resp.status
             text = await resp.text()
-    elasticapm_client.end_transaction("MyView")
-    transactions = elasticapm_client.events[constants.TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    zuqa_client.end_transaction("MyView")
+    transactions = zuqa_client.events[constants.TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     assert not spans
 
@@ -162,7 +162,7 @@ async def test_trace_parent_propagation_unsampled(instrument, event_loop, elasti
     assert trace_parent.span_id == transaction_object.id
     assert not trace_parent.trace_options.recorded
 
-    if elasticapm_client.config.use_elastic_traceparent_header:
+    if zuqa_client.config.use_elastic_traceparent_header:
         assert constants.TRACEPARENT_LEGACY_HEADER_NAME in headers
         assert headers[constants.TRACEPARENT_HEADER_NAME] == headers[constants.TRACEPARENT_LEGACY_HEADER_NAME]
     else:
@@ -172,19 +172,19 @@ async def test_trace_parent_propagation_unsampled(instrument, event_loop, elasti
 @pytest.mark.parametrize(
     "is_sampled", [pytest.param(True, id="is_sampled-True"), pytest.param(False, id="is_sampled-False")]
 )
-async def test_tracestate_propagation(instrument, event_loop, elasticapm_client, waiting_httpserver, is_sampled):
+async def test_tracestate_propagation(instrument, event_loop, zuqa_client, waiting_httpserver, is_sampled):
     traceparent = TraceParent.from_string(
         "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-03", "foo=bar,baz=bazzinga"
     )
 
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    transaction_object = elasticapm_client.begin_transaction("transaction", trace_parent=traceparent)
+    transaction_object = zuqa_client.begin_transaction("transaction", trace_parent=traceparent)
     transaction_object.is_sampled = is_sampled
     async with aiohttp.ClientSession() as session:
         async with session.get(waiting_httpserver.url) as resp:
             status = resp.status
             text = await resp.text()
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
     headers = waiting_httpserver.requests[0].headers
     assert headers[constants.TRACESTATE_HEADER_NAME] == "foo=bar,baz=bazzinga"

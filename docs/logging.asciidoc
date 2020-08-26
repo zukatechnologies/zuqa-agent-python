@@ -21,12 +21,12 @@ For Python 3.2+, we use https://docs.python.org/3/library/logging.html#logging.s
 to decorate the default LogRecordFactory to automatically add new attributes to
 each LogRecord object:
 
-* `elasticapm_transaction_id`
-* `elasticapm_trace_id`
-* `elasticapm_span_id`
+* `zuqa_transaction_id`
+* `zuqa_trace_id`
+* `zuqa_span_id`
 
 This factory also adds these fields to a dictionary attribute,
-`elasticapm_labels`, using the official ECS https://www.elastic.co/guide/en/ecs/current/ecs-tracing.html[tracing fields].
+`zuqa_labels`, using the official ECS https://www.elastic.co/guide/en/ecs/current/ecs-tracing.html[tracing fields].
 
 You can disable this automatic behavior by using the
 <<config-generic-disable-log-record-factory,`disable_log_record_factory`>> setting
@@ -77,17 +77,17 @@ log.msg("some_event")
 [float]
 ===== Use structlog for agent-internal logging
 
-The Elastic APM Python agent uses logging to log internal events and issues.
+The ZUQA Python agent uses logging to log internal events and issues.
 By default, it will use a `logging` logger.
 If your project uses structlog, you can tell the agent to use a structlog logger
-by setting the environment variable `ELASTIC_APM_USE_STRUCTLOG` to `true`.
+by setting the environment variable `ZUQA_USE_STRUCTLOG` to `true`.
 
 [float]
 [[log-correlation-in-es]]
 === Log correlation in Elasticsearch
 
 In order to correlate logs from your app with transactions captured by the
-Elastic APM Python Agent, your logs must contain one or more of the following
+ZUQA Python Agent, your logs must contain one or more of the following
 identifiers:
 
 * `transaction.id`
@@ -101,7 +101,7 @@ in, and use {blog-ref}structured-logging-filebeat[Filebeat]
 to pull these logs into Elasticsearch.
 
 Without structured logging the task gets a little trickier. Here we
-recommend first making sure your LogRecord objects have the elasticapm
+recommend first making sure your LogRecord objects have the zuqa
 attributes (see <<logging>>), and then you'll want to combine some specific
 formatting with a Grok pattern, either in Elasticsearch using
 {ref}/grok-processor.html[the grok processor],
@@ -138,9 +138,9 @@ This will automatically append apm-specific fields to your format string:
 ----
 formatstring = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 formatstring = formatstring + " | zuqa " \
-                              "transaction.id=%(elasticapm_transaction_id)s " \
-                              "trace.id=%(elasticapm_trace_id)s " \
-                              "span.id=%(elasticapm_span_id)s"
+                              "transaction.id=%(zuqa_transaction_id)s " \
+                              "trace.id=%(zuqa_trace_id)s " \
+                              "span.id=%(zuqa_span_id)s"
 ----
 
 Then, you could use a grok pattern like this (for the

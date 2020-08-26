@@ -48,11 +48,11 @@ zerorpc = pytest.importorskip("zerorpc")
 gevent = pytest.importorskip("gevent")
 
 
-def test_zerorpc_middleware_with_reqrep(elasticapm_client):
+def test_zerorpc_middleware_with_reqrep(zuqa_client):
     tmpdir = tempfile.mkdtemp()
     server_endpoint = "ipc://{0}".format(os.path.join(tmpdir, "random_zeroserver"))
     try:
-        zerorpc.Context.get_instance().register_middleware(Middleware(client=elasticapm_client))
+        zerorpc.Context.get_instance().register_middleware(Middleware(client=zuqa_client))
         server = zerorpc.Server(random)
         server.bind(server_endpoint)
         gevent.spawn(server.run)
@@ -69,8 +69,8 @@ def test_zerorpc_middleware_with_reqrep(elasticapm_client):
         shutil.rmtree(tmpdir, ignore_errors=True)
     ex = excinfo.value
     assert ex.name == "IndexError"
-    assert len(elasticapm_client.events) == 1
-    exc = elasticapm_client.events[ERROR][0]["exception"]
+    assert len(zuqa_client.events) == 1
+    exc = zuqa_client.events[ERROR][0]["exception"]
     assert exc["type"] == "IndexError"
     frames = exc["stacktrace"]
     assert frames[0]["function"] == "choice"

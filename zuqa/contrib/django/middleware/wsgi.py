@@ -32,16 +32,16 @@
 from django.apps import apps
 
 from zuqa.contrib.django.client import get_client
-from zuqa.middleware import ElasticAPM as ElasticAPMBase
+from zuqa.middleware import ZUQA as ZuqaBase
 
 
-class ElasticAPM(ElasticAPMBase):
+class ZUQA(ZuqaBase):
     """
     Identical to the default WSGI middleware except that
     the client comes dynamically via ``get_client
 
-    >>> from zuqa.contrib.django.middleware.wsgi import ElasticAPM
-    >>> application = ElasticAPM(application)
+    >>> from zuqa.contrib.django.middleware.wsgi import ZUQA
+    >>> application = ZUQA(application)
     """
 
     def __init__(self, application):

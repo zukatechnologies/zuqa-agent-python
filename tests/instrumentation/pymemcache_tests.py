@@ -46,18 +46,18 @@ if "MEMCACHED_HOST" not in os.environ:
 
 
 @pytest.mark.integrationtest
-def test_pymemcache_client(instrument, elasticapm_client):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_pymemcache_client(instrument, zuqa_client):
+    zuqa_client.begin_transaction("transaction.test")
     host = os.environ.get("MEMCACHED_HOST", "localhost")
     with capture_span("test_pymemcache", "test"):
         conn = pymemcache.client.base.Client((host, 11211))
         conn.set("mykey", "a")
         assert b"a" == conn.get("mykey")
         assert {"mykey": b"a"} == conn.get_many(["mykey", "myotherkey"])
-    elasticapm_client.end_transaction("BillingView")
+    zuqa_client.end_transaction("BillingView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     expected_signatures = {"test_pymemcache", "Client.set", "Client.get", "Client.get_many"}
 
@@ -93,18 +93,18 @@ def test_pymemcache_client(instrument, elasticapm_client):
 
 
 @pytest.mark.integrationtest
-def test_pymemcache_pooled_client(instrument, elasticapm_client):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_pymemcache_pooled_client(instrument, zuqa_client):
+    zuqa_client.begin_transaction("transaction.test")
     host = os.environ.get("MEMCACHED_HOST", "localhost")
     with capture_span("test_pymemcache", "test"):
         conn = pymemcache.client.base.PooledClient((host, 11211))
         conn.set("mykey", "a")
         assert b"a" == conn.get("mykey")
         assert {"mykey": b"a"} == conn.get_many(["mykey", "myotherkey"])
-    elasticapm_client.end_transaction("BillingView")
+    zuqa_client.end_transaction("BillingView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     expected_signatures = {
         "test_pymemcache",
@@ -119,18 +119,18 @@ def test_pymemcache_pooled_client(instrument, elasticapm_client):
 
 
 @pytest.mark.integrationtest
-def test_pymemcache_hash_client(instrument, elasticapm_client):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_pymemcache_hash_client(instrument, zuqa_client):
+    zuqa_client.begin_transaction("transaction.test")
     host = os.environ.get("MEMCACHED_HOST", "localhost")
     with capture_span("test_pymemcache", "test"):
         conn = pymemcache.client.hash.HashClient([(host, 11211)])
         conn.set("mykey", "a")
         assert b"a" == conn.get("mykey")
         assert {"mykey": b"a"} == conn.get_many(["mykey", "myotherkey"])
-    elasticapm_client.end_transaction("BillingView")
+    zuqa_client.end_transaction("BillingView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     expected_signatures = {
         "test_pymemcache",

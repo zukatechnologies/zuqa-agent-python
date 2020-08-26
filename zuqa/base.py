@@ -57,11 +57,11 @@ __all__ = ("Client",)
 
 class Client(object):
     """
-    The base ElasticAPM client, which handles communication over the
+    The base ZUQA client, which handles communication over the
     HTTP API to the APM Server.
 
     Will read default configuration from the environment variable
-    ``ELASTIC_APM_APP_NAME`` and ``ELASTIC_APM_SECRET_TOKEN``
+    ``ZUQA_APP_NAME`` and ``ZUQA_SECRET_TOKEN``
     if available. ::
 
     >>> from zuqa import Client
@@ -116,7 +116,7 @@ class Client(object):
             record_factory = logging.getLogRecordFactory()
             # Only way to know if it's wrapped is to create a log record
             throwaway_record = record_factory(__name__, logging.DEBUG, __file__, 252, "dummy_msg", [], None)
-            if not hasattr(throwaway_record, "elasticapm_labels"):
+            if not hasattr(throwaway_record, "zuqa_labels"):
                 self.logger.debug("Inserting zuqa log_record_factory into logging")
 
                 # Late import due to circular imports
@@ -537,13 +537,13 @@ class Client(object):
         if v == (2, 7):
             warnings.warn(
                 (
-                    "The Elastic APM agent will stop supporting Python 2.7 starting in 6.0.0 -- "
+                    "The ZUQA agent will stop supporting Python 2.7 starting in 6.0.0 -- "
                     "Please upgrade to Python 3.5+ to continue to use the latest features."
                 ),
                 PendingDeprecationWarning,
             )
         elif v < (3, 5):
-            warnings.warn("The Elastic APM agent only supports Python 3.5+", DeprecationWarning)
+            warnings.warn("The ZUQA agent only supports Python 3.5+", DeprecationWarning)
 
 
 class DummyClient(Client):

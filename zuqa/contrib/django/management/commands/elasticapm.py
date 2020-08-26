@@ -92,15 +92,15 @@ CONFIG_EXAMPLE = """
 
 You can set it in your settings file:
 
-    ELASTIC_APM = {
+    ZUQA = {
         'SERVICE_NAME': '<YOUR-SERVICE-NAME>',
         'SECRET_TOKEN': '<YOUR-SECRET-TOKEN>',
     }
 
 or with environment variables:
 
-    $ export ELASTIC_APM_SERVICE_NAME="<YOUR-SERVICE-NAME>"
-    $ export ELASTIC_APM_SECRET_TOKEN="<YOUR-SECRET-TOKEN>"
+    $ export ZUQA_SERVICE_NAME="<YOUR-SERVICE-NAME>"
+    $ export ZUQA_SECRET_TOKEN="<YOUR-SECRET-TOKEN>"
     $ python manage.py zuqa check
 
 """
@@ -220,33 +220,33 @@ class Command(BaseCommand):
 
         # check if we're disabled due to DEBUG:
         if settings.DEBUG:
-            if getattr(settings, "ELASTIC_APM", {}).get("DEBUG"):
+            if getattr(settings, "ZUQA", {}).get("DEBUG"):
                 self.write(
                     "Note: even though you are running in DEBUG mode, we will "
-                    'send data to the APM Server, because you set ELASTIC_APM["DEBUG"] to '
-                    "True. You can disable ElasticAPM while in DEBUG mode like this"
+                    'send data to the APM Server, because you set ZUQA["DEBUG"] to '
+                    "True. You can disable ZUQA while in DEBUG mode like this"
                     "\n\n",
                     yellow,
                 )
                 self.write(
-                    "   ELASTIC_APM = {\n"
+                    "   ZUQA = {\n"
                     '       "DEBUG": False,\n'
-                    "       # your other ELASTIC_APM settings\n"
+                    "       # your other ZUQA settings\n"
                     "   }"
                 )
             else:
                 self.write(
-                    "Looks like you're running in DEBUG mode. ElasticAPM will NOT "
+                    "Looks like you're running in DEBUG mode. ZUQA will NOT "
                     "gather any data while DEBUG is set to True.\n\n",
                     red,
                 )
                 self.write(
-                    "If you want to test ElasticAPM while DEBUG is set to True, you"
-                    " can force ElasticAPM to gather data by setting"
-                    ' ELASTIC_APM["DEBUG"] to True, like this\n\n'
-                    "   ELASTIC_APM = {\n"
+                    "If you want to test ZUQA while DEBUG is set to True, you"
+                    " can force ZUQA to gather data by setting"
+                    ' ZUQA["DEBUG"] to True, like this\n\n'
+                    "   ZUQA = {\n"
                     '       "DEBUG": True,\n'
-                    "       # your other ELASTIC_APM settings\n"
+                    "       # your other ZUQA settings\n"
                     "   }"
                 )
                 passed = False
@@ -263,7 +263,7 @@ class Command(BaseCommand):
                 self.write("Tracing middleware is configured! Awesome!", green)
             else:
                 self.write("Tracing middleware is configured, but not at the first position\n", yellow)
-                self.write("ElasticAPM works best if you add it at the top of your %s setting" % middleware_attr)
+                self.write("ZUQA works best if you add it at the top of your %s setting" % middleware_attr)
         except ValueError:
             self.write("Tracing middleware not configured!", red)
             self.write(

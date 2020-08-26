@@ -35,7 +35,7 @@ import os
 
 get_logger = logging.getLogger
 
-if os.environ.get("ELASTIC_APM_USE_STRUCTLOG", "").lower() == "true":
+if os.environ.get("ZUQA_USE_STRUCTLOG", "").lower() == "true":
 
     try:
         import structlog
@@ -44,4 +44,4 @@ if os.environ.get("ELASTIC_APM_USE_STRUCTLOG", "").lower() == "true":
     except ImportError:
         # use stdlib logger to log warning
         logger = get_logger("zuqa")
-        logger.warning("ELASTIC_APM_USE_STRUCTLOG is set, but structlog is not installed")
+        logger.warning("ZUQA_USE_STRUCTLOG is set, but structlog is not installed")

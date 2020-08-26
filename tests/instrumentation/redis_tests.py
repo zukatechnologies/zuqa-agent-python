@@ -56,17 +56,17 @@ def redis_conn():
 
 
 @pytest.mark.integrationtest
-def test_pipeline(instrument, elasticapm_client, redis_conn):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_pipeline(instrument, zuqa_client, redis_conn):
+    zuqa_client.begin_transaction("transaction.test")
     with capture_span("test_pipeline", "test"):
         pipeline = redis_conn.pipeline()
         pipeline.rpush("mykey", "a", "b")
         pipeline.expire("mykey", 1000)
         pipeline.execute()
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     assert spans[0]["name"] in ("StrictPipeline.execute", "Pipeline.execute")
     assert spans[0]["type"] == "db"
@@ -85,21 +85,21 @@ def test_pipeline(instrument, elasticapm_client, redis_conn):
 
 
 @pytest.mark.integrationtest
-def test_rq_patches_redis(instrument, elasticapm_client, redis_conn):
+def test_rq_patches_redis(instrument, zuqa_client, redis_conn):
     # Let's go ahead and change how something important works
     redis_conn._pipeline = partial(StrictRedis.pipeline, redis_conn)
 
-    elasticapm_client.begin_transaction("transaction.test")
+    zuqa_client.begin_transaction("transaction.test")
     with capture_span("test_pipeline", "test"):
         # conn = redis.StrictRedis()
         pipeline = redis_conn._pipeline()
         pipeline.rpush("mykey", "a", "b")
         pipeline.expire("mykey", 1000)
         pipeline.execute()
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     assert spans[0]["name"] in ("StrictPipeline.execute", "Pipeline.execute")
     assert spans[0]["type"] == "db"
@@ -118,15 +118,15 @@ def test_rq_patches_redis(instrument, elasticapm_client, redis_conn):
 
 
 @pytest.mark.integrationtest
-def test_redis_client(instrument, elasticapm_client, redis_conn):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_redis_client(instrument, zuqa_client, redis_conn):
+    zuqa_client.begin_transaction("transaction.test")
     with capture_span("test_redis_client", "test"):
         redis_conn.rpush("mykey", "a", "b")
         redis_conn.expire("mykey", 1000)
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     expected_signatures = {"test_redis_client", "RPUSH", "EXPIRE"}
 

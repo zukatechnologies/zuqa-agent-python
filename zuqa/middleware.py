@@ -35,13 +35,13 @@ from zuqa.utils import get_url_dict
 from zuqa.utils.wsgi import get_current_url, get_environ, get_headers
 
 
-class ElasticAPM(object):
+class ZUQA(object):
     """
     A WSGI middleware which will attempt to capture any
-    uncaught exceptions and send them to ElasticAPM.
+    uncaught exceptions and send them to ZUQA.
 
     >>> from zuqa.base import Client
-    >>> application = ElasticAPM(application, Client())
+    >>> application = ZUQA(application, Client())
     """
 
     def __init__(self, application, client):

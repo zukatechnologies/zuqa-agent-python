@@ -86,7 +86,7 @@ def test_bad_locals_in_frame():
     assert result["vars"] == variables
 
 
-def test_traceback_hide(elasticapm_client):
+def test_traceback_hide(zuqa_client):
     def get_me_a_filtered_frame(hide=True):
         __traceback_hide__ = True
         if not hide:
@@ -144,38 +144,38 @@ def test_iter_stack_frames_max_frames():
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client", [{"stack_trace_limit": 10, "span_frames_min_duration": -1}], indirect=True
+    "zuqa_client", [{"stack_trace_limit": 10, "span_frames_min_duration": -1}], indirect=True
 )
-def test_iter_stack_frames_max_frames_is_dynamic(elasticapm_client):
+def test_iter_stack_frames_max_frames_is_dynamic(zuqa_client):
     def func():
         with zuqa.capture_span("yay"):
             pass
 
-    elasticapm_client.begin_transaction("foo")
+    zuqa_client.begin_transaction("foo")
     get_me_more_test_frames(15, func=func)
-    elasticapm_client.end_transaction()
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
+    zuqa_client.end_transaction()
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
 
-    span = elasticapm_client.spans_for_transaction(transaction)[0]
+    span = zuqa_client.spans_for_transaction(transaction)[0]
     assert len(span["stacktrace"]) == 10
 
-    elasticapm_client.config.update(version="2", stack_trace_limit=5)
+    zuqa_client.config.update(version="2", stack_trace_limit=5)
 
-    elasticapm_client.begin_transaction("foo")
+    zuqa_client.begin_transaction("foo")
     get_me_more_test_frames(15, func=func)
-    elasticapm_client.end_transaction()
-    transaction = elasticapm_client.events[constants.TRANSACTION][1]
+    zuqa_client.end_transaction()
+    transaction = zuqa_client.events[constants.TRANSACTION][1]
 
-    span = elasticapm_client.spans_for_transaction(transaction)[0]
+    span = zuqa_client.spans_for_transaction(transaction)[0]
     assert len(span["stacktrace"]) == 5
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client", [{"include_paths": ("/a/b/c/*", "/c/d/*"), "exclude_paths": ("/c/*",)}], indirect=True
+    "zuqa_client", [{"include_paths": ("/a/b/c/*", "/c/d/*"), "exclude_paths": ("/c/*",)}], indirect=True
 )
-def test_library_frames(elasticapm_client):
-    include = elasticapm_client.include_paths_re
-    exclude = elasticapm_client.exclude_paths_re
+def test_library_frames(zuqa_client):
+    include = zuqa_client.include_paths_re
+    exclude = zuqa_client.exclude_paths_re
     frame1 = Mock(f_code=Mock(co_filename="/a/b/c/d.py"))
     frame2 = Mock(f_code=Mock(co_filename="/a/b/c/d/e.py"))
     frame3 = Mock(f_code=Mock(co_filename="/c/d/e.py"))

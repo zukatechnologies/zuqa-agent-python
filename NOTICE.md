@@ -6,7 +6,7 @@ This project contains dependencies which have been vendored.
 
 ### wrapt
 
-- **path:** [`elasticapm/utils/wrapt`](zuqa/utils/wrapt)
+- **path:** [`zuqa/utils/wrapt`](zuqa/utils/wrapt)
 - **author:** Graham Dumpleton
 - **project url:** https://github.com/GrahamDumpleton/wrapt
 - **license:** BSD-2-Clause, http://opensource.org/licenses/BSD-2-Clause

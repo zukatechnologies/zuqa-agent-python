@@ -1,14 +1,14 @@
 [[tornado-support]]
 === Tornado Support
 
-Incorporating Elastic APM into your Tornado project only requires a few easy
+Incorporating ZUQA into your Tornado project only requires a few easy
 steps.
 
 [float]
 [[tornado-installation]]
 ==== Installation
 
-Install the Elastic APM agent using pip:
+Install the ZUQA agent using pip:
 
 [source,bash]
 ----
@@ -35,25 +35,25 @@ To initialize the agent for your application using environment variables:
 [source,python]
 ----
 import tornado.web
-from zuqa.contrib.tornado import ElasticAPM
+from zuqa.contrib.tornado import ZUQA
 
 app = tornado.web.Application()
-apm = ElasticAPM(app)
+apm = ZUQA(app)
 ----
 
-To configure the agent using `ELASTIC_APM` in your application's settings:
+To configure the agent using `ZUQA` in your application's settings:
 
 [source,python]
 ----
 import tornado.web
-from zuqa.contrib.tornado import ElasticAPM
+from zuqa.contrib.tornado import ZUQA
 
 app = tornado.web.Application()
-app.settings['ELASTIC_APM'] = {
+app.settings['ZUQA'] = {
     'SERVICE_NAME': '<SERVICE-NAME>',
     'SECRET_TOKEN': '<SECRET-TOKEN>',
 }
-apm = ElasticAPM(app)
+apm = ZUQA(app)
 ----
 
 [float]
@@ -105,7 +105,7 @@ list of regular expressions which are matched against the transaction name:
 
 [source,python]
 ----
-app.settings['ELASTIC_APM'] = {
+app.settings['ZUQA'] = {
     # ...
     'TRANSACTIONS_IGNORE_PATTERNS': ['^GET SecretHandler', 'MainHandler']
     # ...
@@ -122,4 +122,4 @@ and any requests containing `MainHandler`.
 
 A list of supported <<supported-tornado,tornado>> and <<supported-python,Python>> versions can be found on our <<supported-technologies,Supported Technologies>> page.
 
-NOTE: Elastic APM only supports `asyncio` when using Python 3.7+
+NOTE: ZUQA only supports `asyncio` when using Python 3.7+
