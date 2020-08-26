@@ -36,17 +36,17 @@ Once your changes are ready to submit for review:
 1. Code style
 
     This project uses several tools to maintain a consistent code style:
-    
+
      * the automatic code formatter [black](https://black.readthedocs.io/en/stable/)
      * sorting of imports via [isort](https://isort.readthedocs.io/en/latest/)
      * [flake8](http://flake8.pycqa.org/en/latest/)
      * License header check via custom script
-     
+
     The easiest way to make sure your pull request adheres to the the code style
     is to install [pre-commit](https://pre-commit.com/).
-    
+
         pip install pre-commit # or "brew install pre-commit" if you use Homebrew
-        
+
         pre-commit install
 
 1. Test your changes
@@ -100,10 +100,10 @@ should "Squash and merge".
 
 If you have commit access, the process is as follows:
 
-1. Update the version in `elasticapm/version.py` according to the scale of the change. (major, minor or patch)
+1. Update the version in `zuqa/version.py` according to the scale of the change. (major, minor or patch)
 1. Update `CHANGELOG.asciidoc`. Rename the `Unreleased` section to the correct version (`vX.X.X`), and nest under the appropriate sub-heading, e.g., `Python Agent version 5.x`.
 1. For Majors: Add a new row to the EOL table in `docs/upgrading.asciidoc`. The EOL date is the release date plus 18 months.
-1. Commit changes with message `update CHANGELOG and bump version to X.Y.Z` where `X.Y.Z` is the version in `elasticapm/version.py`
+1. Commit changes with message `update CHANGELOG and bump version to X.Y.Z` where `X.Y.Z` is the version in `zuqa/version.py`
 1. Tag the commit with `git tag -a vX.Y.Z`, for example `git tag -a v1.2.3`.
    Copy the changelog for the release to the tag message, removing any leading `#`.
 1. Reset the current major branch (`1.x`, `2.x` etc) to point to the current master, e.g. `git branch -f 1.x master`

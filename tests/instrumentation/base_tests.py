@@ -81,21 +81,21 @@ def test_instrument_nonexisting_method(caplog):
     assert "has no attribute" in record.message
 
 
-def test_double_instrument(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_double_instrument(zuqa_client):
+    zuqa_client.begin_transaction("test")
     inst = _TestDummyInstrumentation()
     try:
         inst.instrument()
         assert hasattr(Dummy.dummy, "_self_wrapper")
         Dummy().dummy()
-        elasticapm_client.end_transaction()
-        assert len(elasticapm_client.spans_for_transaction(elasticapm_client.events[constants.TRANSACTION][0])) == 1
+        zuqa_client.end_transaction()
+        assert len(zuqa_client.spans_for_transaction(zuqa_client.events[constants.TRANSACTION][0])) == 1
         inst.instrumented = False
         inst.instrument()
-        elasticapm_client.begin_transaction("test")
+        zuqa_client.begin_transaction("test")
         Dummy().dummy()
-        elasticapm_client.end_transaction()
-        assert len(elasticapm_client.spans_for_transaction(elasticapm_client.events[constants.TRANSACTION][1])) == 1
+        zuqa_client.end_transaction()
+        assert len(zuqa_client.spans_for_transaction(zuqa_client.events[constants.TRANSACTION][1])) == 1
     finally:
         inst.uninstrument()
 
@@ -145,17 +145,17 @@ def test_uninstrument_py3(caplog):
     assert not isinstance(Dummy.dummy, wrapt.BoundFunctionWrapper)
 
 
-def test_module_method_args(elasticapm_client):
+def test_module_method_args(zuqa_client):
     """
     Test that the module/method arguments are correctly passed to
     the _TestDummyInstrumentation.call method
     """
     instrumentation = _TestDummyInstrumentation()
     instrumentation.instrument()
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     dummy = Dummy()
     call_args = dummy.dummy()
-    elasticapm_client.end_transaction("test", "test")
+    zuqa_client.end_transaction("test", "test")
     instrumentation.uninstrument()
 
     assert call_args == ("tests.instrumentation.base_tests", "Dummy.dummy")
@@ -172,24 +172,24 @@ def test_skip_instrument_env_var(caplog):
     assert not instrumentation.instrumented
 
 
-def test_skip_ignored_frames(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_skip_ignored_frames(zuqa_client):
+    zuqa_client.begin_transaction("test")
     with zuqa.capture_span("test"):
         pass
-    elasticapm_client.end_transaction("test", "test")
-    span = elasticapm_client.events[SPAN][0]
+    zuqa_client.end_transaction("test", "test")
+    span = zuqa_client.events[SPAN][0]
     for frame in span["stacktrace"]:
         assert not frame["module"].startswith("zuqa")
 
 
-def test_end_nonexisting_span(caplog, elasticapm_client):
+def test_end_nonexisting_span(caplog, zuqa_client):
     with caplog.at_level(logging.INFO, "zuqa.traces"):
-        t = elasticapm_client.begin_transaction("test")
+        t = zuqa_client.begin_transaction("test")
         # we're purposefully creating a case where we don't begin a span
         # and then try to end the non-existing span
         t.is_sampled = False
         with zuqa.capture_span("test_name", "test_type"):
             t.is_sampled = True
-    elasticapm_client.end_transaction("test", "")
+    zuqa_client.end_transaction("test", "")
     record = caplog.records[0]
     assert record.args == ("test_name", "test_type")

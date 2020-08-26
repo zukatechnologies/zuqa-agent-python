@@ -97,13 +97,13 @@ def test_config_environment():
     with mock.patch.dict(
         "os.environ",
         {
-            "ELASTIC_APM_SERVICE_NAME": "foo",
-            "ELASTIC_APM_SECRET_TOKEN": "bar",
-            "ELASTIC_APM_SERVER_URL": "http://example.com:1234",
-            "ELASTIC_APM_SERVICE_VERSION": "1",
-            "ELASTIC_APM_HOSTNAME": "localhost",
-            "ELASTIC_APM_API_REQUEST_TIME": "5s",
-            "ELASTIC_APM_AUTO_LOG_STACKS": "false",
+            "ZUQA_SERVICE_NAME": "foo",
+            "ZUQA_SECRET_TOKEN": "bar",
+            "ZUQA_SERVER_URL": "http://example.com:1234",
+            "ZUQA_SERVICE_VERSION": "1",
+            "ZUQA_HOSTNAME": "localhost",
+            "ZUQA_API_REQUEST_TIME": "5s",
+            "ZUQA_AUTO_LOG_STACKS": "false",
         },
     ):
         config = Config()
@@ -139,7 +139,7 @@ def test_config_inline_dict():
 
 def test_config_precedence():
     #  precedence order: environment, inline dict, config dict
-    with mock.patch.dict("os.environ", {"ELASTIC_APM_SERVICE_NAME": "bar"}):
+    with mock.patch.dict("os.environ", {"ZUQA_SERVICE_NAME": "bar"}):
         config = Config(
             {"SERVICE_NAME": "foo", "SECRET_TOKEN": "secret", "COLLECT_LOCAL_VARIABLES": "all"},
             inline_dict={"secret_token": "notsecret", "service_name": "baz"},

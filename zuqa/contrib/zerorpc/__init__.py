@@ -35,7 +35,7 @@ from zuqa.base import Client
 
 
 class Middleware(object):
-    """ElasticAPM middleware for ZeroRPC.
+    """ZUQA middleware for ZeroRPC.
 
     >>> zuqa = Middleware(service_name='..', secret_token='...')
     >>> zerorpc.Context.get_instance().register_middleware(zuqa)
@@ -54,7 +54,7 @@ class Middleware(object):
                   instantiated from the keyword arguments.
 
         """
-        self._elasticapm_client = client or Client(**kwargs)
+        self._zuqa_client = client or Client(**kwargs)
         self._hide_zerorpc_frames = hide_zerorpc_frames
 
     def server_inspect_exception(self, req_event, rep_event, task_ctx, exc_info):
@@ -81,4 +81,4 @@ class Middleware(object):
                     break
                 traceback = traceback.tb_next
 
-        self._elasticapm_client.capture_exception(exc_info, extra=task_ctx, handled=False)
+        self._zuqa_client.capture_exception(exc_info, extra=task_ctx, handled=False)

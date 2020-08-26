@@ -1,14 +1,14 @@
 [[starlette-support]]
 === Starlette/FastAPI Support
 
-Incorporating Elastic APM into your Starlette project only requires a few easy
+Incorporating ZUQA into your Starlette project only requires a few easy
 steps.
 
 [float]
 [[starlette-installation]]
 ==== Installation
 
-Install the Elastic APM agent using pip:
+Install the ZUQA agent using pip:
 
 [source,bash]
 ----
@@ -35,11 +35,11 @@ To initialize the agent for your application using environment variables:
 [source,python]
 ----
 from starlette.applications import Starlette
-from zuqa.contrib.starlette import make_apm_client, ElasticAPM
+from zuqa.contrib.starlette import make_apm_client, ZUQA
 
-elasticapm = make_apm_client()
+zuqa = make_apm_client()
 app = Starlette()
-app.add_middleware(ElasticAPM, client=elasticapm)
+app.add_middleware(ZUQA, client=zuqa)
 ----
 
 To configure the agent using initialization arguments:
@@ -47,14 +47,14 @@ To configure the agent using initialization arguments:
 [source,python]
 ----
 from starlette.applications import Starlette
-from zuqa.contrib.starlette import make_apm_client, ElasticAPM
+from zuqa.contrib.starlette import make_apm_client, ZUQA
 
-elasticapm = make_apm_client({
+zuqa = make_apm_client({
     'SERVICE_NAME': '<SERVICE-NAME>',
     'SECRET_TOKEN': '<SECRET-TOKEN>',
 })
 app = Starlette()
-app.add_middleware(ElasticAPM, client=elasticapm)
+app.add_middleware(ZUQA, client=zuqa)
 ----
 
 [float]
@@ -67,11 +67,11 @@ is almost exactly the same as with Starlette:
 [source,python]
 ----
 from fastapi import FastAPI
-from zuqa.contrib.starlette import make_apm_client, ElasticAPM
+from zuqa.contrib.starlette import make_apm_client, ZUQA
 
-elasticapm = make_apm_client()
+zuqa = make_apm_client()
 app = FastAPI()
-app.add_middleware(ElasticAPM, client=elasticapm)
+app.add_middleware(ZUQA, client=zuqa)
 ----
 
 [float]
@@ -123,7 +123,7 @@ list of regular expressions which are matched against the transaction name:
 
 [source,python]
 ----
-elasticapm = make_apm_client({
+zuqa = make_apm_client({
     # ...
     'TRANSACTIONS_IGNORE_PATTERNS': ['^GET /secret', '/extra_secret']
     # ...
@@ -142,4 +142,4 @@ A list of supported <<supported-starlette,Starlette>> and
 <<supported-python,Python>> versions can be found on our
 <<supported-technologies,Supported Technologies>> page.
 
-NOTE: Elastic APM only supports `asyncio` when using Python 3.7+
+NOTE: ZUQA only supports `asyncio` when using Python 3.7+

@@ -10,7 +10,7 @@ env:
   global:
   - PIP_CACHE="$HOME/.pip_cache"'
   - RUN_SCRIPT="./travis/run_tests.sh"
-  - POSTGRES_DB=elasticapm_test
+  - POSTGRES_DB=zuqa_test
   - TWINE_USERNAME=piquadrat
   matrix:
   - WEBFRAMEWORK=django-master
@@ -27,7 +27,7 @@ stages:
   - test
 
 before_script:
-- psql -c 'create database elasticapm_test;' -U postgres
+- psql -c 'create database zuqa_test;' -U postgres
 - mkdir -p "$PIP_CACHE"
 - mkdir -p wheelhouse
 script:

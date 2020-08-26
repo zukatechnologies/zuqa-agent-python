@@ -45,13 +45,13 @@ from tests.fixtures import TempStoreClient
 
 
 @pytest.fixture()
-def logger(elasticapm_client):
-    elasticapm_client.config.include_paths = ["tests", "zuqa"]
-    handler = LoggingHandler(elasticapm_client)
+def logger(zuqa_client):
+    zuqa_client.config.include_paths = ["tests", "zuqa"]
+    handler = LoggingHandler(zuqa_client)
     logger = logging.getLogger(__name__)
     logger.handlers = []
     logger.addHandler(handler)
-    logger.client = elasticapm_client
+    logger.client = zuqa_client
     logger.level = logging.INFO
     return logger
 
@@ -202,14 +202,14 @@ def test_logger_exception(logger):
     assert event["log"]["message"] == "This is a test with an exception"
 
 
-def test_client_arg(elasticapm_client):
-    handler = LoggingHandler(elasticapm_client)
-    assert handler.client == elasticapm_client
+def test_client_arg(zuqa_client):
+    handler = LoggingHandler(zuqa_client)
+    assert handler.client == zuqa_client
 
 
-def test_client_kwarg(elasticapm_client):
-    handler = LoggingHandler(client=elasticapm_client)
-    assert handler.client == elasticapm_client
+def test_client_kwarg(zuqa_client):
+    handler = LoggingHandler(client=zuqa_client)
+    assert handler.client == zuqa_client
 
 
 def test_invalid_first_arg_type():
@@ -228,17 +228,17 @@ def test_logger_setup():
     assert handler.level == logging.NOTSET
 
 
-def test_logging_handler_emit_error(capsys, elasticapm_client):
-    handler = LoggingHandler(elasticapm_client)
+def test_logging_handler_emit_error(capsys, zuqa_client):
+    handler = LoggingHandler(zuqa_client)
     handler._emit = lambda: 1 / 0
     handler.emit(LogRecord("x", 1, "/ab/c/", 10, "Oops", [], None))
     out, err = capsys.readouterr()
-    assert "Top level ElasticAPM exception caught" in err
+    assert "Top level ZUQA exception caught" in err
     assert "Oops" in err
 
 
-def test_logging_handler_dont_emit_elasticapm(capsys, elasticapm_client):
-    handler = LoggingHandler(elasticapm_client)
+def test_logging_handler_dont_emit_zuqa(capsys, zuqa_client):
+    handler = LoggingHandler(zuqa_client)
     handler.emit(LogRecord("zuqa.errors", 1, "/ab/c/", 10, "Oops", [], None))
     out, err = capsys.readouterr()
     assert "Oops" in err
@@ -252,19 +252,19 @@ def test_arbitrary_object(logger):
     assert event["log"]["param_message"] == "['a', 'list', 'of', 'strings']"
 
 
-def test_logging_filter_no_span(elasticapm_client):
-    transaction = elasticapm_client.begin_transaction("test")
+def test_logging_filter_no_span(zuqa_client):
+    transaction = zuqa_client.begin_transaction("test")
     f = LoggingFilter()
     record = logging.LogRecord(__name__, logging.DEBUG, __file__, 252, "dummy_msg", [], None)
     f.filter(record)
-    assert record.elasticapm_transaction_id == transaction.id
-    assert record.elasticapm_trace_id == transaction.trace_parent.trace_id
-    assert record.elasticapm_span_id is None
-    assert record.elasticapm_labels
+    assert record.zuqa_transaction_id == transaction.id
+    assert record.zuqa_trace_id == transaction.trace_parent.trace_id
+    assert record.zuqa_span_id is None
+    assert record.zuqa_labels
 
 
-def test_structlog_processor_no_span(elasticapm_client):
-    transaction = elasticapm_client.begin_transaction("test")
+def test_structlog_processor_no_span(zuqa_client):
+    transaction = zuqa_client.begin_transaction("test")
     event_dict = {}
     new_dict = structlog_processor(None, None, event_dict)
     assert new_dict["transaction.id"] == transaction.id
@@ -272,17 +272,17 @@ def test_structlog_processor_no_span(elasticapm_client):
     assert "span.id" not in new_dict
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"transaction_max_spans": 5}], indirect=True)
-def test_logging_filter_span(elasticapm_client):
-    transaction = elasticapm_client.begin_transaction("test")
+@pytest.mark.parametrize("zuqa_client", [{"transaction_max_spans": 5}], indirect=True)
+def test_logging_filter_span(zuqa_client):
+    transaction = zuqa_client.begin_transaction("test")
     with capture_span("test") as span:
         f = LoggingFilter()
         record = logging.LogRecord(__name__, logging.DEBUG, __file__, 252, "dummy_msg", [], None)
         f.filter(record)
-        assert record.elasticapm_transaction_id == transaction.id
-        assert record.elasticapm_trace_id == transaction.trace_parent.trace_id
-        assert record.elasticapm_span_id == span.id
-        assert record.elasticapm_labels
+        assert record.zuqa_transaction_id == transaction.id
+        assert record.zuqa_trace_id == transaction.trace_parent.trace_id
+        assert record.zuqa_span_id == span.id
+        assert record.zuqa_labels
 
     # Capture too many spans so we start dropping
     for i in range(10):
@@ -293,15 +293,15 @@ def test_logging_filter_span(elasticapm_client):
     with capture_span("drop") as span:
         record = logging.LogRecord(__name__, logging.DEBUG, __file__, 252, "dummy_msg2", [], None)
         f.filter(record)
-        assert record.elasticapm_transaction_id == transaction.id
-        assert record.elasticapm_trace_id == transaction.trace_parent.trace_id
-        assert record.elasticapm_span_id is None
-        assert record.elasticapm_labels
+        assert record.zuqa_transaction_id == transaction.id
+        assert record.zuqa_trace_id == transaction.trace_parent.trace_id
+        assert record.zuqa_span_id is None
+        assert record.zuqa_labels
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"transaction_max_spans": 5}], indirect=True)
-def test_structlog_processor_span(elasticapm_client):
-    transaction = elasticapm_client.begin_transaction("test")
+@pytest.mark.parametrize("zuqa_client", [{"transaction_max_spans": 5}], indirect=True)
+def test_structlog_processor_span(zuqa_client):
+    transaction = zuqa_client.begin_transaction("test")
     with capture_span("test") as span:
         event_dict = {}
         new_dict = structlog_processor(None, None, event_dict)
@@ -324,19 +324,19 @@ def test_structlog_processor_span(elasticapm_client):
 
 
 @pytest.mark.skipif(not compat.PY3, reason="Log record factories are only 3.2+")
-def test_automatic_log_record_factory_install(elasticapm_client):
+def test_automatic_log_record_factory_install(zuqa_client):
     """
-    Use the elasticapm_client fixture to load the client, which in turn installs
+    Use the zuqa_client fixture to load the client, which in turn installs
     the log_record_factory. Check to make sure it happened.
     """
-    transaction = elasticapm_client.begin_transaction("test")
+    transaction = zuqa_client.begin_transaction("test")
     with capture_span("test") as span:
         record_factory = logging.getLogRecordFactory()
         record = record_factory(__name__, logging.DEBUG, __file__, 252, "dummy_msg", [], None)
-        assert record.elasticapm_transaction_id == transaction.id
-        assert record.elasticapm_trace_id == transaction.trace_parent.trace_id
-        assert record.elasticapm_span_id == span.id
-        assert record.elasticapm_labels
+        assert record.zuqa_transaction_id == transaction.id
+        assert record.zuqa_trace_id == transaction.trace_parent.trace_id
+        assert record.zuqa_span_id == span.id
+        assert record.zuqa_labels
 
 
 def test_formatter():
@@ -344,8 +344,8 @@ def test_formatter():
     formatter = Formatter()
     formatted_record = formatter.format(record)
     assert "| zuqa" in formatted_record
-    assert hasattr(record, "elasticapm_transaction_id")
+    assert hasattr(record, "zuqa_transaction_id")
     record = logging.LogRecord(__name__, logging.DEBUG, __file__, 252, "dummy_msg", [], None)
     formatted_time = formatter.formatTime(record)
     assert formatted_time
-    assert hasattr(record, "elasticapm_transaction_id")
+    assert hasattr(record, "zuqa_transaction_id")

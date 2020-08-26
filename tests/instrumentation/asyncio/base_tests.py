@@ -38,17 +38,17 @@ from zuqa.conf import constants
 pytestmark = [pytest.mark.asyncio]
 
 
-async def test_async_capture_span(instrument, elasticapm_client):
+async def test_async_capture_span(instrument, zuqa_client):
     @zuqa.async_capture_span()
     async def do_some_work():
         async with zuqa.async_capture_span("more-work"):
             await tasks.sleep(0.1)
 
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     await do_some_work()
-    elasticapm_client.end_transaction("test", "OK")
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    zuqa_client.end_transaction("test", "OK")
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 3
     sleep, c, d = spans
     assert sleep["subtype"] == "sleep"

@@ -1,7 +1,7 @@
 [[metrics]]
 == Metrics
 
-With Elastic APM, you can capture system and process metrics.
+With ZUQA, you can capture system and process metrics.
 These metrics will be sent regularly to the APM Server and from there to Elasticsearch
 
 [float]
@@ -16,7 +16,7 @@ These metrics will be sent regularly to the APM Server and from there to Elastic
 [[cpu-memory-metricset]]
 ==== CPU/Memory metric set
 
-`elasticapm.metrics.sets.cpu.CPUMetricSet`
+`zuqa.metrics.sets.cpu.CPUMetricSet`
 
 This metric set collects various system metrics and metrics of the current process.
 

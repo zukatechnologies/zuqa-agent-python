@@ -163,7 +163,7 @@ def test_transform_recursive():
 
 def test_transform_custom_repr():
     class Foo(object):
-        def __elasticapm__(self):
+        def __zuqa__(self):
             return "example"
 
     x = Foo()

@@ -96,9 +96,9 @@ def force_text(s, encoding="utf-8", strings_only=False, errors="strict"):
     return s
 
 
-def _has_elasticapm_metadata(value):
+def _has_zuqa_metadata(value):
     try:
-        return callable(value.__getattribute__("__elasticapm__"))
+        return callable(value.__getattribute__("__zuqa__"))
     except Exception:
         return False
 
@@ -136,8 +136,8 @@ def transform(value, stack=None, context=None):
         ret = to_unicode(value)
     elif isinstance(value, compat.binary_type):
         ret = to_string(value)
-    elif not isinstance(value, compat.class_types) and _has_elasticapm_metadata(value):
-        ret = transform_rec(value.__elasticapm__())
+    elif not isinstance(value, compat.class_types) and _has_zuqa_metadata(value):
+        ret = transform_rec(value.__zuqa__())
     elif isinstance(value, bool):
         ret = bool(value)
     elif isinstance(value, float):

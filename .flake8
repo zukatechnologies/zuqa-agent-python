@@ -1,6 +1,6 @@
 [flake8]
 exclude=
-    elasticapm/utils/wrapt/**,
+    zuqa/utils/wrapt/**,
     build/**,
     src/**,
     tests/**,

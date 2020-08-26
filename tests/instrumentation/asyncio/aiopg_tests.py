@@ -53,7 +53,7 @@ if "POSTGRES_DB" not in os.environ:
 def dsn():
     return "dbname={database} user={user} password={password} host={host} port={port}".format(
         **{
-            "database": os.environ.get("POSTGRES_DB", "elasticapm_test"),
+            "database": os.environ.get("POSTGRES_DB", "zuqa_test"),
             "user": os.environ.get("POSTGRES_USER", "postgres"),
             "password": os.environ.get("POSTGRES_PASSWORD", "postgres"),
             "host": os.environ.get("POSTGRES_HOST", "localhost"),
@@ -82,13 +82,13 @@ async def cursor(request):
     return cur
 
 
-async def test_select_sleep(instrument, cursor, elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+async def test_select_sleep(instrument, cursor, zuqa_client):
+    zuqa_client.begin_transaction("test")
     await cursor.execute("SELECT pg_sleep(0.1);")
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")
 
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert 100 < span["duration"] < 110
@@ -100,23 +100,23 @@ async def test_select_sleep(instrument, cursor, elasticapm_client):
 
 
 @pytest.mark.skipif(not has_sql_module, reason="SQL module missing from psycopg2")
-async def test_composable_queries(instrument, cursor, elasticapm_client):
+async def test_composable_queries(instrument, cursor, zuqa_client):
     query = sql.SQL("SELECT * FROM {table} WHERE {row} LIKE 't%' ORDER BY {row} DESC").format(
         table=sql.Identifier("test"), row=sql.Identifier("name")
     )
     baked_query = query.as_string(cursor.raw)
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     await cursor.execute(query)
-    elasticapm_client.end_transaction("test", "OK")
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    zuqa_client.end_transaction("test", "OK")
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
     assert span["name"] == "SELECT FROM test"
     assert span["context"]["db"]["statement"] == baked_query
 
 
-async def test_callproc(instrument, cursor, elasticapm_client):
+async def test_callproc(instrument, cursor, zuqa_client):
     await cursor.execute(
         """
         CREATE OR REPLACE FUNCTION squareme(me INT)
@@ -127,12 +127,12 @@ async def test_callproc(instrument, cursor, elasticapm_client):
         $$;
         """
     )
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
     await cursor.callproc("squareme", [2])
     result = await cursor.fetchall()
     assert result[0][0] == 4
-    elasticapm_client.end_transaction("test", "OK")
-    transactions = elasticapm_client.events[constants.TRANSACTION]
-    span = elasticapm_client.spans_for_transaction(transactions[0])[0]
+    zuqa_client.end_transaction("test", "OK")
+    transactions = zuqa_client.events[constants.TRANSACTION]
+    span = zuqa_client.spans_for_transaction(transactions[0])[0]
     assert span["name"] == "squareme()"
     assert span["action"] == "exec"

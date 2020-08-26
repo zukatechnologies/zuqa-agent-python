@@ -1,7 +1,7 @@
 [[tuning-and-overhead]]
 == Performance tuning
 
-Using an APM solution comes with certain trade-offs, and the Python agent for Elastic APM is no different.
+Using an APM solution comes with certain trade-offs, and the Python agent for ZUQA is no different.
 Instrumenting your code, measuring timings, recording context data, etc., all need resources: 
 
  * CPU time
@@ -9,7 +9,7 @@ Instrumenting your code, measuring timings, recording context data, etc., all ne
  * bandwidth use
  * Elasticsearch storage
 
-We invested and continue to invest a lot of effort to keep the overhead of using Elastic APM as low as possible.
+We invested and continue to invest a lot of effort to keep the overhead of using ZUQA as low as possible.
 But because every deployment is different, there are some knobs you can turn to adapt it to your specific needs.
 
 [float]
@@ -101,7 +101,7 @@ Reading source files inside a running application can cause a lot of disk I/O, a
 [[tuning-body-headers]]
 === Collecting headers and request body
 
-You can configure the Elastic APM agent to capture headers of both requests and responses (<<config-capture-headers,`capture_headers`>>),
+You can configure the ZUQA agent to capture headers of both requests and responses (<<config-capture-headers,`capture_headers`>>),
 as well as request bodies (<<config-capture-body,`capture_body`>>).
 By default, capturing request bodies is disabled.
 Enabling it for transactions may introduce noticeable overhead, as well as increased storage use, depending on the nature of your POST requests.

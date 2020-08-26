@@ -273,52 +273,52 @@ def dummy_processor_no_events(client, data):
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [{"processors": "tests.processors.tests.dummy_processor,tests.processors.tests.dummy_processor_no_events"}],
     indirect=True,
 )
-def test_transactions_processing(elasticapm_client):
+def test_transactions_processing(zuqa_client):
     for i in range(5):
-        elasticapm_client.begin_transaction("dummy")
+        zuqa_client.begin_transaction("dummy")
         with zuqa.capture_span("bla"):
             pass
-        elasticapm_client.end_transaction("dummy_transaction", "success")
-    for transaction in elasticapm_client.events[TRANSACTION]:
+        zuqa_client.end_transaction("dummy_transaction", "success")
+    for transaction in zuqa_client.events[TRANSACTION]:
         assert transaction["processed"] is True
         assert "processed_no_events" not in transaction
-    for span in elasticapm_client.events[SPAN]:
+    for span in zuqa_client.events[SPAN]:
         assert span["processed"] is True
         assert "processed_no_events" not in span
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [{"processors": "tests.processors.tests.dummy_processor,tests.processors.tests.dummy_processor_no_events"}],
     indirect=True,
 )
-def test_exception_processing(elasticapm_client):
+def test_exception_processing(zuqa_client):
     try:
         1 / 0
     except ZeroDivisionError:
-        elasticapm_client.capture_exception()
-    assert elasticapm_client.events[ERROR][0]["processed"] is True
-    assert "processed_no_events" not in elasticapm_client.events[ERROR][0]
+        zuqa_client.capture_exception()
+    assert zuqa_client.events[ERROR][0]["processed"] is True
+    assert "processed_no_events" not in zuqa_client.events[ERROR][0]
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [{"processors": "tests.processors.tests.dummy_processor,tests.processors.tests.dummy_processor_no_events"}],
     indirect=True,
 )
-def test_message_processing(elasticapm_client):
-    elasticapm_client.capture_message("foo")
-    assert elasticapm_client.events[ERROR][0]["processed"] is True
-    assert "processed_no_events" not in elasticapm_client.events[ERROR][0]
+def test_message_processing(zuqa_client):
+    zuqa_client.capture_message("foo")
+    assert zuqa_client.events[ERROR][0]["processed"] is True
+    assert "processed_no_events" not in zuqa_client.events[ERROR][0]
 
 
 @mock.patch("zuqa.base.constants.HARDCODED_PROCESSORS", ["tests.processors.tests.dummy_processor"])
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [
         {
             "processors": "tests.processors.tests.dummy_processor,"
@@ -328,8 +328,8 @@ def test_message_processing(elasticapm_client):
     ],
     indirect=True,
 )
-def test_deduplicate_processors(elasticapm_client):
-    processors = elasticapm_client.load_processors()
+def test_deduplicate_processors(zuqa_client):
+    processors = zuqa_client.load_processors()
     assert len(processors) == 2
     for p in processors:
         assert callable(p)
@@ -343,22 +343,22 @@ def test_for_events_decorator():
     assert foo.event_types == {"error", "transaction"}
 
 
-def test_drop_events_in_processor(elasticapm_client, caplog):
+def test_drop_events_in_processor(zuqa_client, caplog):
     dropping_processor = mock.MagicMock(return_value=None, event_types=[SPAN], __name__="dropper")
     shouldnt_be_called_processor = mock.Mock(event_types=[])
 
-    elasticapm_client._transport._processors = [dropping_processor, shouldnt_be_called_processor]
+    zuqa_client._transport._processors = [dropping_processor, shouldnt_be_called_processor]
     with caplog.at_level(logging.DEBUG, logger="zuqa.transport"):
-        elasticapm_client.queue(SPAN, {"some": "data"})
+        zuqa_client.queue(SPAN, {"some": "data"})
     assert dropping_processor.call_count == 1
     assert shouldnt_be_called_processor.call_count == 0
-    assert elasticapm_client._transport.events[SPAN][0] is None
+    assert zuqa_client._transport.events[SPAN][0] is None
     record = caplog.records[0]
     assert record.message == "Dropped event of type span due to processor mock.mock.dropper"
     assert record.levelname == "DEBUG"
 
 
-def test_context_lines_processor(elasticapm_client):
+def test_context_lines_processor(zuqa_client):
     abs_path = os.path.join(os.path.dirname(__file__), "..", "utils", "stacks")
     fname1 = os.path.join(abs_path, "linenos.py")
     fname2 = os.path.join(abs_path, "linenos2.py")
@@ -372,7 +372,7 @@ def test_context_lines_processor(elasticapm_client):
             ]
         }
     }
-    processed = processors.add_context_lines_to_frames(elasticapm_client, data)
+    processed = processors.add_context_lines_to_frames(zuqa_client, data)
     assert processed["exception"]["stacktrace"] == [
         {"pre_context": ["1", "2"], "context_line": "3", "post_context": ["4", "5"]},
         {"pre_context": ["c", "d"], "context_line": "e", "post_context": ["f", "g"]},

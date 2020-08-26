@@ -42,13 +42,13 @@ from zuqa.conf import constants
 pytestmark = pytest.mark.eventlet
 
 
-def test_transaction_with_eventlet(sending_elasticapm_client):
+def test_transaction_with_eventlet(sending_zuqa_client):
     assert is_monkey_patched(os)
-    transaction = sending_elasticapm_client.begin_transaction("test")
+    transaction = sending_zuqa_client.begin_transaction("test")
     with zuqa.capture_span("bla"):
         pass
-    sending_elasticapm_client.end_transaction("test", "OK")
-    sending_elasticapm_client.close()
-    assert len(sending_elasticapm_client.httpserver.requests) == 1
-    assert sending_elasticapm_client.httpserver.payloads[0][1][constants.SPAN]
-    assert sending_elasticapm_client.httpserver.payloads[0][2][constants.TRANSACTION]
+    sending_zuqa_client.end_transaction("test", "OK")
+    sending_zuqa_client.close()
+    assert len(sending_zuqa_client.httpserver.requests) == 1
+    assert sending_zuqa_client.httpserver.payloads[0][1][constants.SPAN]
+    assert sending_zuqa_client.httpserver.payloads[0][2][constants.TRANSACTION]

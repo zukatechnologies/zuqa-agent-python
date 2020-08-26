@@ -41,8 +41,8 @@ scenarios(os.path.join("features", "api_key.feature"))
 
 
 @given("an agent")
-def an_agent(elasticapm_client):
-    return elasticapm_client
+def an_agent(zuqa_client):
+    return zuqa_client
 
 
 @when(parsers.parse("an api key is set to '{key}' in the config"))

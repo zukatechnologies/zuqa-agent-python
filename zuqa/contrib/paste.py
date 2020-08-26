@@ -30,9 +30,9 @@
 
 
 from zuqa.base import Client
-from zuqa.middleware import ElasticAPM
+from zuqa.middleware import ZUQA
 
 
 def filter_factory(app, global_conf, **kwargs):
     client = Client(**kwargs)
-    return ElasticAPM(app, client)
+    return ZUQA(app, client)

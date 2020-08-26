@@ -1,13 +1,13 @@
 from flask import Flask
-# or configure to use ELASTIC_APM in your application's settings
+# or configure to use ZUQA in your application's settings
 from flask_cors import CORS
 import time
 
-from zuqa.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ZUQA
 
 app = Flask(__name__)
 
-app.config['ELASTIC_APM'] = {
+app.config['ZUQA'] = {
     # Set required service name. Allowed characters:
     # a-z, A-Z, 0-9, -, _, and space
     'SERVICE_NAME': 'HELLO',
@@ -17,7 +17,7 @@ app.config['ELASTIC_APM'] = {
     'SERVER_URL': 'http://localhost:8200',
 }
 
-apm = ElasticAPM(app)
+apm = ZUQA(app)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 

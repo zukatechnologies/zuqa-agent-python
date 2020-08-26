@@ -68,7 +68,7 @@ class HTTPTransportBase(Transport):
         """
         Sends a request to a remote APM Server using HTTP POST.
 
-        Returns the shortcut URL of the recorded error on Elastic APM
+        Returns the shortcut URL of the recorded error on ZUQA
         """
         raise NotImplementedError()
 

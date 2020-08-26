@@ -39,8 +39,8 @@ cpu_psutil = pytest.importorskip("zuqa.metrics.sets.cpu_psutil")
 pytestmark = pytest.mark.psutil
 
 
-def test_cpu_mem_from_psutil(elasticapm_client):
-    metricset = cpu_psutil.CPUMetricSet(MetricsRegistry(elasticapm_client))
+def test_cpu_mem_from_psutil(zuqa_client):
+    metricset = cpu_psutil.CPUMetricSet(MetricsRegistry(zuqa_client))
     # do something that generates some CPU load
     for i in compat.irange(10 ** 6):
         j = i * i
@@ -62,9 +62,9 @@ cpu_linux = pytest.importorskip("zuqa.metrics.sets.cpu_linux")
 
 
 @pytest.mark.skip("test is flaky on CI")
-def test_compare_psutil_linux_metricsets(elasticapm_client):
-    psutil_metricset = cpu_psutil.CPUMetricSet(MetricsRegistry(elasticapm_client))
-    linux_metricset = cpu_linux.CPUMetricSet(MetricsRegistry(elasticapm_client))
+def test_compare_psutil_linux_metricsets(zuqa_client):
+    psutil_metricset = cpu_psutil.CPUMetricSet(MetricsRegistry(zuqa_client))
+    linux_metricset = cpu_linux.CPUMetricSet(MetricsRegistry(zuqa_client))
     # do something that generates some CPU load
     for i in compat.irange(10 ** 6):
         j = i * i

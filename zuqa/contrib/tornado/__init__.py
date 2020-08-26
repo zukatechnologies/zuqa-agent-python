@@ -40,18 +40,18 @@ import zuqa
 from zuqa import Client
 
 
-class ElasticAPM:
+class ZUQA:
     def __init__(self, app, client=None, **config):
         """
         Create the zuqa Client object and store in the app for later
         use.
 
-        ElasticAPM configuration is sent in via the **config kwargs, or
+        ZUQA configuration is sent in via the **config kwargs, or
         optionally can be added to the application via the Application object
-        (as a dictionary under the "ELASTIC_APM" key in the settings).
+        (as a dictionary under the "ZUQA" key in the settings).
         """
-        if "ELASTIC_APM" in app.settings and isinstance(app.settings["ELASTIC_APM"], dict):
-            settings = app.settings["ELASTIC_APM"]
+        if "ZUQA" in app.settings and isinstance(app.settings["ZUQA"], dict):
+            settings = app.settings["ZUQA"]
             settings.update(config)
             config = settings
         if not client:
@@ -60,7 +60,7 @@ class ElasticAPM:
             client = Client(config)
         self.app = app
         self.client = client
-        app.elasticapm_client = client
+        app.zuqa_client = client
 
         # Don't instrument if debug=True in tornado, unless client.config.debug is True
         if (

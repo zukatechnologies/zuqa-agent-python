@@ -69,13 +69,13 @@ def cassandra_session(cassandra_cluster):
     session.execute("DROP KEYSPACE testkeyspace;")
 
 
-def test_cassandra_connect(instrument, elasticapm_client, cassandra_cluster):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_cassandra_connect(instrument, zuqa_client, cassandra_cluster):
+    zuqa_client.begin_transaction("transaction.test")
     sess = cassandra_cluster.connect()
-    elasticapm_client.end_transaction("test")
+    zuqa_client.end_transaction("test")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    span = elasticapm_client.spans_for_transaction(transactions[0])[0]
+    transactions = zuqa_client.events[TRANSACTION]
+    span = zuqa_client.spans_for_transaction(transactions[0])[0]
 
     assert span["type"] == "db"
     assert span["subtype"] == "cassandra"
@@ -89,12 +89,12 @@ def test_cassandra_connect(instrument, elasticapm_client, cassandra_cluster):
     }
 
 
-def test_select_query_string(instrument, cassandra_session, elasticapm_client):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_select_query_string(instrument, cassandra_session, zuqa_client):
+    zuqa_client.begin_transaction("transaction.test")
     cassandra_session.execute("SELECT name from users")
-    elasticapm_client.end_transaction("test")
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    span = elasticapm_client.spans_for_transaction(transaction)[0]
+    zuqa_client.end_transaction("test")
+    transaction = zuqa_client.events[TRANSACTION][0]
+    span = zuqa_client.spans_for_transaction(transaction)[0]
     assert span["type"] == "db"
     assert span["subtype"] == "cassandra"
     assert span["action"] == "query"
@@ -107,13 +107,13 @@ def test_select_query_string(instrument, cassandra_session, elasticapm_client):
     }
 
 
-def test_select_simple_statement(instrument, cassandra_session, elasticapm_client):
+def test_select_simple_statement(instrument, cassandra_session, zuqa_client):
     statement = SimpleStatement("SELECT name from users")
-    elasticapm_client.begin_transaction("transaction.test")
+    zuqa_client.begin_transaction("transaction.test")
     cassandra_session.execute(statement)
-    elasticapm_client.end_transaction("test")
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    span = elasticapm_client.spans_for_transaction(transaction)[0]
+    zuqa_client.end_transaction("test")
+    transaction = zuqa_client.events[TRANSACTION][0]
+    span = zuqa_client.spans_for_transaction(transaction)[0]
     assert span["type"] == "db"
     assert span["subtype"] == "cassandra"
     assert span["action"] == "query"
@@ -121,13 +121,13 @@ def test_select_simple_statement(instrument, cassandra_session, elasticapm_clien
     assert span["context"]["db"] == {"statement": "SELECT name from users", "type": "sql"}
 
 
-def test_select_prepared_statement(instrument, cassandra_session, elasticapm_client):
+def test_select_prepared_statement(instrument, cassandra_session, zuqa_client):
     prepared_statement = cassandra_session.prepare("SELECT name from users")
-    elasticapm_client.begin_transaction("transaction.test")
+    zuqa_client.begin_transaction("transaction.test")
     cassandra_session.execute(prepared_statement)
-    elasticapm_client.end_transaction("test")
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    span = elasticapm_client.spans_for_transaction(transaction)[0]
+    zuqa_client.end_transaction("test")
+    transaction = zuqa_client.events[TRANSACTION][0]
+    span = zuqa_client.spans_for_transaction(transaction)[0]
     assert span["type"] == "db"
     assert span["subtype"] == "cassandra"
     assert span["action"] == "query"

@@ -66,18 +66,18 @@ def pymssql_connection(request):
 
 
 @pytest.mark.integrationtest
-def test_pymssql_select(instrument, pymssql_connection, elasticapm_client):
+def test_pymssql_select(instrument, pymssql_connection, zuqa_client):
     cursor = pymssql_connection.cursor()
     query = "SELECT * FROM test WHERE name LIKE 't%' ORDER BY id"
 
     try:
-        elasticapm_client.begin_transaction("web.django")
+        zuqa_client.begin_transaction("web.django")
         cursor.execute(query)
         assert cursor.fetchall() == [(2, "two"), (3, "three")]
-        elasticapm_client.end_transaction(None, "test-transaction")
+        zuqa_client.end_transaction(None, "test-transaction")
     finally:
-        transactions = elasticapm_client.events[TRANSACTION]
-        spans = elasticapm_client.spans_for_transaction(transactions[0])
+        transactions = zuqa_client.events[TRANSACTION]
+        spans = zuqa_client.spans_for_transaction(transactions[0])
         span = spans[0]
         assert span["name"] == "SELECT FROM test"
         assert span["type"] == "db"
@@ -109,18 +109,18 @@ def test_host_port_parsing(args, kwargs, expected):
 
 
 @pytest.mark.integrationtest
-def test_pymssql_rows_affected(instrument, pymssql_connection, elasticapm_client):
+def test_pymssql_rows_affected(instrument, pymssql_connection, zuqa_client):
     cursor = pymssql_connection.cursor()
     try:
-        elasticapm_client.begin_transaction("web.django")
+        zuqa_client.begin_transaction("web.django")
         cursor.execute("INSERT INTO test VALUES (4, 'four')")
         cursor.execute("SELECT * FROM test")
         cursor.execute("UPDATE test SET name = 'five' WHERE  id = 4")
         cursor.execute("DELETE FROM test WHERE  id = 4")
-        elasticapm_client.end_transaction(None, "test-transaction")
+        zuqa_client.end_transaction(None, "test-transaction")
     finally:
-        transactions = elasticapm_client.events[TRANSACTION]
-        spans = elasticapm_client.spans_for_transaction(transactions[0])
+        transactions = zuqa_client.events[TRANSACTION]
+        spans = zuqa_client.spans_for_transaction(transactions[0])
 
         assert spans[0]["name"] == "INSERT INTO test"
         assert spans[0]["context"]["db"]["rows_affected"] == 1

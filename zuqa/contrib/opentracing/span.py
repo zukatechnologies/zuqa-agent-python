@@ -50,11 +50,11 @@ logger = get_logger("zuqa.contrib.opentracing")
 
 
 class OTSpan(OTSpanBase):
-    def __init__(self, tracer, context, elastic_apm_ref):
+    def __init__(self, tracer, context, zuqa_ref):
         super(OTSpan, self).__init__(tracer, context)
-        self.elastic_apm_ref = elastic_apm_ref
-        self.is_transaction = isinstance(elastic_apm_ref, traces.Transaction)
-        self.is_dropped = isinstance(elastic_apm_ref, traces.DroppedSpan)
+        self.zuqa_ref = zuqa_ref
+        self.is_transaction = isinstance(zuqa_ref, traces.Transaction)
+        self.is_dropped = isinstance(zuqa_ref, traces.DroppedSpan)
         if not context.span:
             context.span = self
 
@@ -76,17 +76,17 @@ class OTSpan(OTSpanBase):
         return self
 
     def set_operation_name(self, operation_name):
-        self.elastic_apm_ref.name = operation_name
+        self.zuqa_ref.name = operation_name
         return self
 
     def set_tag(self, key, value):
         if self.is_transaction:
             if key == "type":
-                self.elastic_apm_ref.transaction_type = value
+                self.zuqa_ref.transaction_type = value
             elif key == "result":
-                self.elastic_apm_ref.result = value
+                self.zuqa_ref.result = value
             elif key == tags.HTTP_STATUS_CODE:
-                self.elastic_apm_ref.result = "HTTP {}xx".format(compat.text_type(value)[0])
+                self.zuqa_ref.result = "HTTP {}xx".format(compat.text_type(value)[0])
                 traces.set_context({"status_code": value}, "response")
             elif key == "user.id":
                 traces.set_user_context(user_id=value)
@@ -101,10 +101,10 @@ class OTSpan(OTSpanBase):
             elif key == tags.COMPONENT:
                 traces.set_context({"framework": {"name": value}}, "service")
             else:
-                self.elastic_apm_ref.label(**{key: value})
+                self.zuqa_ref.label(**{key: value})
         elif not self.is_dropped:
             if key.startswith("db."):
-                span_context = self.elastic_apm_ref.context or {}
+                span_context = self.zuqa_ref.context or {}
                 if "db" not in span_context:
                     span_context["db"] = {}
                 if key == tags.DATABASE_STATEMENT:
@@ -113,21 +113,21 @@ class OTSpan(OTSpanBase):
                     span_context["db"]["user"] = value
                 elif key == tags.DATABASE_TYPE:
                     span_context["db"]["type"] = value
-                    self.elastic_apm_ref.type = "db." + value
+                    self.zuqa_ref.type = "db." + value
                 else:
-                    self.elastic_apm_ref.label(**{key: value})
-                self.elastic_apm_ref.context = span_context
+                    self.zuqa_ref.label(**{key: value})
+                self.zuqa_ref.context = span_context
             elif key == tags.SPAN_KIND:
-                self.elastic_apm_ref.type = value
+                self.zuqa_ref.type = value
             else:
-                self.elastic_apm_ref.label(**{key: value})
+                self.zuqa_ref.label(**{key: value})
         return self
 
     def finish(self, finish_time=None):
         if self.is_transaction:
             self.tracer._agent.end_transaction()
         elif not self.is_dropped:
-            self.elastic_apm_ref.transaction.end_span()
+            self.zuqa_ref.transaction.end_span()
 
 
 class OTSpanContext(OTSpanContextBase):

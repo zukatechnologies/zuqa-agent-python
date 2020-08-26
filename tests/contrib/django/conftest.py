@@ -49,12 +49,12 @@ def pytest_configure(config):
             DATABASES={
                 "default": {
                     "ENGINE": "django.db.backends.sqlite3",
-                    "NAME": "elasticapm_tests.db",
-                    "TEST_NAME": "elasticapm_tests.db",
-                    "TEST": {"NAME": "elasticapm_tests.db"},
+                    "NAME": "zuqa_tests.db",
+                    "TEST_NAME": "zuqa_tests.db",
+                    "TEST": {"NAME": "zuqa_tests.db"},
                 }
             },
-            TEST_DATABASE_NAME="elasticapm_tests.db",
+            TEST_DATABASE_NAME="zuqa_tests.db",
             INSTALLED_APPS=[
                 "django.contrib.auth",
                 "django.contrib.admin",
@@ -88,7 +88,7 @@ def pytest_configure(config):
                     },
                 }
             ],
-            ELASTIC_APM={
+            ZUQA={
                 "METRICS_INTERVAL": "0ms",
                 "TRANSPORT_CLASS": "tests.fixtures.DummyTransport",
             },  # avoid autostarting the metrics collector thread

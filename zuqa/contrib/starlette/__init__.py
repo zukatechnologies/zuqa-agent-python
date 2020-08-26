@@ -50,7 +50,7 @@ logger = get_logger("zuqa.errors.client")
 
 
 def make_apm_client(config: dict, client_cls=Client, **defaults) -> Client:
-    """Builds ElasticAPM client.
+    """Builds ZUQA client.
 
     Args:
         config (dict): Dictionary of Client configuration. All keys must be uppercase. See `zuqa.conf.Config`.
@@ -67,11 +67,11 @@ def make_apm_client(config: dict, client_cls=Client, **defaults) -> Client:
     return client_cls(config, **defaults)
 
 
-class ElasticAPM(BaseHTTPMiddleware):
+class ZUQA(BaseHTTPMiddleware):
     """
-    Starlette / FastAPI middleware for Elastic APM capturing.
+    Starlette / FastAPI middleware for ZUQA capturing.
 
-    >>> elasticapm = make_apm_client({
+    >>> zuqa = make_apm_client({
         >>> 'SERVICE_NAME': 'myapp',
         >>> 'DEBUG': True,
         >>> 'SERVER_URL': 'http://localhost:8200',
@@ -79,19 +79,19 @@ class ElasticAPM(BaseHTTPMiddleware):
         >>> 'CAPTURE_BODY': 'all'
     >>> })
 
-    >>> app.add_middleware(ElasticAPM, client=zuqa)
+    >>> app.add_middleware(ZUQA, client=zuqa)
 
     Pass an arbitrary APP_NAME and SECRET_TOKEN::
 
-    >>> elasticapm = ElasticAPM(app, service_name='myapp', secret_token='asdasdasd')
+    >>> zuqa = ZUQA(app, service_name='myapp', secret_token='asdasdasd')
 
     Pass an explicit client::
 
-    >>> elasticapm = ElasticAPM(app, client=client)
+    >>> zuqa = ZUQA(app, client=client)
 
     Automatically configure logging::
 
-    >>> elasticapm = ElasticAPM(app, logging=True)
+    >>> zuqa = ZUQA(app, logging=True)
 
     Capture an exception::
 
@@ -110,7 +110,7 @@ class ElasticAPM(BaseHTTPMiddleware):
 
         Args:
             app (ASGIApp): Starlette app
-            client (Client): ElasticAPM Client
+            client (Client): ZUQA Client
         """
         self.client = client
 

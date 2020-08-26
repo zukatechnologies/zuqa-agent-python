@@ -41,13 +41,13 @@ To better align with other parts of the Elastic Stack and the {ecs-ref}/index.ht
 we renamed "tags" to "labels", and introduced limited support for typed labels.
 While tag values were only allowed to be strings, label values can be strings, booleans, or numerical.
 
-To benefit from this change, ensure that you run at least *APM Server 6.7*, and use `elasticapm.label()` instead of `elasticapm.tag()`.
+To benefit from this change, ensure that you run at least *APM Server 6.7*, and use `zuqa.label()` instead of `zuqa.tag()`.
 The `tag()` API will continue to work as before, but emit a `DeprecationWarning`. It will be removed in 6.0 of the agent. 
 
 [[upgrading-4.x]]
 === Upgrading to version 4 of the agent
 
-4.0 of the Elastic APM Python Agent comes with several backwards incompatible changes.
+4.0 of the ZUQA Python Agent comes with several backwards incompatible changes.
 
 [[upgrading-4.x-apm-server]]
 ==== APM Server 6.5 required

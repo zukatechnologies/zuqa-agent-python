@@ -33,68 +33,68 @@ import pytest
 
 
 @mock.patch("tests.fixtures.DummyTransport.get_config")
-def test_update_config(mock_get_config, elasticapm_client):
-    assert elasticapm_client.config.transaction_sample_rate == 1.0
-    assert elasticapm_client.config.config_version is None
+def test_update_config(mock_get_config, zuqa_client):
+    assert zuqa_client.config.transaction_sample_rate == 1.0
+    assert zuqa_client.config.config_version is None
     mock_get_config.return_value = 2, {"transaction_sample_rate": 0.1}, 30
-    elasticapm_client.config.update_config()
-    assert elasticapm_client.config.transaction_sample_rate == 0.1
-    assert elasticapm_client.config.config_version == 2
+    zuqa_client.config.update_config()
+    assert zuqa_client.config.transaction_sample_rate == 0.1
+    assert zuqa_client.config.config_version == 2
 
 
 @mock.patch("tests.fixtures.DummyTransport.get_config")
-def test_environment_doesnt_override_central_config(mock_get_config, elasticapm_client):
-    assert elasticapm_client.config.transaction_sample_rate == 1.0
-    assert elasticapm_client.config.config_version is None
+def test_environment_doesnt_override_central_config(mock_get_config, zuqa_client):
+    assert zuqa_client.config.transaction_sample_rate == 1.0
+    assert zuqa_client.config.config_version is None
     mock_get_config.return_value = 2, {"transaction_sample_rate": 0.1}, 30
-    with mock.patch.dict("os.environ", {"ELASTIC_APM_TRANSACTION_SAMPLE_RATE": "0.5"}):
-        elasticapm_client.config.update_config()
-    assert elasticapm_client.config.transaction_sample_rate == 0.1
-    assert elasticapm_client.config.config_version == 2
+    with mock.patch.dict("os.environ", {"ZUQA_TRANSACTION_SAMPLE_RATE": "0.5"}):
+        zuqa_client.config.update_config()
+    assert zuqa_client.config.transaction_sample_rate == 0.1
+    assert zuqa_client.config.config_version == 2
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"transaction_sample_rate": 0.9}], indirect=True)
+@pytest.mark.parametrize("zuqa_client", [{"transaction_sample_rate": 0.9}], indirect=True)
 @mock.patch("tests.fixtures.DummyTransport.get_config")
-def test_reset_to_original(mock_get_config, elasticapm_client):
-    assert elasticapm_client.config.transaction_sample_rate == 0.9
-    assert elasticapm_client.config.config_version is None
-    assert not elasticapm_client.config.changed
+def test_reset_to_original(mock_get_config, zuqa_client):
+    assert zuqa_client.config.transaction_sample_rate == 0.9
+    assert zuqa_client.config.config_version is None
+    assert not zuqa_client.config.changed
     mock_get_config.return_value = 2, {"transaction_sample_rate": 0.1}, 30
-    elasticapm_client.config.update_config()
-    assert elasticapm_client.config.changed
-    assert elasticapm_client.config.transaction_sample_rate == 0.1
+    zuqa_client.config.update_config()
+    assert zuqa_client.config.changed
+    assert zuqa_client.config.transaction_sample_rate == 0.1
     mock_get_config.return_value = 3, {}, 30
-    elasticapm_client.config.update_config()
-    assert not elasticapm_client.config.changed
-    assert elasticapm_client.config.transaction_sample_rate == 0.9
+    zuqa_client.config.update_config()
+    assert not zuqa_client.config.changed
+    assert zuqa_client.config.transaction_sample_rate == 0.9
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"transaction_sample_rate": 0.9}], indirect=True)
+@pytest.mark.parametrize("zuqa_client", [{"transaction_sample_rate": 0.9}], indirect=True)
 @mock.patch("tests.fixtures.DummyTransport.get_config")
-def test_no_reset_if_version_matches(mock_get_config, elasticapm_client):
-    assert elasticapm_client.config.transaction_sample_rate == 0.9
-    assert elasticapm_client.config.config_version is None
-    assert not elasticapm_client.config.changed
+def test_no_reset_if_version_matches(mock_get_config, zuqa_client):
+    assert zuqa_client.config.transaction_sample_rate == 0.9
+    assert zuqa_client.config.config_version is None
+    assert not zuqa_client.config.changed
     mock_get_config.return_value = 2, {"transaction_sample_rate": 0.1}, 30
-    elasticapm_client.config.update_config()
-    assert elasticapm_client.config.changed
-    assert elasticapm_client.config.transaction_sample_rate == 0.1
+    zuqa_client.config.update_config()
+    assert zuqa_client.config.changed
+    assert zuqa_client.config.transaction_sample_rate == 0.1
     mock_get_config.return_value = 2, {}, 30
-    elasticapm_client.config.update_config()
-    assert elasticapm_client.config.changed
-    assert elasticapm_client.config.config_version == 2
+    zuqa_client.config.update_config()
+    assert zuqa_client.config.changed
+    assert zuqa_client.config.config_version == 2
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"central_config": False}], indirect=True)
-def test_disable_central_config(elasticapm_client):
-    assert elasticapm_client._config_updater is None
+@pytest.mark.parametrize("zuqa_client", [{"central_config": False}], indirect=True)
+def test_disable_central_config(zuqa_client):
+    assert zuqa_client._config_updater is None
 
 
 @mock.patch("tests.fixtures.DummyTransport.get_config")
-def test_erroneous_config_is_ignored(mock_get_config, elasticapm_client):
-    assert elasticapm_client.config.transaction_sample_rate == 1.0
-    assert elasticapm_client.config.config_version is None
+def test_erroneous_config_is_ignored(mock_get_config, zuqa_client):
+    assert zuqa_client.config.transaction_sample_rate == 1.0
+    assert zuqa_client.config.config_version is None
     mock_get_config.return_value = 2, {"transaction_sample_rate": "x"}, 30
-    elasticapm_client.config.update_config()
-    assert elasticapm_client.config.transaction_sample_rate == 1.0
-    assert elasticapm_client.config.config_version == None
+    zuqa_client.config.update_config()
+    assert zuqa_client.config.transaction_sample_rate == 1.0
+    assert zuqa_client.config.config_version == None

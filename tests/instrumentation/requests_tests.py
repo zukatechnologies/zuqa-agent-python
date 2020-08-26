@@ -44,17 +44,17 @@ from zuqa.utils.disttracing import TraceParent
 pytestmark = pytest.mark.requests
 
 
-def test_requests_instrumentation(instrument, elasticapm_client, waiting_httpserver):
+def test_requests_instrumentation(instrument, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
     parsed_url = compat.urlparse.urlparse(url)
-    elasticapm_client.begin_transaction("transaction.test")
+    zuqa_client.begin_transaction("transaction.test")
     with capture_span("test_request", "test"):
         requests.get(url, allow_redirects=False)
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
     assert spans[0]["name"].startswith("GET 127.0.0.1:")
     assert spans[0]["type"] == "external"
     assert spans[0]["subtype"] == "http"
@@ -74,17 +74,17 @@ def test_requests_instrumentation(instrument, elasticapm_client, waiting_httpser
     assert trace_parent.trace_options.recorded
 
 
-def test_requests_instrumentation_via_session(instrument, elasticapm_client, waiting_httpserver):
+def test_requests_instrumentation_via_session(instrument, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    elasticapm_client.begin_transaction("transaction.test")
+    zuqa_client.begin_transaction("transaction.test")
     with capture_span("test_request", "test"):
         s = requests.Session()
         s.get(url, allow_redirects=False)
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
     assert spans[0]["name"].startswith("GET 127.0.0.1:")
     assert url == spans[0]["context"]["http"]["url"]
 
@@ -97,19 +97,19 @@ def test_requests_instrumentation_via_session(instrument, elasticapm_client, wai
     assert trace_parent.trace_options.recorded
 
 
-def test_requests_instrumentation_via_prepared_request(instrument, elasticapm_client, waiting_httpserver):
+def test_requests_instrumentation_via_prepared_request(instrument, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
-    elasticapm_client.begin_transaction("transaction.test")
+    zuqa_client.begin_transaction("transaction.test")
     with capture_span("test_request", "test"):
         r = requests.Request("get", url)
         pr = r.prepare()
         s = requests.Session()
         s.send(pr, allow_redirects=False)
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
     assert spans[0]["name"].startswith("GET 127.0.0.1:")
     assert url == spans[0]["context"]["http"]["url"]
 
@@ -122,36 +122,36 @@ def test_requests_instrumentation_via_prepared_request(instrument, elasticapm_cl
     assert trace_parent.trace_options.recorded
 
 
-def test_requests_instrumentation_malformed_none(instrument, elasticapm_client):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_requests_instrumentation_malformed_none(instrument, zuqa_client):
+    zuqa_client.begin_transaction("transaction.test")
     with capture_span("test_request", "test"):
         with pytest.raises(MissingSchema):
             requests.get(None)
 
 
-def test_requests_instrumentation_malformed_schema(instrument, elasticapm_client):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_requests_instrumentation_malformed_schema(instrument, zuqa_client):
+    zuqa_client.begin_transaction("transaction.test")
     with capture_span("test_request", "test"):
         with pytest.raises(MissingSchema):
             requests.get("")
 
 
-def test_requests_instrumentation_malformed_path(instrument, elasticapm_client):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_requests_instrumentation_malformed_path(instrument, zuqa_client):
+    zuqa_client.begin_transaction("transaction.test")
     with capture_span("test_request", "test"):
         with pytest.raises(InvalidURL):
             requests.get("http://")
 
 
-def test_url_sanitization(instrument, elasticapm_client, waiting_httpserver):
+def test_url_sanitization(instrument, zuqa_client, waiting_httpserver):
     waiting_httpserver.serve_content("")
     url = waiting_httpserver.url + "/hello_world"
     url = url.replace("http://", "http://user:pass@")
-    transaction_object = elasticapm_client.begin_transaction("transaction")
+    transaction_object = zuqa_client.begin_transaction("transaction")
     requests.get(url)
-    elasticapm_client.end_transaction("MyView")
-    transactions = elasticapm_client.events[TRANSACTION]
-    span = elasticapm_client.spans_for_transaction(transactions[0])[0]
+    zuqa_client.end_transaction("MyView")
+    transactions = zuqa_client.events[TRANSACTION]
+    span = zuqa_client.spans_for_transaction(transactions[0])[0]
 
     assert "pass" not in span["context"]["http"]["url"]
     assert constants.MASK in span["context"]["http"]["url"]

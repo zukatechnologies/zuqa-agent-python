@@ -30,7 +30,7 @@
 
 
 from zuqa.base import Client
-from zuqa.middleware import ElasticAPM as Middleware
+from zuqa.middleware import ZUQA as Middleware
 from zuqa.utils import compat
 
 
@@ -41,8 +41,8 @@ def list_from_setting(config, setting):
     return value.split()
 
 
-class ElasticAPM(Middleware):
+class ZUQA(Middleware):
     def __init__(self, app, config, client_cls=Client):
         client_config = {key[11:]: val for key, val in compat.iteritems(config) if key.startswith("zuqa.")}
         client = client_cls(**client_config)
-        super(ElasticAPM, self).__init__(app, client)
+        super(ZUQA, self).__init__(app, client)

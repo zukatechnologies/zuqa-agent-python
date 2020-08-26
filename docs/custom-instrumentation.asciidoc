@@ -1,11 +1,11 @@
 [[instrumenting-custom-code]]
 === Instrumenting custom code
 
-Elastic APM instruments a variety of libraries out of the box, but sometimes you
+ZUQA instruments a variety of libraries out of the box, but sometimes you
 need to know how long a specific function took or how often it gets
 called.
 
-You can apply the `@elasticapm.capture_span()` decorator to achieve exactly that.
+You can apply the `@zuqa.capture_span()` decorator to achieve exactly that.
 It can also be used as a context manager in the following way:
 
 [source,python]
@@ -26,7 +26,7 @@ def coffee_maker(strength):
     fresh_pots()
 ----
 
-Similarly, you can use `elasticapm.async_capture_span` for instrumenting `async` workloads:
+Similarly, you can use `zuqa.async_capture_span` for instrumenting `async` workloads:
 
 [source,python]
 ----

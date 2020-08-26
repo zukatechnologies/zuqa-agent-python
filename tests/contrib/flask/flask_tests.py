@@ -39,7 +39,7 @@ import mock
 
 from zuqa.conf import constants
 from zuqa.conf.constants import ERROR, TRANSACTION
-from zuqa.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ZUQA
 from zuqa.utils import compat
 from zuqa.utils.disttracing import TraceParent
 from tests.contrib.flask.utils import captured_templates
@@ -106,7 +106,7 @@ def test_get_debug(flask_apm_client):
     assert len(flask_apm_client.client.events) == 0
 
 
-def test_get_debug_elasticapm(flask_apm_client):
+def test_get_debug_zuqa(flask_apm_client):
     app = flask_apm_client.app
     app.debug = True
     app.config["TESTING"] = True
@@ -117,7 +117,7 @@ def test_get_debug_elasticapm(flask_apm_client):
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client", [{"capture_body": "errors"}, {"capture_body": "all"}, {"capture_body": "off"}], indirect=True
+    "zuqa_client", [{"capture_body": "errors"}, {"capture_body": "all"}, {"capture_body": "off"}], indirect=True
 )
 def test_post(flask_apm_client):
     client = flask_apm_client.app.test_client()
@@ -152,7 +152,7 @@ def test_post(flask_apm_client):
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client",
+    "zuqa_client",
     [{"capture_body": "transactions"}, {"capture_body": "all"}, {"capture_body": "off"}],
     indirect=True,
 )
@@ -203,7 +203,7 @@ def test_instrumentation_debug(flask_apm_client):
     assert len(flask_apm_client.client.events[TRANSACTION]) == 0
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"debug": True}], indirect=True)
+@pytest.mark.parametrize("zuqa_client", [{"debug": True}], indirect=True)
 def test_instrumentation_debug_client_debug(flask_apm_client):
     flask_apm_client.app.debug = True
     assert len(flask_apm_client.client.events[TRANSACTION]) == 0
@@ -263,15 +263,15 @@ def test_non_standard_http_status(flask_apm_client):
 
 
 def test_framework_name(flask_app):
-    elasticapm = ElasticAPM(app=flask_app, metrics_interval="0ms")
-    assert elasticapm.client.config.framework_name == "flask"
-    app_info = elasticapm.client.get_service_info()
+    zuqa = ZUQA(app=flask_app, metrics_interval="0ms")
+    assert zuqa.client.config.framework_name == "flask"
+    app_info = zuqa.client.get_service_info()
     assert app_info["framework"]["name"] == "flask"
-    elasticapm.client.close()
+    zuqa.client.close()
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client", [{"capture_body": "errors"}, {"capture_body": "all"}, {"capture_body": "off"}], indirect=True
+    "zuqa_client", [{"capture_body": "errors"}, {"capture_body": "all"}, {"capture_body": "off"}], indirect=True
 )
 def test_post_files(flask_apm_client):
     with open(os.path.abspath(__file__), mode="rb") as f:
@@ -352,7 +352,7 @@ def test_capture_headers_config_is_dynamic_for_transactions(flask_apm_client):
     assert "headers" not in transaction["context"]["request"]
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"capture_body": "transactions"}], indirect=True)
+@pytest.mark.parametrize("zuqa_client", [{"capture_body": "transactions"}], indirect=True)
 def test_options_request(flask_apm_client):
     resp = flask_apm_client.app.test_client().options("/")
     resp.close()
@@ -361,7 +361,7 @@ def test_options_request(flask_apm_client):
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client", [{"capture_headers": "true"}, {"capture_headers": "false"}], indirect=True
+    "zuqa_client", [{"capture_headers": "true"}, {"capture_headers": "false"}], indirect=True
 )
 def test_capture_headers_errors(flask_apm_client):
     resp = flask_apm_client.app.test_client().post("/an-error/", headers={"some-header": "foo"})
@@ -374,7 +374,7 @@ def test_capture_headers_errors(flask_apm_client):
 
 
 @pytest.mark.parametrize(
-    "elasticapm_client", [{"capture_headers": "true"}, {"capture_headers": "false"}], indirect=True
+    "zuqa_client", [{"capture_headers": "true"}, {"capture_headers": "false"}], indirect=True
 )
 def test_capture_headers_transactions(flask_apm_client):
     resp = flask_apm_client.app.test_client().post("/users/", headers={"some-header": "foo"})
@@ -400,12 +400,12 @@ def test_streaming_response(flask_apm_client):
 
 def test_response_close_wsgi(flask_wsgi_server):
     # this tests the response-close behavior using a real WSGI server
-    elasticapm_client = flask_wsgi_server.app.apm_client.client
+    zuqa_client = flask_wsgi_server.app.apm_client.client
     url = flask_wsgi_server.url + "/streaming/"
     response = urlopen(url)
     response.read()
-    transaction = elasticapm_client.events[TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    transaction = zuqa_client.events[TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert transaction["duration"] > 50
     assert len(spans) == 5
 

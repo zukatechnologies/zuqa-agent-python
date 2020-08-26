@@ -51,7 +51,7 @@ logger = get_logger("zuqa.errors.client")
 
 
 def make_client(client_cls, app, **defaults):
-    config = app.config.get("ELASTIC_APM", {})
+    config = app.config.get("ZUQA", {})
 
     if "framework_name" not in defaults:
         defaults["framework_name"] = "flask"
@@ -61,26 +61,26 @@ def make_client(client_cls, app, **defaults):
     return client
 
 
-class ElasticAPM(object):
+class ZUQA(object):
     """
-    Flask application for Elastic APM.
+    Flask application for ZUQA.
 
-    Look up configuration from ``os.environ.get('ELASTIC_APM_APP_NAME')`` and
-    ``os.environ.get('ELASTIC_APM_SECRET_TOKEN')``::
+    Look up configuration from ``os.environ.get('ZUQA_APP_NAME')`` and
+    ``os.environ.get('ZUQA_SECRET_TOKEN')``::
 
-    >>> elasticapm = ElasticAPM(app)
+    >>> zuqa = ZUQA(app)
 
     Pass an arbitrary APP_NAME and SECRET_TOKEN::
 
-    >>> elasticapm = ElasticAPM(app, service_name='myapp', secret_token='asdasdasd')
+    >>> zuqa = ZUQA(app, service_name='myapp', secret_token='asdasdasd')
 
     Pass an explicit client::
 
-    >>> elasticapm = ElasticAPM(app, client=client)
+    >>> zuqa = ZUQA(app, client=client)
 
     Automatically configure logging::
 
-    >>> elasticapm = ElasticAPM(app, logging=True)
+    >>> zuqa = ZUQA(app, logging=True)
 
     Capture an exception::
 

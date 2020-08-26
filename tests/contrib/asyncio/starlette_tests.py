@@ -39,14 +39,14 @@ from starlette.testclient import TestClient
 
 from zuqa import async_capture_span
 from zuqa.conf import constants
-from zuqa.contrib.starlette import ElasticAPM
+from zuqa.contrib.starlette import ZUQA
 from zuqa.utils.disttracing import TraceParent
 
 pytestmark = [pytest.mark.starlette]
 
 
 @pytest.fixture
-def app(elasticapm_client):
+def app(zuqa_client):
     app = Starlette()
 
     @app.route("/", methods=["GET", "POST"])
@@ -59,12 +59,12 @@ def app(elasticapm_client):
     async def raise_exception(request):
         raise ValueError()
 
-    app.add_middleware(ElasticAPM, client=elasticapm_client)
+    app.add_middleware(ZUQA, client=zuqa_client)
 
     return app
 
 
-def test_get(app, elasticapm_client):
+def test_get(app, zuqa_client):
     client = TestClient(app)
 
     response = client.get(
@@ -78,9 +78,9 @@ def test_get(app, elasticapm_client):
 
     assert response.status_code == 200
 
-    assert len(elasticapm_client.events[constants.TRANSACTION]) == 1
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    assert len(zuqa_client.events[constants.TRANSACTION]) == 1
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
 
@@ -95,8 +95,8 @@ def test_get(app, elasticapm_client):
     assert span["name"] == "test"
 
 
-@pytest.mark.parametrize("elasticapm_client", [{"capture_body": "all"}], indirect=True)
-def test_post(app, elasticapm_client):
+@pytest.mark.parametrize("zuqa_client", [{"capture_body": "all"}], indirect=True)
+def test_post(app, zuqa_client):
     client = TestClient(app)
 
     response = client.post(
@@ -111,9 +111,9 @@ def test_post(app, elasticapm_client):
 
     assert response.status_code == 200
 
-    assert len(elasticapm_client.events[constants.TRANSACTION]) == 1
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    assert len(zuqa_client.events[constants.TRANSACTION]) == 1
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 1
     span = spans[0]
 
@@ -129,7 +129,7 @@ def test_post(app, elasticapm_client):
     assert span["name"] == "test"
 
 
-def test_exception(app, elasticapm_client):
+def test_exception(app, zuqa_client):
     client = TestClient(app)
 
     with pytest.raises(ValueError):
@@ -142,9 +142,9 @@ def test_exception(app, elasticapm_client):
             },
         )
 
-    assert len(elasticapm_client.events[constants.TRANSACTION]) == 1
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
-    spans = elasticapm_client.spans_for_transaction(transaction)
+    assert len(zuqa_client.events[constants.TRANSACTION]) == 1
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
+    spans = zuqa_client.spans_for_transaction(transaction)
     assert len(spans) == 0
 
     assert transaction["name"] == "GET /raise-exception"
@@ -155,15 +155,15 @@ def test_exception(app, elasticapm_client):
     assert request["socket"] == {"remote_address": "127.0.0.1", "encrypted": False}
     assert transaction["context"]["response"]["status_code"] == 500
 
-    assert len(elasticapm_client.events[constants.ERROR]) == 1
-    error = elasticapm_client.events[constants.ERROR][0]
+    assert len(zuqa_client.events[constants.ERROR]) == 1
+    error = zuqa_client.events[constants.ERROR][0]
     assert error["transaction_id"] == transaction["id"]
     assert error["exception"]["type"] == "ValueError"
     assert error["context"]["request"] == transaction["context"]["request"]
 
 
 @pytest.mark.parametrize("header_name", [constants.TRACEPARENT_HEADER_NAME, constants.TRACEPARENT_LEGACY_HEADER_NAME])
-def test_traceparent_handling(app, elasticapm_client, header_name):
+def test_traceparent_handling(app, zuqa_client, header_name):
     client = TestClient(app)
     with mock.patch(
         "zuqa.contrib.flask.TraceParent.from_string", wraps=TraceParent.from_string
@@ -178,32 +178,32 @@ def test_traceparent_handling(app, elasticapm_client, header_name):
 
     assert response.status_code == 200
 
-    transaction = elasticapm_client.events[constants.TRANSACTION][0]
+    transaction = zuqa_client.events[constants.TRANSACTION][0]
 
     assert transaction["trace_id"] == "0af7651916cd43dd8448eb211c80319c"
     assert transaction["parent_id"] == "b7ad6b7169203331"
     assert "foo=bar,baz=bazzinga" in wrapped_from_string.call_args[0]
 
 
-def test_capture_headers_body_is_dynamic(app, elasticapm_client):
+def test_capture_headers_body_is_dynamic(app, zuqa_client):
     client = TestClient(app)
 
     for i, val in enumerate((True, False)):
-        elasticapm_client.config.update(str(i), capture_body="transaction" if val else "none", capture_headers=val)
+        zuqa_client.config.update(str(i), capture_body="transaction" if val else "none", capture_headers=val)
         client.post("/", "somedata", headers={"foo": "bar"})
 
-        elasticapm_client.config.update(str(i) + str(i), capture_body="error" if val else "none", capture_headers=val)
+        zuqa_client.config.update(str(i) + str(i), capture_body="error" if val else "none", capture_headers=val)
         with pytest.raises(ValueError):
             client.post("/raise-exception", "somedata", headers={"foo": "bar"})
 
-    assert "headers" in elasticapm_client.events[constants.TRANSACTION][0]["context"]["request"]
-    assert "headers" in elasticapm_client.events[constants.TRANSACTION][0]["context"]["response"]
-    assert elasticapm_client.events[constants.TRANSACTION][0]["context"]["request"]["body"] == "somedata"
-    assert "headers" in elasticapm_client.events[constants.ERROR][0]["context"]["request"]
-    assert elasticapm_client.events[constants.ERROR][0]["context"]["request"]["body"] == "somedata"
+    assert "headers" in zuqa_client.events[constants.TRANSACTION][0]["context"]["request"]
+    assert "headers" in zuqa_client.events[constants.TRANSACTION][0]["context"]["response"]
+    assert zuqa_client.events[constants.TRANSACTION][0]["context"]["request"]["body"] == "somedata"
+    assert "headers" in zuqa_client.events[constants.ERROR][0]["context"]["request"]
+    assert zuqa_client.events[constants.ERROR][0]["context"]["request"]["body"] == "somedata"
 
-    assert "headers" not in elasticapm_client.events[constants.TRANSACTION][2]["context"]["request"]
-    assert "headers" not in elasticapm_client.events[constants.TRANSACTION][2]["context"]["response"]
-    assert elasticapm_client.events[constants.TRANSACTION][2]["context"]["request"]["body"] == "[REDACTED]"
-    assert "headers" not in elasticapm_client.events[constants.ERROR][1]["context"]["request"]
-    assert elasticapm_client.events[constants.ERROR][1]["context"]["request"]["body"] == "[REDACTED]"
+    assert "headers" not in zuqa_client.events[constants.TRANSACTION][2]["context"]["request"]
+    assert "headers" not in zuqa_client.events[constants.TRANSACTION][2]["context"]["response"]
+    assert zuqa_client.events[constants.TRANSACTION][2]["context"]["request"]["body"] == "[REDACTED]"
+    assert "headers" not in zuqa_client.events[constants.ERROR][1]["context"]["request"]
+    assert zuqa_client.events[constants.ERROR][1]["context"]["request"]["body"] == "[REDACTED]"

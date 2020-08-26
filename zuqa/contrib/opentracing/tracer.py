@@ -43,13 +43,13 @@ from zuqa.utils import compat, disttracing
 
 
 class Tracer(TracerBase):
-    _elasticapm_client_class = zuqa.Client
+    _zuqa_client_class = zuqa.Client
 
     def __init__(self, client_instance=None, config=None, scope_manager=None):
-        self._agent = client_instance or self._elasticapm_client_class(config=config)
+        self._agent = client_instance or self._zuqa_client_class(config=config)
         if scope_manager and not isinstance(scope_manager, ThreadLocalScopeManager):
             warnings.warn(
-                "Currently, the Elastic APM opentracing bridge only supports the ThreadLocalScopeManager. "
+                "Currently, the ZUQA opentracing bridge only supports the ThreadLocalScopeManager. "
                 "Usage of other scope managers will lead to unpredictable results."
             )
         self._scope_manager = scope_manager or ThreadLocalScopeManager()
@@ -100,7 +100,7 @@ class Tracer(TracerBase):
             # and if it is a span. In all other cases, the parent is found implicitly through the
             # execution context.
             parent_span_id = (
-                parent_context.span.elastic_apm_ref.id
+                parent_context.span.zuqa_ref.id
                 if parent_context and parent_context.span and not parent_context.span.is_transaction
                 else None
             )

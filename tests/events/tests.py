@@ -49,6 +49,6 @@ def test_event_to_string():
     assert message.to_string(client, data) == formatted_message
 
 
-def test_capture_exception_no_exception(elasticapm_client):
+def test_capture_exception_no_exception(zuqa_client):
     with pytest.raises(ValueError):
-        Exception.capture(elasticapm_client)
+        Exception.capture(zuqa_client)

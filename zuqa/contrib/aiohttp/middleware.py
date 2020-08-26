@@ -47,11 +47,11 @@ def tracing_middleware(app):
     from zuqa.contrib.aiohttp import CLIENT_KEY  # noqa
 
     async def handle_request(request, handler):
-        elasticapm_client = app.get(CLIENT_KEY)
-        if elasticapm_client:
-            request[CLIENT_KEY] = elasticapm_client
+        zuqa_client = app.get(CLIENT_KEY)
+        if zuqa_client:
+            request[CLIENT_KEY] = zuqa_client
             trace_parent = AioHttpTraceParent.from_headers(request.headers)
-            elasticapm_client.begin_transaction("request", trace_parent=trace_parent)
+            zuqa_client.begin_transaction("request", trace_parent=trace_parent)
             resource = request.match_info.route.resource
             name = request.method
             if resource:
@@ -66,33 +66,33 @@ def tracing_middleware(app):
                 name += " unknown route"
             zuqa.set_transaction_name(name, override=False)
             zuqa.set_context(
-                lambda: get_data_from_request(request, elasticapm_client.config, constants.TRANSACTION), "request"
+                lambda: get_data_from_request(request, zuqa_client.config, constants.TRANSACTION), "request"
             )
 
         try:
             response = await handler(request)
             zuqa.set_transaction_result("HTTP {}xx".format(response.status // 100), override=False)
             zuqa.set_context(
-                lambda: get_data_from_response(response, elasticapm_client.config, constants.TRANSACTION), "response"
+                lambda: get_data_from_response(response, zuqa_client.config, constants.TRANSACTION), "response"
             )
             return response
         except Exception as exc:
-            if elasticapm_client:
-                elasticapm_client.capture_exception(
-                    context={"request": get_data_from_request(request, elasticapm_client.config, constants.ERROR)}
+            if zuqa_client:
+                zuqa_client.capture_exception(
+                    context={"request": get_data_from_request(request, zuqa_client.config, constants.ERROR)}
                 )
                 zuqa.set_transaction_result("HTTP 5xx", override=False)
                 zuqa.set_context({"status_code": 500}, "response")
                 # some exceptions are response-like, e.g. have headers and status code. Let's try and capture them
                 if isinstance(exc, (Response, HTTPException)):
                     zuqa.set_context(
-                        lambda: get_data_from_response(exc, elasticapm_client.config, constants.ERROR),  # noqa: F821
+                        lambda: get_data_from_response(exc, zuqa_client.config, constants.ERROR),  # noqa: F821
                         "response",
                     )
 
             raise
         finally:
-            elasticapm_client.end_transaction()
+            zuqa_client.end_transaction()
 
     # decorating with @middleware is only required in aiohttp < 4.0, and we only support 3+
     if aiohttp.__version__.startswith("3"):
