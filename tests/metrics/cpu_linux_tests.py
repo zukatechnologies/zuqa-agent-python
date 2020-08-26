@@ -32,10 +32,10 @@ import os
 
 import pytest
 
-from elasticapm.metrics.base_metrics import MetricsRegistry
+from zuqa.metrics.base_metrics import MetricsRegistry
 
 try:
-    from elasticapm.metrics.sets.cpu_linux import CPUMetricSet
+    from zuqa.metrics.sets.cpu_linux import CPUMetricSet
 except ImportError:
     pytest.skip("Not a Linux system", allow_module_level=True)
 

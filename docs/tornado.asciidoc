@@ -35,7 +35,7 @@ To initialize the agent for your application using environment variables:
 [source,python]
 ----
 import tornado.web
-from elasticapm.contrib.tornado import ElasticAPM
+from zuqa.contrib.tornado import ElasticAPM
 
 app = tornado.web.Application()
 apm = ElasticAPM(app)
@@ -46,7 +46,7 @@ To configure the agent using `ELASTIC_APM` in your application's settings:
 [source,python]
 ----
 import tornado.web
-from elasticapm.contrib.tornado import ElasticAPM
+from zuqa.contrib.tornado import ElasticAPM
 
 app = tornado.web.Application()
 app.settings['ELASTIC_APM'] = {

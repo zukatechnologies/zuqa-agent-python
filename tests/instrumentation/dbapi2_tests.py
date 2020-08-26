@@ -28,7 +28,7 @@
 #  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from elasticapm.instrumentation.packages.dbapi2 import Literal, extract_signature, scan, tokenize
+from zuqa.instrumentation.packages.dbapi2 import Literal, extract_signature, scan, tokenize
 
 
 def test_scan_simple():

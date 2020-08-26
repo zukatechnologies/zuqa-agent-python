@@ -10,13 +10,13 @@ It can also be used as a context manager in the following way:
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-@elasticapm.capture_span()
+@zuqa.capture_span()
 def coffee_maker(strength):
     fetch_water()
 
-    with elasticapm.capture_span('near-to-machine'):
+    with zuqa.capture_span('near-to-machine'):
         insert_filter()
         for i in range(strength):
             pour_coffee()
@@ -30,13 +30,13 @@ Similarly, you can use `elasticapm.async_capture_span` for instrumenting `async`
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-@elasticapm.async_capture_span()
+@zuqa.async_capture_span()
 async def coffee_maker(strength):
     await fetch_water()
 
-    async with elasticapm.async_capture_span('near-to-machine'):
+    async with zuqa.async_capture_span('near-to-machine'):
         await insert_filter()
         async for i in range(strength):
             await pour_coffee()

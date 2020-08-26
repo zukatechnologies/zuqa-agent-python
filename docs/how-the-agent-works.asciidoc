@@ -45,7 +45,7 @@ The `elasticapm.Client` can be setup programmatically or using the environment v
 ----
 import requests
 import time
-import elasticapm
+import zuqa
 
 def main():
     sess = requests.Session()
@@ -54,8 +54,8 @@ def main():
         time.sleep(1)
 
 if __name__ == '__main__':
-    client = elasticapm.Client()
-    elasticapm.instrument()
+    client = zuqa.Client()
+    zuqa.instrument()
     client.begin_transaction('main')
     main()
     client.end_transaction('main')

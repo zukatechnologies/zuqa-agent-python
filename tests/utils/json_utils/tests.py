@@ -36,8 +36,8 @@ import datetime
 import decimal
 import uuid
 
-from elasticapm.utils import compat
-from elasticapm.utils import json_encoder as json
+from zuqa.utils import compat
+from zuqa.utils import json_encoder as json
 
 
 def test_uuid():

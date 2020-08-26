@@ -34,7 +34,7 @@ import pytest
 from jinja2 import Environment, FileSystemLoader
 from jinja2.environment import Template
 
-from elasticapm.conf.constants import TRANSACTION
+from zuqa.conf.constants import TRANSACTION
 
 
 @pytest.fixture()

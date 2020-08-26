@@ -39,7 +39,7 @@ from django.test.utils import override_settings
 
 import pytest
 
-from elasticapm.conf.constants import TRANSACTION
+from zuqa.conf.constants import TRANSACTION
 from tests.contrib.django.conftest import BASE_TEMPLATE_DIR
 from tests.utils.compat import middleware_setting
 
@@ -60,7 +60,7 @@ TEMPLATES = (
 
 def test_template_rendering(instrument, django_elasticapm_client, client):
     with override_settings(
-        **middleware_setting(django.VERSION, ["elasticapm.contrib.django.middleware.TracingMiddleware"])
+        **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.get(reverse("render-heavy-template"))
         client.get(reverse("render-heavy-template"))
@@ -90,7 +90,7 @@ def test_template_rendering(instrument, django_elasticapm_client, client):
 def test_template_rendering_django18_jinja2(instrument, django_elasticapm_client, client):
     with override_settings(
         TEMPLATES=TEMPLATES,
-        **middleware_setting(django.VERSION, ["elasticapm.contrib.django.middleware.TracingMiddleware"])
+        **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.get(reverse("render-jinja2-template"))
         client.get(reverse("render-jinja2-template"))

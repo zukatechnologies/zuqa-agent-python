@@ -33,8 +33,8 @@ from functools import partial
 
 import pytest
 
-from elasticapm.conf import constants
-from elasticapm.utils import (
+from zuqa.conf import constants
+from zuqa.utils import (
     get_name_from_func,
     get_url_dict,
     read_pem_file,
@@ -42,7 +42,7 @@ from elasticapm.utils import (
     starmatch_to_regex,
     url_to_destination,
 )
-from elasticapm.utils.deprecation import deprecated
+from zuqa.utils.deprecation import deprecated
 
 try:
     from functools import partialmethod

@@ -38,7 +38,7 @@ import stat
 import mock
 import pytest
 
-from elasticapm.conf import (
+from zuqa.conf import (
     Config,
     ConfigurationError,
     FileIsReadableValidator,

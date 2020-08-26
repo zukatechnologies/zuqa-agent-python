@@ -38,9 +38,9 @@ from functools import partial
 from redis import UnixDomainSocketConnection
 from redis.client import StrictRedis
 
-from elasticapm.conf.constants import TRANSACTION
-from elasticapm.instrumentation.packages.redis import get_destination_info
-from elasticapm.traces import capture_span
+from zuqa.conf.constants import TRANSACTION
+from zuqa.instrumentation.packages.redis import get_destination_info
+from zuqa.traces import capture_span
 
 pytestmark = [pytest.mark.redis]
 

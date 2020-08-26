@@ -38,10 +38,10 @@ import os
 import mock
 import pytest
 
-import elasticapm
-from elasticapm import Client, processors
-from elasticapm.conf.constants import ERROR, SPAN, TRANSACTION
-from elasticapm.utils import compat
+import zuqa
+from zuqa import Client, processors
+from zuqa.conf.constants import ERROR, SPAN, TRANSACTION
+from zuqa.utils import compat
 
 
 @pytest.fixture()
@@ -280,7 +280,7 @@ def dummy_processor_no_events(client, data):
 def test_transactions_processing(elasticapm_client):
     for i in range(5):
         elasticapm_client.begin_transaction("dummy")
-        with elasticapm.capture_span("bla"):
+        with zuqa.capture_span("bla"):
             pass
         elasticapm_client.end_transaction("dummy_transaction", "success")
     for transaction in elasticapm_client.events[TRANSACTION]:
@@ -316,7 +316,7 @@ def test_message_processing(elasticapm_client):
     assert "processed_no_events" not in elasticapm_client.events[ERROR][0]
 
 
-@mock.patch("elasticapm.base.constants.HARDCODED_PROCESSORS", ["tests.processors.tests.dummy_processor"])
+@mock.patch("zuqa.base.constants.HARDCODED_PROCESSORS", ["tests.processors.tests.dummy_processor"])
 @pytest.mark.parametrize(
     "elasticapm_client",
     [
@@ -348,7 +348,7 @@ def test_drop_events_in_processor(elasticapm_client, caplog):
     shouldnt_be_called_processor = mock.Mock(event_types=[])
 
     elasticapm_client._transport._processors = [dropping_processor, shouldnt_be_called_processor]
-    with caplog.at_level(logging.DEBUG, logger="elasticapm.transport"):
+    with caplog.at_level(logging.DEBUG, logger="zuqa.transport"):
         elasticapm_client.queue(SPAN, {"some": "data"})
     assert dropping_processor.call_count == 1
     assert shouldnt_be_called_processor.call_count == 0

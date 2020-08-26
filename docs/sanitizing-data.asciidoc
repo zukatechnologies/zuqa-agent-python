@@ -14,8 +14,8 @@ This is an example of a processor that removes the exception stacktrace from an 
 
 [source,python]
 ----
-from elasticapm.conf.constants import ERROR
-from elasticapm.processors import for_events
+from zuqa.conf.constants import ERROR
+from zuqa.processors import for_events
 
 @for_events(ERROR)
 def my_processor(client, event):
@@ -37,12 +37,12 @@ ELASTIC_APM = {
     'SECRET_TOKEN': '<SECRET-TOKEN>',
     'PROCESSORS': (
         'path.to.my_processor',
-        'elasticapm.processors.sanitize_stacktrace_locals',
-        'elasticapm.processors.sanitize_http_request_cookies',
-        'elasticapm.processors.sanitize_http_headers',
-        'elasticapm.processors.sanitize_http_wsgi_env',
-        'elasticapm.processors.sanitize_http_request_querystring',
-        'elasticapm.processors.sanitize_http_request_body',
+        'zuqa.processors.sanitize_stacktrace_locals',
+        'zuqa.processors.sanitize_http_request_cookies',
+        'zuqa.processors.sanitize_http_headers',
+        'zuqa.processors.sanitize_http_wsgi_env',
+        'zuqa.processors.sanitize_http_request_querystring',
+        'zuqa.processors.sanitize_http_request_body',
     ),
 }
 ----

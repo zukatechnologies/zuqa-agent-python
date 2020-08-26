@@ -45,11 +45,11 @@ import pytest
 from pytest_localserver.http import ContentServer
 from pytest_localserver.https import DEFAULT_CERTIFICATE
 
-import elasticapm
-from elasticapm.base import Client
-from elasticapm.conf.constants import ERROR, KEYWORD_MAX_LENGTH, SPAN, TRANSACTION
-from elasticapm.utils import compat, encoding
-from elasticapm.utils.disttracing import TraceParent
+import zuqa
+from zuqa.base import Client
+from zuqa.conf.constants import ERROR, KEYWORD_MAX_LENGTH, SPAN, TRANSACTION
+from zuqa.utils import compat, encoding
+from zuqa.utils.disttracing import TraceParent
 from tests.fixtures import DummyTransport, TempStoreClient
 from tests.utils import assert_any_record_contains
 
@@ -89,7 +89,7 @@ def test_process_info(elasticapm_client):
 
 def test_system_info(elasticapm_client):
     # mock docker/kubernetes data here to get consistent behavior if test is run in docker
-    with mock.patch("elasticapm.utils.cgroup.get_cgroup_container_metadata") as mocked:
+    with mock.patch("zuqa.utils.cgroup.get_cgroup_container_metadata") as mocked:
         mocked.return_value = {}
         system_info = elasticapm_client.get_system_info()
     assert {"hostname", "architecture", "platform"} == set(system_info.keys())
@@ -111,7 +111,7 @@ def test_global_labels(elasticapm_client):
 
 def test_docker_kubernetes_system_info(elasticapm_client):
     # mock docker/kubernetes data here to get consistent behavior if test is run in docker
-    with mock.patch("elasticapm.utils.cgroup.get_cgroup_container_metadata") as mock_metadata:
+    with mock.patch("zuqa.utils.cgroup.get_cgroup_container_metadata") as mock_metadata:
         mock_metadata.return_value = {"container": {"id": "123"}, "kubernetes": {"pod": {"uid": "456"}}}
         system_info = elasticapm_client.get_system_info()
     assert system_info["container"] == {"id": "123"}
@@ -131,7 +131,7 @@ def test_docker_kubernetes_system_info_from_environ():
     # initialize agent only after overriding environment
     elasticapm_client = TempStoreClient(metrics_interval="0ms")
     # mock docker/kubernetes data here to get consistent behavior if test is run in docker
-    with mock.patch("elasticapm.utils.cgroup.get_cgroup_container_metadata") as mock_metadata:
+    with mock.patch("zuqa.utils.cgroup.get_cgroup_container_metadata") as mock_metadata:
         mock_metadata.return_value = {}
         system_info = elasticapm_client.get_system_info()
     assert "kubernetes" in system_info
@@ -155,7 +155,7 @@ def test_docker_kubernetes_system_info_from_environ_overrides_cgroups():
     # initialize agent only after overriding environment
     elasticapm_client = TempStoreClient(metrics_interval="0ms")
     # mock docker/kubernetes data here to get consistent behavior if test is run in docker
-    with mock.patch("elasticapm.utils.cgroup.get_cgroup_container_metadata") as mock_metadata, mock.patch(
+    with mock.patch("zuqa.utils.cgroup.get_cgroup_container_metadata") as mock_metadata, mock.patch(
         "socket.gethostname"
     ) as mock_gethostname:
         mock_metadata.return_value = {"container": {"id": "123"}, "kubernetes": {"pod": {"uid": "456"}}}
@@ -176,7 +176,7 @@ def test_docker_kubernetes_system_info_except_hostname_from_environ():
     # initialize agent only after overriding environment
     elasticapm_client = TempStoreClient(metrics_interval="0ms")
     # mock docker/kubernetes data here to get consistent behavior if test is run in docker
-    with mock.patch("elasticapm.utils.cgroup.get_cgroup_container_metadata") as mock_metadata, mock.patch(
+    with mock.patch("zuqa.utils.cgroup.get_cgroup_container_metadata") as mock_metadata, mock.patch(
         "socket.gethostname"
     ) as mock_gethostname:
         mock_metadata.return_value = {}
@@ -234,18 +234,18 @@ def test_empty_processor_list(elasticapm_client):
 
 @pytest.mark.parametrize(
     "sending_elasticapm_client",
-    [{"transport_class": "elasticapm.transport.http.Transport", "async_mode": False}],
+    [{"transport_class": "zuqa.transport.http.Transport", "async_mode": False}],
     indirect=True,
 )
 @pytest.mark.parametrize("validating_httpserver", [{"app": ContentServer}], indirect=True)
-@mock.patch("elasticapm.transport.base.TransportState.should_try")
+@mock.patch("zuqa.transport.base.TransportState.should_try")
 def test_send_remote_failover_sync(should_try, sending_elasticapm_client, caplog):
     sending_elasticapm_client.httpserver.code = 400
     sending_elasticapm_client.httpserver.content = "go away"
     should_try.return_value = True
 
     # test error
-    with caplog.at_level("ERROR", "elasticapm.transport"):
+    with caplog.at_level("ERROR", "zuqa.transport"):
         sending_elasticapm_client.capture_message("foo", handled=False)
     sending_elasticapm_client._transport.flush()
     assert sending_elasticapm_client._transport.state.did_fail()
@@ -258,8 +258,8 @@ def test_send_remote_failover_sync(should_try, sending_elasticapm_client, caplog
     assert not sending_elasticapm_client._transport.state.did_fail()
 
 
-@mock.patch("elasticapm.transport.http.Transport.send")
-@mock.patch("elasticapm.transport.base.TransportState.should_try")
+@mock.patch("zuqa.transport.http.Transport.send")
+@mock.patch("zuqa.transport.base.TransportState.should_try")
 def test_send_remote_failover_sync_non_transport_exception_error(should_try, http_send, caplog):
     should_try.return_value = True
 
@@ -267,13 +267,13 @@ def test_send_remote_failover_sync_non_transport_exception_error(should_try, htt
         server_url="http://example.com",
         service_name="app_name",
         secret_token="secret",
-        transport_class="elasticapm.transport.http.Transport",
+        transport_class="zuqa.transport.http.Transport",
         metrics_interval="0ms",
         metrics_sets=[],
     )
     # test error
     http_send.side_effect = ValueError("oopsie")
-    with caplog.at_level("ERROR", "elasticapm.transport"):
+    with caplog.at_level("ERROR", "zuqa.transport"):
         client.capture_message("foo", handled=False)
     client._transport.flush()
     record = caplog.records[0]
@@ -297,7 +297,7 @@ def test_send(sending_elasticapm_client):
         "Content-Type": "application/x-ndjson",
         "Content-Encoding": "gzip",
         "Authorization": "Bearer %s" % sending_elasticapm_client.config.secret_token,
-        "User-Agent": "elasticapm-python/%s" % elasticapm.VERSION,
+        "User-Agent": "zuqa-python/%s" % zuqa.VERSION,
     }
     seen_headers = dict(request.headers)
     for k, v in expected_headers.items():
@@ -319,7 +319,7 @@ def test_send_not_enabled(sending_elasticapm_client):
 
 @pytest.mark.parametrize(
     "sending_elasticapm_client",
-    [{"transport_class": "elasticapm.transport.http.Transport", "async_mode": False}],
+    [{"transport_class": "zuqa.transport.http.Transport", "async_mode": False}],
     indirect=True,
 )
 def test_client_shutdown_sync(sending_elasticapm_client):
@@ -410,7 +410,7 @@ def test_empty_transport_disables_send():
 def test_collect_local_variables_transactions(elasticapm_client):
     mode = elasticapm_client.config.collect_local_variables
     elasticapm_client.begin_transaction("test")
-    with elasticapm.capture_span("foo"):
+    with zuqa.capture_span("foo"):
         a_local_var = 1
         a_long_local_var = 100 * "a"
         a_long_local_list = list(range(100))
@@ -440,7 +440,7 @@ def test_collect_source_transactions(elasticapm_client):
     library_frame_context = elasticapm_client.config.source_lines_span_library_frames
     in_app_frame_context = elasticapm_client.config.source_lines_span_app_frames
     elasticapm_client.begin_transaction("test")
-    with elasticapm.capture_span("foo"):
+    with zuqa.capture_span("foo"):
         pass
     elasticapm_client.end_transaction("test", "ok")
     span = elasticapm_client.events[SPAN][0]
@@ -474,7 +474,7 @@ def test_collect_source_transactions(elasticapm_client):
 def test_transaction_sampling(elasticapm_client, not_so_random):
     for i in range(10):
         elasticapm_client.begin_transaction("test_type")
-        with elasticapm.capture_span("xyz"):
+        with zuqa.capture_span("xyz"):
             pass
         elasticapm_client.end_transaction("test")
 
@@ -494,7 +494,7 @@ def test_transaction_sample_rate_dynamic(elasticapm_client, not_so_random):
     elasticapm_client.config.update(version="1", transaction_sample_rate=0.4)
     for i in range(10):
         elasticapm_client.begin_transaction("test_type")
-        with elasticapm.capture_span("xyz"):
+        with zuqa.capture_span("xyz"):
             pass
         elasticapm_client.end_transaction("test")
 
@@ -512,7 +512,7 @@ def test_transaction_sample_rate_dynamic(elasticapm_client, not_so_random):
     elasticapm_client.config.update(version="1", transaction_sample_rate=1.0)
     for i in range(5):
         elasticapm_client.begin_transaction("test_type")
-        with elasticapm.capture_span("xyz"):
+        with zuqa.capture_span("xyz"):
             pass
         elasticapm_client.end_transaction("test")
 
@@ -526,10 +526,10 @@ def test_transaction_sample_rate_dynamic(elasticapm_client, not_so_random):
 def test_transaction_max_spans(elasticapm_client):
     elasticapm_client.begin_transaction("test_type")
     for i in range(5):
-        with elasticapm.capture_span("nodrop"):
+        with zuqa.capture_span("nodrop"):
             pass
     for i in range(10):
-        with elasticapm.capture_span("drop"):
+        with zuqa.capture_span("drop"):
             pass
     transaction_obj = elasticapm_client.end_transaction("test")
 
@@ -548,7 +548,7 @@ def test_transaction_max_spans_dynamic(elasticapm_client):
     elasticapm_client.config.update(version=1, transaction_max_spans=1)
     elasticapm_client.begin_transaction("test_type")
     for i in range(5):
-        with elasticapm.capture_span("span"):
+        with zuqa.capture_span("span"):
             pass
     elasticapm_client.end_transaction("test")
     transaction = elasticapm_client.events[TRANSACTION][0]
@@ -558,7 +558,7 @@ def test_transaction_max_spans_dynamic(elasticapm_client):
     elasticapm_client.config.update(version=2, transaction_max_spans=3)
     elasticapm_client.begin_transaction("test_type")
     for i in range(5):
-        with elasticapm.capture_span("span"):
+        with zuqa.capture_span("span"):
             pass
 
     elasticapm_client.end_transaction("test")
@@ -570,9 +570,9 @@ def test_transaction_max_spans_dynamic(elasticapm_client):
 @pytest.mark.parametrize("elasticapm_client", [{"span_frames_min_duration": 20}], indirect=True)
 def test_transaction_span_frames_min_duration(elasticapm_client):
     elasticapm_client.begin_transaction("test_type")
-    with elasticapm.capture_span("noframes", duration=0.001):
+    with zuqa.capture_span("noframes", duration=0.001):
         pass
-    with elasticapm.capture_span("frames", duration=0.04):
+    with zuqa.capture_span("frames", duration=0.04):
         pass
     elasticapm_client.end_transaction("test")
 
@@ -589,9 +589,9 @@ def test_transaction_span_frames_min_duration(elasticapm_client):
 @pytest.mark.parametrize("elasticapm_client", [{"span_frames_min_durarion_ms": -1}], indirect=True)
 def test_transaction_span_frames_min_duration_no_limit(elasticapm_client):
     elasticapm_client.begin_transaction("test_type")
-    with elasticapm.capture_span("frames"):
+    with zuqa.capture_span("frames"):
         pass
-    with elasticapm.capture_span("frames", duration=0.04):
+    with zuqa.capture_span("frames", duration=0.04):
         pass
     elasticapm_client.end_transaction("test")
 
@@ -608,9 +608,9 @@ def test_transaction_span_frames_min_duration_no_limit(elasticapm_client):
 def test_transaction_span_frames_min_duration_dynamic(elasticapm_client):
     elasticapm_client.config.update(version="1", span_frames_min_duration=20)
     elasticapm_client.begin_transaction("test_type")
-    with elasticapm.capture_span("noframes", duration=0.001):
+    with zuqa.capture_span("noframes", duration=0.001):
         pass
-    with elasticapm.capture_span("frames", duration=0.04):
+    with zuqa.capture_span("frames", duration=0.04):
         pass
     elasticapm_client.end_transaction("test")
 
@@ -625,9 +625,9 @@ def test_transaction_span_frames_min_duration_dynamic(elasticapm_client):
 
     elasticapm_client.config.update(version="1", span_frames_min_duration=-1)
     elasticapm_client.begin_transaction("test_type")
-    with elasticapm.capture_span("frames"):
+    with zuqa.capture_span("frames"):
         pass
-    with elasticapm.capture_span("frames", duration=0.04):
+    with zuqa.capture_span("frames", duration=0.04):
         pass
     elasticapm_client.end_transaction("test")
 
@@ -644,19 +644,19 @@ def test_transaction_span_frames_min_duration_dynamic(elasticapm_client):
 @pytest.mark.parametrize("elasticapm_client", [{"transaction_max_spans": 3}], indirect=True)
 def test_transaction_max_span_nested(elasticapm_client):
     elasticapm_client.begin_transaction("test_type")
-    with elasticapm.capture_span("1"):
-        with elasticapm.capture_span("2"):
-            with elasticapm.capture_span("3"):
-                with elasticapm.capture_span("4"):
-                    with elasticapm.capture_span("5"):
+    with zuqa.capture_span("1"):
+        with zuqa.capture_span("2"):
+            with zuqa.capture_span("3"):
+                with zuqa.capture_span("4"):
+                    with zuqa.capture_span("5"):
                         pass
-                with elasticapm.capture_span("6"):
+                with zuqa.capture_span("6"):
                     pass
-            with elasticapm.capture_span("7"):
+            with zuqa.capture_span("7"):
                 pass
-        with elasticapm.capture_span("8"):
+        with zuqa.capture_span("8"):
             pass
-    with elasticapm.capture_span("9"):
+    with zuqa.capture_span("9"):
         pass
     transaction_obj = elasticapm_client.end_transaction("test")
 
@@ -677,9 +677,9 @@ def test_transaction_keyword_truncation(elasticapm_client):
     assert len(expected) == KEYWORD_MAX_LENGTH
     assert expected[-1] != "x"
     elasticapm_client.begin_transaction(too_long)
-    elasticapm.tag(val=too_long)
-    elasticapm.set_user_context(username=too_long, email=too_long, user_id=too_long)
-    with elasticapm.capture_span(name=too_long, span_type=too_long):
+    zuqa.tag(val=too_long)
+    zuqa.set_user_context(username=too_long, email=too_long, user_id=too_long)
+    with zuqa.capture_span(name=too_long, span_type=too_long):
         pass
     elasticapm_client.end_transaction(too_long, too_long)
     elasticapm_client.close()
@@ -702,7 +702,7 @@ def test_transaction_keyword_truncation(elasticapm_client):
 
 
 @pytest.mark.parametrize("sending_elasticapm_client", [{"service_name": "*"}], indirect=True)
-@mock.patch("elasticapm.transport.base.Transport.send")
+@mock.patch("zuqa.transport.base.Transport.send")
 def test_config_error_stops_error_send(mock_send, sending_elasticapm_client):
     assert sending_elasticapm_client.config.disable_send is True
     sending_elasticapm_client.capture_message("bla", handled=False)
@@ -710,7 +710,7 @@ def test_config_error_stops_error_send(mock_send, sending_elasticapm_client):
 
 
 @pytest.mark.parametrize("sending_elasticapm_client", [{"service_name": "*"}], indirect=True)
-@mock.patch("elasticapm.transport.base.Transport.send")
+@mock.patch("zuqa.transport.base.Transport.send")
 def test_config_error_stops_transaction_send(mock_send, sending_elasticapm_client):
     assert sending_elasticapm_client.config.disable_send is True
     sending_elasticapm_client.begin_transaction("test")
@@ -785,7 +785,7 @@ def test_python_version_deprecation(mock_python_version_tuple, version, raises, 
     mock_python_version_tuple.return_value = version
     e = None
     try:
-        e = elasticapm.Client()
+        e = zuqa.Client()
     finally:
         if e:
             e.close()
@@ -808,7 +808,7 @@ def test_recording(elasticapm_client):
     except ZeroDivisionError:
         assert elasticapm_client.capture_exception() is not None
     assert elasticapm_client.begin_transaction("test") is not None
-    with elasticapm.capture_span("x") as x_span:
+    with zuqa.capture_span("x") as x_span:
         assert x_span is not None
     assert elasticapm_client.end_transaction("ok", "ok") is not None
 
@@ -820,7 +820,7 @@ def test_recording(elasticapm_client):
     except ZeroDivisionError:
         assert elasticapm_client.capture_exception() is None
     assert elasticapm_client.begin_transaction("test") is None
-    with elasticapm.capture_span("x") as x_span:
+    with zuqa.capture_span("x") as x_span:
         assert x_span is None
     assert elasticapm_client.end_transaction("ok", "ok") is None
 

@@ -3,7 +3,7 @@ from flask import Flask
 from flask_cors import CORS
 import time
 
-from elasticapm.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ElasticAPM
 
 app = Flask(__name__)
 

@@ -35,7 +35,7 @@ To initialize the agent for your application using environment variables:
 [source,python]
 ----
 from starlette.applications import Starlette
-from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
+from zuqa.contrib.starlette import make_apm_client, ElasticAPM
 
 elasticapm = make_apm_client()
 app = Starlette()
@@ -47,7 +47,7 @@ To configure the agent using initialization arguments:
 [source,python]
 ----
 from starlette.applications import Starlette
-from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
+from zuqa.contrib.starlette import make_apm_client, ElasticAPM
 
 elasticapm = make_apm_client({
     'SERVICE_NAME': '<SERVICE-NAME>',
@@ -67,7 +67,7 @@ is almost exactly the same as with Starlette:
 [source,python]
 ----
 from fastapi import FastAPI
-from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
+from zuqa.contrib.starlette import make_apm_client, ElasticAPM
 
 elasticapm = make_apm_client()
 app = FastAPI()

@@ -36,7 +36,7 @@ import os
 
 from elasticsearch import VERSION as ES_VERSION
 
-from elasticapm.conf.constants import TRANSACTION
+from zuqa.conf.constants import TRANSACTION
 from elasticsearch_async import AsyncElasticsearch
 
 pytestmark = [pytest.mark.elasticsearch, pytest.mark.asyncio, pytest.mark.integrationtest]

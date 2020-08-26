@@ -31,8 +31,8 @@
 import mock
 import pytest
 
-from elasticapm.conf import constants
-from elasticapm.instrumentation.packages.botocore import BotocoreInstrumentation
+from zuqa.conf import constants
+from zuqa.instrumentation.packages.botocore import BotocoreInstrumentation
 
 boto3 = pytest.importorskip("boto3")
 

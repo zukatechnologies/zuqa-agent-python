@@ -31,11 +31,11 @@
 import pytest
 import urllib3
 
-from elasticapm.conf import constants
-from elasticapm.conf.constants import TRANSACTION
-from elasticapm.traces import capture_span
-from elasticapm.utils.compat import urlparse
-from elasticapm.utils.disttracing import TraceParent
+from zuqa.conf import constants
+from zuqa.conf.constants import TRANSACTION
+from zuqa.traces import capture_span
+from zuqa.utils.compat import urlparse
+from zuqa.utils.disttracing import TraceParent
 
 
 def test_urllib3(instrument, elasticapm_client, waiting_httpserver):

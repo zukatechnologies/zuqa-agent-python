@@ -40,7 +40,7 @@
 
 import mock
 
-from elasticapm.conf.constants import ERROR
+from zuqa.conf.constants import ERROR
 
 
 def test_chained_cause_exception(elasticapm_client):
@@ -83,7 +83,7 @@ def test_chained_context_exception_suppressed(elasticapm_client):
 
 
 def test_chained_context_exception_max(elasticapm_client):
-    with mock.patch("elasticapm.events.EXCEPTION_CHAIN_MAX_DEPTH", 1):
+    with mock.patch("zuqa.events.EXCEPTION_CHAIN_MAX_DEPTH", 1):
         try:
             try:
                 1 / 0

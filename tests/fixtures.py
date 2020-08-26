@@ -43,13 +43,13 @@ import pytest
 from pytest_localserver.http import ContentServer
 from werkzeug.wrappers import Request, Response
 
-import elasticapm
-from elasticapm.base import Client
-from elasticapm.conf.constants import SPAN
-from elasticapm.traces import execution_context
-from elasticapm.transport.http_base import HTTPTransportBase
-from elasticapm.utils import compat
-from elasticapm.utils.threading import ThreadManager
+import zuqa
+from zuqa.base import Client
+from zuqa.conf.constants import SPAN
+from zuqa.traces import execution_context
+from zuqa.transport.http_base import HTTPTransportBase
+from zuqa.utils import compat
+from zuqa.utils.threading import ThreadManager
 
 try:
     from urllib.request import pathname2url
@@ -210,7 +210,7 @@ def sending_elasticapm_client(request, validating_httpserver):
     client_config.setdefault("server_url", validating_httpserver.url)
     client_config.setdefault("service_name", "myapp")
     client_config.setdefault("secret_token", "test_key")
-    client_config.setdefault("transport_class", "elasticapm.transport.http.Transport")
+    client_config.setdefault("transport_class", "zuqa.transport.http.Transport")
     client_config.setdefault("span_frames_min_duration", -1)
     client_config.setdefault("include_paths", ("*/tests/*",))
     client_config.setdefault("metrics_interval", "0ms")
@@ -270,9 +270,9 @@ def not_so_random():
 
 @pytest.fixture()
 def instrument():
-    elasticapm.instrument()
+    zuqa.instrument()
     yield
-    elasticapm.uninstrument()
+    zuqa.uninstrument()
 
 
 def wait_for_http_server(httpserver, timeout=30):

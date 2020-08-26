@@ -32,14 +32,14 @@ import time
 import mock
 import pytest
 
-import elasticapm
-from elasticapm.utils import compat
+import zuqa
+from zuqa.utils import compat
 
 
 def test_bare_transaction(elasticapm_client):
     elasticapm_client.begin_transaction("request", start=0)
     elasticapm_client.end_transaction("test", "OK", duration=5)
-    breakdown = elasticapm_client._metrics.get_metricset("elasticapm.metrics.sets.breakdown.BreakdownMetricSet")
+    breakdown = elasticapm_client._metrics.get_metricset("zuqa.metrics.sets.breakdown.BreakdownMetricSet")
     data = list(breakdown.collect())
     assert len(data) == 2
     asserts = 0
@@ -57,7 +57,7 @@ def test_bare_transaction(elasticapm_client):
     assert asserts == 2
 
     transaction_metrics = elasticapm_client._metrics.get_metricset(
-        "elasticapm.metrics.sets.transactions.TransactionsMetricSet"
+        "zuqa.metrics.sets.transactions.TransactionsMetricSet"
     )
     transaction_data = list(transaction_metrics.collect())
     assert len(transaction_data) == 1
@@ -66,10 +66,10 @@ def test_bare_transaction(elasticapm_client):
 
 def test_single_span(elasticapm_client):
     elasticapm_client.begin_transaction("request", start=0)
-    with elasticapm.capture_span("test", span_type="db", span_subtype="mysql", start=10, duration=5):
+    with zuqa.capture_span("test", span_type="db", span_subtype="mysql", start=10, duration=5):
         pass
     elasticapm_client.end_transaction("test", "OK", duration=15)
-    breakdown = elasticapm_client._metrics.get_metricset("elasticapm.metrics.sets.breakdown.BreakdownMetricSet")
+    breakdown = elasticapm_client._metrics.get_metricset("zuqa.metrics.sets.breakdown.BreakdownMetricSet")
     data = list(breakdown.collect())
     assert len(data) == 3
     asserts = 0
@@ -92,7 +92,7 @@ def test_single_span(elasticapm_client):
     assert asserts == 3
 
     transaction_metrics = elasticapm_client._metrics.get_metricset(
-        "elasticapm.metrics.sets.transactions.TransactionsMetricSet"
+        "zuqa.metrics.sets.transactions.TransactionsMetricSet"
     )
     transaction_data = list(transaction_metrics.collect())
     assert len(transaction_data) == 1
@@ -101,13 +101,13 @@ def test_single_span(elasticapm_client):
 
 def test_nested_spans(elasticapm_client):
     elasticapm_client.begin_transaction("request", start=0)
-    with elasticapm.capture_span("test", span_type="template", span_subtype="django", start=5, duration=15):
-        with elasticapm.capture_span("test", span_type="db", span_subtype="mysql", start=10, duration=5):
+    with zuqa.capture_span("test", span_type="template", span_subtype="django", start=5, duration=15):
+        with zuqa.capture_span("test", span_type="db", span_subtype="mysql", start=10, duration=5):
             pass
-        with elasticapm.capture_span("test", span_type="db", span_subtype="mysql", start=15, duration=5):
+        with zuqa.capture_span("test", span_type="db", span_subtype="mysql", start=15, duration=5):
             pass
     elasticapm_client.end_transaction("test", "OK", duration=25)
-    breakdown = elasticapm_client._metrics.get_metricset("elasticapm.metrics.sets.breakdown.BreakdownMetricSet")
+    breakdown = elasticapm_client._metrics.get_metricset("zuqa.metrics.sets.breakdown.BreakdownMetricSet")
     data = list(breakdown.collect())
     assert len(data) == 4
     asserts = 0
@@ -135,7 +135,7 @@ def test_nested_spans(elasticapm_client):
     assert asserts == 4
 
     transaction_metrics = elasticapm_client._metrics.get_metricset(
-        "elasticapm.metrics.sets.transactions.TransactionsMetricSet"
+        "zuqa.metrics.sets.transactions.TransactionsMetricSet"
     )
     transaction_data = list(transaction_metrics.collect())
     assert len(transaction_data) == 1
@@ -144,10 +144,10 @@ def test_nested_spans(elasticapm_client):
 
 def test_explicit_app_span(elasticapm_client):
     transaction = elasticapm_client.begin_transaction("request")
-    with elasticapm.capture_span("test", span_type="app"):
+    with zuqa.capture_span("test", span_type="app"):
         pass
     elasticapm_client.end_transaction("test", "OK")
-    breakdown = elasticapm_client._metrics.get_metricset("elasticapm.metrics.sets.breakdown.BreakdownMetricSet")
+    breakdown = elasticapm_client._metrics.get_metricset("zuqa.metrics.sets.breakdown.BreakdownMetricSet")
     data = list(breakdown.collect())
     assert len(data) == 2
     asserts = 0
@@ -167,16 +167,16 @@ def test_explicit_app_span(elasticapm_client):
 @pytest.mark.parametrize("elasticapm_client", [{"breakdown_metrics": False}], indirect=True)
 def test_disable_breakdowns(elasticapm_client):
     with pytest.raises(LookupError):
-        elasticapm_client._metrics.get_metricset("elasticapm.metrics.sets.breakdown.BreakdownMetricSet")
+        elasticapm_client._metrics.get_metricset("zuqa.metrics.sets.breakdown.BreakdownMetricSet")
     transaction_metrics = elasticapm_client._metrics.get_metricset(
-        "elasticapm.metrics.sets.transactions.TransactionsMetricSet"
+        "zuqa.metrics.sets.transactions.TransactionsMetricSet"
     )
-    with mock.patch("elasticapm.traces.BaseSpan.child_started") as mock_child_started, mock.patch(
-        "elasticapm.traces.BaseSpan.child_ended"
-    ) as mock_child_ended, mock.patch("elasticapm.traces.Transaction.track_span_duration") as mock_track_span_duration:
+    with mock.patch("zuqa.traces.BaseSpan.child_started") as mock_child_started, mock.patch(
+        "zuqa.traces.BaseSpan.child_ended"
+    ) as mock_child_ended, mock.patch("zuqa.traces.Transaction.track_span_duration") as mock_track_span_duration:
         transaction = elasticapm_client.begin_transaction("test")
         assert transaction._breakdown is None
-        with elasticapm.capture_span("test", span_type="template", span_subtype="django", duration=5):
+        with zuqa.capture_span("test", span_type="template", span_subtype="django", duration=5):
             pass
         elasticapm_client.end_transaction("test", "OK", duration=5)
         assert mock_child_started.call_count == 0
@@ -190,12 +190,12 @@ def test_disable_breakdowns(elasticapm_client):
 
 def test_metrics_reset_after_collect(elasticapm_client):
     elasticapm_client.begin_transaction("request")
-    with elasticapm.capture_span("test", span_type="db", span_subtype="mysql", duration=5):
+    with zuqa.capture_span("test", span_type="db", span_subtype="mysql", duration=5):
         pass
     elasticapm_client.end_transaction("test", "OK", duration=15)
-    breakdown = elasticapm_client._metrics.get_metricset("elasticapm.metrics.sets.breakdown.BreakdownMetricSet")
+    breakdown = elasticapm_client._metrics.get_metricset("zuqa.metrics.sets.breakdown.BreakdownMetricSet")
     transaction_metrics = elasticapm_client._metrics.get_metricset(
-        "elasticapm.metrics.sets.transactions.TransactionsMetricSet"
+        "zuqa.metrics.sets.transactions.TransactionsMetricSet"
     )
     for metricset in (breakdown, transaction_metrics):
         for labels, c in compat.iteritems(metricset._counters):
@@ -212,11 +212,11 @@ def test_metrics_reset_after_collect(elasticapm_client):
 def test_multiple_transactions(elasticapm_client):
     for i in (1, 2):
         elasticapm_client.begin_transaction("request")
-        with elasticapm.capture_span("test", duration=5):
+        with zuqa.capture_span("test", duration=5):
             pass
         elasticapm_client.end_transaction("test", "OK", duration=10)
 
-    breakdown = elasticapm_client._metrics.get_metricset("elasticapm.metrics.sets.breakdown.BreakdownMetricSet")
+    breakdown = elasticapm_client._metrics.get_metricset("zuqa.metrics.sets.breakdown.BreakdownMetricSet")
     data = list(breakdown.collect())
     asserts = 0
     for elem in data:
@@ -239,7 +239,7 @@ def test_multiple_transactions(elasticapm_client):
     assert asserts == 3
 
     transaction_metrics = elasticapm_client._metrics.get_metricset(
-        "elasticapm.metrics.sets.transactions.TransactionsMetricSet"
+        "zuqa.metrics.sets.transactions.TransactionsMetricSet"
     )
     transaction_data = list(transaction_metrics.collect())
     assert len(transaction_data) == 1

@@ -37,11 +37,11 @@ import os
 
 import mock
 
-from elasticapm.conf import constants
-from elasticapm.conf.constants import ERROR, TRANSACTION
-from elasticapm.contrib.flask import ElasticAPM
-from elasticapm.utils import compat
-from elasticapm.utils.disttracing import TraceParent
+from zuqa.conf import constants
+from zuqa.conf.constants import ERROR, TRANSACTION
+from zuqa.contrib.flask import ElasticAPM
+from zuqa.utils import compat
+from zuqa.utils.disttracing import TraceParent
 from tests.contrib.flask.utils import captured_templates
 
 try:
@@ -230,7 +230,7 @@ def test_instrumentation_404(flask_apm_client):
 @pytest.mark.parametrize("header_name", [constants.TRACEPARENT_HEADER_NAME, constants.TRACEPARENT_LEGACY_HEADER_NAME])
 def test_traceparent_handling(flask_apm_client, header_name):
     with mock.patch(
-        "elasticapm.contrib.flask.TraceParent.from_string", wraps=TraceParent.from_string
+        "zuqa.contrib.flask.TraceParent.from_string", wraps=TraceParent.from_string
     ) as wrapped_from_string:
         resp = flask_apm_client.app.test_client().post(
             "/users/",

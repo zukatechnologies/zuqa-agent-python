@@ -35,7 +35,7 @@ from __future__ import absolute_import
 import pytest
 from mock import Mock
 
-from elasticapm.events import Exception, Message
+from zuqa.events import Exception, Message
 
 
 def test_event_to_string():

@@ -37,10 +37,10 @@ import sys
 import mock
 from opentracing import Format
 
-from elasticapm.conf import constants
-from elasticapm.contrib.opentracing import Tracer
-from elasticapm.contrib.opentracing.span import OTSpanContext
-from elasticapm.utils.disttracing import TraceParent
+from zuqa.conf import constants
+from zuqa.contrib.opentracing import Tracer
+from zuqa.contrib.opentracing.span import OTSpanContext
+from zuqa.utils.disttracing import TraceParent
 
 pytestmark = pytest.mark.opentracing
 
@@ -73,7 +73,7 @@ def test_tracer_with_config():
 
 
 def test_tracer_instrument(elasticapm_client):
-    with mock.patch("elasticapm.contrib.opentracing.tracer.instrument") as mock_instrument:
+    with mock.patch("zuqa.contrib.opentracing.tracer.instrument") as mock_instrument:
         elasticapm_client.config.instrument = False
         Tracer(client_instance=elasticapm_client)
         assert mock_instrument.call_count == 0

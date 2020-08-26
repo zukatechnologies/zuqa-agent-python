@@ -39,7 +39,7 @@ add the same new attributes to any filtered `LogRecord`:
 [source,python]
 ----
 import logging
-from elasticapm.handlers.logging import LoggingFilter
+from zuqa.handlers.logging import LoggingFilter
 
 console = logging.StreamHandler()
 console.addFilter(LoggingFilter())
@@ -66,7 +66,7 @@ to the event_dict of any processed event:
 [source,python]
 ----
 from structlog import PrintLogger, wrap_logger
-from elasticapm.handlers.structlog import structlog_processor
+from zuqa.handlers.structlog import structlog_processor
 
 wrapped_logger = PrintLogger()
 logger = wrap_logger(wrapped_logger, processors=[structlog_processor])
@@ -125,7 +125,7 @@ for the one that we provide:
 [source,python]
 ----
 import logging
-from elasticapm.handlers.logging import Formatter
+from zuqa.handlers.logging import Formatter
 
 fh = logging.FileHandler('spam.log')
 formatter = Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -137,7 +137,7 @@ This will automatically append apm-specific fields to your format string:
 [source,python]
 ----
 formatstring = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-formatstring = formatstring + " | elasticapm " \
+formatstring = formatstring + " | zuqa " \
                               "transaction.id=%(elasticapm_transaction_id)s " \
                               "trace.id=%(elasticapm_trace_id)s " \
                               "span.id=%(elasticapm_span_id)s"
@@ -154,7 +154,7 @@ Then, you could use a grok pattern like this (for the
     {
       "grok": {
         "field": "message",
-        "patterns": ["%{GREEDYDATA:msg} | elasticapm transaction.id=%{DATA:transaction.id} trace.id=%{DATA:trace.id} span.id=%{DATA:span.id}"]
+        "patterns": ["%{GREEDYDATA:msg} | zuqa transaction.id=%{DATA:transaction.id} trace.id=%{DATA:trace.id} span.id=%{DATA:span.id}"]
       }
     }
   ]

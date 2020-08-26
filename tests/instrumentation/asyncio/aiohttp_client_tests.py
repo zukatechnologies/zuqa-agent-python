@@ -33,8 +33,8 @@ import pytest  # isort:skip
 aiohttp = pytest.importorskip("aiohttp")  # isort:skip
 yarl = pytest.importorskip("yarl")  # isort:skip
 
-from elasticapm.conf import constants
-from elasticapm.utils.disttracing import TraceParent
+from zuqa.conf import constants
+from zuqa.utils.disttracing import TraceParent
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.aiohttp]
 

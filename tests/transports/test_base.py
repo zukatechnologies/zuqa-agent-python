@@ -37,8 +37,8 @@ import timeit
 import mock
 import pytest
 
-from elasticapm.transport.base import Transport, TransportException, TransportState
-from elasticapm.utils import compat
+from zuqa.transport.base import Transport, TransportException, TransportState
+from zuqa.utils import compat
 from tests.fixtures import DummyTransport, TempStoreClient
 from tests.utils import assert_any_record_contains
 
@@ -83,7 +83,7 @@ def test_transport_state_set_success():
     assert state.retry_number == -1
 
 
-@mock.patch("elasticapm.transport.base.Transport.send")
+@mock.patch("zuqa.transport.base.Transport.send")
 @pytest.mark.parametrize("elasticapm_client", [{"api_request_time": "5s"}], indirect=True)
 def test_empty_queue_flush_is_not_sent(mock_send, elasticapm_client):
     transport = Transport(client=elasticapm_client, metadata={"x": "y"})
@@ -95,7 +95,7 @@ def test_empty_queue_flush_is_not_sent(mock_send, elasticapm_client):
         transport.close()
 
 
-@mock.patch("elasticapm.transport.base.Transport.send")
+@mock.patch("zuqa.transport.base.Transport.send")
 @pytest.mark.parametrize("elasticapm_client", [{"api_request_time": "5s"}], indirect=True)
 def test_metadata_prepended(mock_send, elasticapm_client):
     transport = Transport(client=elasticapm_client, metadata={"x": "y"}, compress_level=0)
@@ -112,10 +112,10 @@ def test_metadata_prepended(mock_send, elasticapm_client):
     assert "metadata" in data[0]
 
 
-@mock.patch("elasticapm.transport.base.Transport.send")
+@mock.patch("zuqa.transport.base.Transport.send")
 @pytest.mark.parametrize("elasticapm_client", [{"api_request_time": "100ms"}], indirect=True)
 def test_flush_time(mock_send, caplog, elasticapm_client):
-    with caplog.at_level("DEBUG", "elasticapm.transport"):
+    with caplog.at_level("DEBUG", "zuqa.transport"):
         transport = Transport(client=elasticapm_client, metadata={})
         transport.start_thread()
         # let first run finish
@@ -126,10 +126,10 @@ def test_flush_time(mock_send, caplog, elasticapm_client):
     assert mock_send.call_count == 0
 
 
-@mock.patch("elasticapm.transport.base.Transport.send")
+@mock.patch("zuqa.transport.base.Transport.send")
 def test_api_request_time_dynamic(mock_send, caplog, elasticapm_client):
     elasticapm_client.config.update(version="1", api_request_time="1s")
-    with caplog.at_level("DEBUG", "elasticapm.transport"):
+    with caplog.at_level("DEBUG", "zuqa.transport"):
         transport = Transport(client=elasticapm_client, metadata={})
         transport.start_thread()
         # let first run finish
@@ -138,7 +138,7 @@ def test_api_request_time_dynamic(mock_send, caplog, elasticapm_client):
     assert not caplog.records
     assert mock_send.call_count == 0
     elasticapm_client.config.update(version="1", api_request_time="100ms")
-    with caplog.at_level("DEBUG", "elasticapm.transport"):
+    with caplog.at_level("DEBUG", "zuqa.transport"):
         transport = Transport(client=elasticapm_client, metadata={})
         transport.start_thread()
         # let first run finish
@@ -149,20 +149,20 @@ def test_api_request_time_dynamic(mock_send, caplog, elasticapm_client):
     assert mock_send.call_count == 0
 
 
-@mock.patch("elasticapm.transport.base.Transport._flush")
+@mock.patch("zuqa.transport.base.Transport._flush")
 def test_api_request_size_dynamic(mock_flush, caplog, elasticapm_client):
     elasticapm_client.config.update(version="1", api_request_size="100b")
     transport = Transport(client=elasticapm_client, metadata={}, queue_chill_count=1)
     transport.start_thread()
     try:
-        with caplog.at_level("DEBUG", "elasticapm.transport"):
+        with caplog.at_level("DEBUG", "zuqa.transport"):
             # we need to add lots of uncompressible data to fill up the gzip-internal buffer
             for i in range(12):
                 transport.queue("error", "".join(random.choice(string.ascii_letters) for i in range(2000)))
             transport._flushed.wait(timeout=0.1)
         assert mock_flush.call_count == 1
         elasticapm_client.config.update(version="1", api_request_size="1mb")
-        with caplog.at_level("DEBUG", "elasticapm.transport"):
+        with caplog.at_level("DEBUG", "zuqa.transport"):
             # we need to add lots of uncompressible data to fill up the gzip-internal buffer
             for i in range(12):
                 transport.queue("error", "".join(random.choice(string.ascii_letters) for i in range(2000)))
@@ -173,13 +173,13 @@ def test_api_request_size_dynamic(mock_flush, caplog, elasticapm_client):
         transport.close()
 
 
-@mock.patch("elasticapm.transport.base.Transport._flush")
+@mock.patch("zuqa.transport.base.Transport._flush")
 @pytest.mark.parametrize("elasticapm_client", [{"api_request_size": "100b"}], indirect=True)
 def test_flush_time_size(mock_flush, caplog, elasticapm_client):
     transport = Transport(client=elasticapm_client, metadata={}, queue_chill_count=1)
     transport.start_thread()
     try:
-        with caplog.at_level("DEBUG", "elasticapm.transport"):
+        with caplog.at_level("DEBUG", "zuqa.transport"):
             # we need to add lots of uncompressible data to fill up the gzip-internal buffer
             for i in range(12):
                 transport.queue("error", "".join(random.choice(string.ascii_letters) for i in range(2000)))
@@ -189,13 +189,13 @@ def test_flush_time_size(mock_flush, caplog, elasticapm_client):
         transport.close()
 
 
-@mock.patch("elasticapm.transport.base.Transport.send")
+@mock.patch("zuqa.transport.base.Transport.send")
 @pytest.mark.parametrize("elasticapm_client", [{"api_request_size": "1000b"}], indirect=True)
 def test_forced_flush(mock_send, caplog, elasticapm_client):
     transport = Transport(client=elasticapm_client, metadata={}, compress_level=0)
     transport.start_thread()
     try:
-        with caplog.at_level("DEBUG", "elasticapm.transport"):
+        with caplog.at_level("DEBUG", "zuqa.transport"):
             transport.queue("error", "x", flush=True)
     finally:
         transport.close()
@@ -203,7 +203,7 @@ def test_forced_flush(mock_send, caplog, elasticapm_client):
     assert transport._queued_data is None
 
 
-@mock.patch("elasticapm.transport.base.Transport.send")
+@mock.patch("zuqa.transport.base.Transport.send")
 def test_sync_transport_fail_and_recover(mock_send, caplog):
     transport = Transport(client=None)
     transport.start_thread()
@@ -226,7 +226,7 @@ def test_sync_transport_fail_and_recover(mock_send, caplog):
 
 @pytest.mark.parametrize("sending_elasticapm_client", [{"api_request_time": "2s"}], indirect=True)
 def test_send_timer(sending_elasticapm_client, caplog):
-    with caplog.at_level("DEBUG", "elasticapm.transport"):
+    with caplog.at_level("DEBUG", "zuqa.transport"):
         assert sending_elasticapm_client.config.api_request_time == 2000
         sending_elasticapm_client.begin_transaction("test_type")
         sending_elasticapm_client.end_transaction("test")

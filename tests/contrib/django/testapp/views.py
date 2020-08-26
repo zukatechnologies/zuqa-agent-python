@@ -37,8 +37,8 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, render
 
-import elasticapm
-from elasticapm.utils import compat
+import zuqa
+from zuqa.utils import compat
 
 
 class MyException(Exception):
@@ -100,7 +100,7 @@ def logging_view(request):
 
 def render_template_view(request):
     def something_expensive():
-        with elasticapm.capture_span("something_expensive", "code"):
+        with zuqa.capture_span("something_expensive", "code"):
             return [User(username="Ron"), User(username="Beni")]
 
     return render(request, "list_users.html", {"users": something_expensive})
@@ -112,7 +112,7 @@ def render_jinja2_template(request):
 
 def render_user_view(request):
     def something_expensive():
-        with elasticapm.capture_span("something_expensive", "code"):
+        with zuqa.capture_span("something_expensive", "code"):
             for i in range(100):
                 users = list(User.objects.all())
         return users
@@ -123,7 +123,7 @@ def render_user_view(request):
 def streaming_view(request):
     def my_generator():
         for i in range(5):
-            with elasticapm.capture_span("iter", "code"):
+            with zuqa.capture_span("iter", "code"):
                 time.sleep(0.01)
                 yield str(i)
 
@@ -132,6 +132,6 @@ def streaming_view(request):
 
 
 def override_transaction_name_view(request):
-    elasticapm.set_transaction_name("foo")
-    elasticapm.set_transaction_result("okydoky")
+    zuqa.set_transaction_name("foo")
+    zuqa.set_transaction_result("okydoky")
     return HttpResponse()

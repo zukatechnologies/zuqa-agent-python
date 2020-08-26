@@ -38,7 +38,7 @@ To initialize the agent for your application using environment variables:
 
 [source,python]
 ----
-from elasticapm.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ElasticAPM
 
 app = Flask(__name__)
 
@@ -49,7 +49,7 @@ To configure the agent using `ELASTIC_APM` in your application's settings:
 
 [source,python]
 ----
-from elasticapm.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ElasticAPM
 
 app.config['ELASTIC_APM'] = {
     'SERVICE_NAME': '<SERVICE-NAME>',
@@ -62,7 +62,7 @@ The final option is to initialize the agent with the settings as arguments:
 
 [source,python]
 ----
-from elasticapm.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ElasticAPM
 
 apm = ElasticAPM(app, service_name='<APP-ID>', secret_token='<SECRET-TOKEN>')
 ----
@@ -94,7 +94,7 @@ You can use the agent's `init_app` hook for adding the application on the fly:
 
 [source,python]
 ----
-from elasticapm.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ElasticAPM
 apm = ElasticAPM()
 
 def create_app():
@@ -142,7 +142,7 @@ with the given level or higher.
 ----
 import logging
 
-from elasticapm.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ElasticAPM
 
 apm = ElasticAPM(app, logging=logging.ERROR)
 ----
@@ -151,7 +151,7 @@ To log all messages independent of log levels to Elastic APM, pass `logging=True
 
 [source,python]
 ----
-from elasticapm.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ElasticAPM
 
 apm = ElasticAPM(app, logging=True)
 ----
@@ -167,8 +167,8 @@ just as you would with any other handler.
 ----
 from flask import Flask
 
-from elasticapm.contrib.flask import ElasticAPM
-from elasticapm.handlers.logging import LoggingHandler
+from zuqa.contrib.flask import ElasticAPM
+from zuqa.handlers.logging import LoggingHandler
 
 app = Flask(__name__)
 

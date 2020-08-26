@@ -31,7 +31,7 @@
 import mock
 import pytest
 
-from elasticapm.utils import cgroup, compat
+from zuqa.utils import cgroup, compat
 
 
 @pytest.mark.parametrize(

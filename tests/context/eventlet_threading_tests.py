@@ -35,8 +35,8 @@ eventlet = pytest.importorskip("eventlet")  # isort:skip
 
 from eventlet.patcher import is_monkey_patched
 
-import elasticapm.context
-from elasticapm.context.threadlocal import ThreadLocalContext
+import zuqa.context
+from zuqa.context.threadlocal import ThreadLocalContext
 
 pytestmark = pytest.mark.eventlet
 
@@ -45,7 +45,7 @@ def test_eventlet_thread_monkeypatched():
     eventlet.monkey_patch(thread=True)
     assert is_monkey_patched("thread")
 
-    execution_context = elasticapm.context.init_execution_context()
+    execution_context = zuqa.context.init_execution_context()
 
     # Should always use ThreadLocalContext when eventlet has patched
     # threading.local

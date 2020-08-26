@@ -32,8 +32,8 @@ import os
 
 import pytest
 
-from elasticapm.conf.constants import TRANSACTION
-from elasticapm.traces import capture_span
+from zuqa.conf.constants import TRANSACTION
+from zuqa.traces import capture_span
 
 pylibmc = pytest.importorskip("pylibmc")
 

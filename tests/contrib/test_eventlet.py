@@ -36,8 +36,8 @@ import os
 
 from eventlet.patcher import is_monkey_patched
 
-import elasticapm
-from elasticapm.conf import constants
+import zuqa
+from zuqa.conf import constants
 
 pytestmark = pytest.mark.eventlet
 
@@ -45,7 +45,7 @@ pytestmark = pytest.mark.eventlet
 def test_transaction_with_eventlet(sending_elasticapm_client):
     assert is_monkey_patched(os)
     transaction = sending_elasticapm_client.begin_transaction("test")
-    with elasticapm.capture_span("bla"):
+    with zuqa.capture_span("bla"):
         pass
     sending_elasticapm_client.end_transaction("test", "OK")
     sending_elasticapm_client.close()

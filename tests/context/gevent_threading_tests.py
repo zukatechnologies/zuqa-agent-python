@@ -31,8 +31,8 @@
 
 import pytest
 
-import elasticapm.context
-from elasticapm.context.threadlocal import ThreadLocalContext
+import zuqa.context
+from zuqa.context.threadlocal import ThreadLocalContext
 
 gevent = pytest.importorskip("gevent")
 pytestmark = pytest.mark.gevent
@@ -42,7 +42,7 @@ def test_gevent_thread_monkeypatched():
     gevent.monkey.patch_thread()
     assert gevent.monkey.is_object_patched("threading", "local")
 
-    execution_context = elasticapm.context.init_execution_context()
+    execution_context = zuqa.context.init_execution_context()
 
     # Should always use ThreadLocalContext when gevent has patched
     # threading.local

@@ -38,8 +38,8 @@ import socket
 from cassandra.cluster import Cluster
 from cassandra.query import SimpleStatement
 
-from elasticapm.conf.constants import TRANSACTION
-from elasticapm.instrumentation.packages.dbapi2 import extract_signature
+from zuqa.conf.constants import TRANSACTION
+from zuqa.instrumentation.packages.dbapi2 import extract_signature
 
 pytestmark = [pytest.mark.cassandra]
 

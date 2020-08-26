@@ -35,8 +35,8 @@ from multiprocessing.dummy import Pool
 import mock
 import pytest
 
-from elasticapm.conf import constants
-from elasticapm.metrics.base_metrics import Counter, Gauge, MetricsRegistry, MetricsSet, NoopMetric, Timer
+from zuqa.conf import constants
+from zuqa.metrics.base_metrics import Counter, Gauge, MetricsRegistry, MetricsSet, NoopMetric, Timer
 from tests.fixtures import TempStoreClient
 
 
@@ -125,10 +125,10 @@ def test_metrics_multithreaded(elasticapm_client):
     assert metricset.counter("x").val == expected
 
 
-@mock.patch("elasticapm.metrics.base_metrics.DISTINCT_LABEL_LIMIT", 3)
+@mock.patch("zuqa.metrics.base_metrics.DISTINCT_LABEL_LIMIT", 3)
 def test_metric_limit(caplog, elasticapm_client):
     m = MetricsSet(MetricsRegistry(elasticapm_client))
-    with caplog.at_level(logging.WARNING, logger="elasticapm.metrics"):
+    with caplog.at_level(logging.WARNING, logger="zuqa.metrics"):
         for i in range(2):
             counter = m.counter("counter", some_label=i)
             gauge = m.gauge("gauge", some_label=i)

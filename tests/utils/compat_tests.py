@@ -31,7 +31,7 @@
 import mock
 import pytest
 
-from elasticapm.utils import compat
+from zuqa.utils import compat
 
 try:
     from werkzeug.datastructures import MultiDict

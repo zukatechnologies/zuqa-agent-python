@@ -36,10 +36,10 @@ import os
 
 import mock
 
-from elasticapm import async_capture_span
-from elasticapm.conf import constants
-from elasticapm.contrib.tornado import ElasticAPM
-from elasticapm.utils.disttracing import TraceParent
+from zuqa import async_capture_span
+from zuqa.conf import constants
+from zuqa.contrib.tornado import ElasticAPM
+from zuqa.utils.disttracing import TraceParent
 
 pytestmark = pytest.mark.tornado
 
@@ -158,7 +158,7 @@ async def test_exception(app, base_url, http_client):
 async def test_traceparent_handling(app, base_url, http_client):
     elasticapm_client = app.elasticapm_client
     with mock.patch(
-        "elasticapm.instrumentation.packages.tornado.TraceParent.from_headers", wraps=TraceParent.from_headers
+        "zuqa.instrumentation.packages.tornado.TraceParent.from_headers", wraps=TraceParent.from_headers
     ) as wrapped_from_string:
         headers = tornado.httputil.HTTPHeaders()
         headers.add(constants.TRACEPARENT_HEADER_NAME, "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-03")

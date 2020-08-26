@@ -36,10 +36,10 @@ import pytest
 import urllib3.poolmanager
 from urllib3.exceptions import MaxRetryError, TimeoutError
 
-from elasticapm.conf import constants
-from elasticapm.transport.base import TransportException
-from elasticapm.transport.http import Transport
-from elasticapm.utils import compat
+from zuqa.conf import constants
+from zuqa.transport.base import TransportException
+from zuqa.transport.http import Transport
+from zuqa.utils import compat
 
 try:
     import urlparse
@@ -139,7 +139,7 @@ def test_header_encodings(elasticapm_client):
     transport = Transport("http://localhost:9999", headers=headers, client=elasticapm_client)
     transport.start_thread()
     try:
-        with mock.patch("elasticapm.transport.http.urllib3.PoolManager.urlopen") as mock_urlopen:
+        with mock.patch("zuqa.transport.http.urllib3.PoolManager.urlopen") as mock_urlopen:
             mock_urlopen.return_value = mock.Mock(status=202)
             transport.send("")
         _, args, kwargs = mock_urlopen.mock_calls[0]
@@ -284,7 +284,7 @@ def test_get_config(waiting_httpserver, elasticapm_client):
 def test_get_config_handle_exception(mock_urlopen, caplog, elasticapm_client):
     transport = Transport("http://example.com/" + constants.EVENTS_API_PATH, client=elasticapm_client)
     mock_urlopen.side_effect = urllib3.exceptions.RequestError(transport.http, "http://example.com/", "boom")
-    with caplog.at_level("DEBUG", "elasticapm.transport.http"):
+    with caplog.at_level("DEBUG", "zuqa.transport.http"):
         version, data, max_age = transport.get_config("1", {})
     assert version == "1"
     assert max_age == 300
@@ -296,7 +296,7 @@ def test_get_config_cache_headers_304(waiting_httpserver, caplog, elasticapm_cli
     waiting_httpserver.serve_content(code=304, content=b"", headers={"Cache-Control": "max-age=5"})
     url = waiting_httpserver.url
     transport = Transport(url + "/" + constants.EVENTS_API_PATH, client=elasticapm_client)
-    with caplog.at_level("DEBUG", "elasticapm.transport.http"):
+    with caplog.at_level("DEBUG", "zuqa.transport.http"):
         version, data, max_age = transport.get_config("1", {})
     assert waiting_httpserver.requests[0].headers["If-None-Match"] == "1"
     assert version == "1"
@@ -312,7 +312,7 @@ def test_get_config_bad_cache_control_header(waiting_httpserver, caplog, elastic
     )
     url = waiting_httpserver.url
     transport = Transport(url + "/" + constants.EVENTS_API_PATH, client=elasticapm_client)
-    with caplog.at_level("DEBUG", "elasticapm.transport.http"):
+    with caplog.at_level("DEBUG", "zuqa.transport.http"):
         version, data, max_age = transport.get_config("1", {})
     assert version == "2"
     assert data == {"x": "y"}
@@ -325,7 +325,7 @@ def test_get_config_empty_response(waiting_httpserver, caplog, elasticapm_client
     waiting_httpserver.serve_content(code=200, content=b"", headers={"Cache-Control": "max-age=5"})
     url = waiting_httpserver.url
     transport = Transport(url + "/" + constants.EVENTS_API_PATH, client=elasticapm_client)
-    with caplog.at_level("DEBUG", "elasticapm.transport.http"):
+    with caplog.at_level("DEBUG", "zuqa.transport.http"):
         version, data, max_age = transport.get_config("1", {})
     assert version == "1"
     assert data is None

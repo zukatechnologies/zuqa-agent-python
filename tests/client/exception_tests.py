@@ -33,9 +33,9 @@ import os
 import mock
 import pytest
 
-import elasticapm
-from elasticapm.conf.constants import ERROR, KEYWORD_MAX_LENGTH
-from elasticapm.utils import compat, encoding
+import zuqa
+from zuqa.conf.constants import ERROR, KEYWORD_MAX_LENGTH
+from zuqa.utils import compat, encoding
 from tests.utils.stacks import get_me_more_test_frames
 
 
@@ -254,7 +254,7 @@ def test_transaction_data_is_attached_to_errors_message_outside_span(elasticapm_
 def test_transaction_data_is_attached_to_errors_message_in_span(elasticapm_client):
     elasticapm_client.begin_transaction("test")
 
-    with elasticapm.capture_span("in_span_handler_test") as span_obj:
+    with zuqa.capture_span("in_span_handler_test") as span_obj:
         elasticapm_client.capture_message("in_span")
 
     transaction = elasticapm_client.end_transaction("test", "test")
@@ -269,7 +269,7 @@ def test_transaction_data_is_attached_to_errors_message_in_span(elasticapm_clien
 
 def test_transaction_data_is_attached_to_errors_exc_handled_in_span(elasticapm_client):
     elasticapm_client.begin_transaction("test")
-    with elasticapm.capture_span("in_span_handler_test") as span_obj:
+    with zuqa.capture_span("in_span_handler_test") as span_obj:
         try:
             assert False
         except AssertionError:
@@ -287,7 +287,7 @@ def test_transaction_data_is_attached_to_errors_exc_handled_in_span(elasticapm_c
 def test_transaction_data_is_attached_to_errors_exc_handled_outside_span(elasticapm_client):
     elasticapm_client.begin_transaction("test")
     try:
-        with elasticapm.capture_span("out_of_span_handler_test") as span_obj:
+        with zuqa.capture_span("out_of_span_handler_test") as span_obj:
             assert False
     except AssertionError:
         elasticapm_client.capture_exception()
@@ -303,9 +303,9 @@ def test_transaction_data_is_attached_to_errors_exc_handled_outside_span(elastic
 
 def test_transaction_context_is_used_in_errors(elasticapm_client):
     elasticapm_client.begin_transaction("test")
-    elasticapm.tag(foo="baz")
-    elasticapm.set_custom_context({"a": "b"})
-    elasticapm.set_user_context(username="foo", email="foo@example.com", user_id=42)
+    zuqa.tag(foo="baz")
+    zuqa.set_custom_context({"a": "b"})
+    zuqa.set_user_context(username="foo", email="foo@example.com", user_id=42)
     elasticapm_client.capture_message("x", custom={"foo": "bar"})
     transaction = elasticapm_client.end_transaction("test", "OK")
     message = elasticapm_client.events[ERROR][0]
@@ -326,7 +326,7 @@ def test_error_keyword_truncation(sending_elasticapm_client):
     try:
         raise WayTooLongException()
     except WayTooLongException:
-        with mock.patch("elasticapm.events.get_culprit") as mock_get_culprit:
+        with mock.patch("zuqa.events.get_culprit") as mock_get_culprit:
             mock_get_culprit.return_value = too_long
             sending_elasticapm_client.capture_exception(handled=False)
     sending_elasticapm_client.close()

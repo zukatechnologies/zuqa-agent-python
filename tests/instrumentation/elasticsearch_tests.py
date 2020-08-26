@@ -37,7 +37,7 @@ import os
 from elasticsearch import VERSION as ES_VERSION
 from elasticsearch import Elasticsearch
 
-from elasticapm.conf.constants import TRANSACTION
+from zuqa.conf.constants import TRANSACTION
 
 pytestmark = [pytest.mark.elasticsearch]
 

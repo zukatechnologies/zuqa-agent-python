@@ -34,8 +34,8 @@ pytest.importorskip("twisted")  # isort:skip
 
 from twisted.python.failure import Failure
 
-from elasticapm.conf.constants import ERROR
-from elasticapm.contrib.twisted import LogObserver
+from zuqa.conf.constants import ERROR
+from zuqa.contrib.twisted import LogObserver
 
 pytestmark = pytest.mark.twisted
 

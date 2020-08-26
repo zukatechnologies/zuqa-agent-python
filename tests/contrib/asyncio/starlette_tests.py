@@ -37,10 +37,10 @@ from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
-from elasticapm import async_capture_span
-from elasticapm.conf import constants
-from elasticapm.contrib.starlette import ElasticAPM
-from elasticapm.utils.disttracing import TraceParent
+from zuqa import async_capture_span
+from zuqa.conf import constants
+from zuqa.contrib.starlette import ElasticAPM
+from zuqa.utils.disttracing import TraceParent
 
 pytestmark = [pytest.mark.starlette]
 
@@ -166,7 +166,7 @@ def test_exception(app, elasticapm_client):
 def test_traceparent_handling(app, elasticapm_client, header_name):
     client = TestClient(app)
     with mock.patch(
-        "elasticapm.contrib.flask.TraceParent.from_string", wraps=TraceParent.from_string
+        "zuqa.contrib.flask.TraceParent.from_string", wraps=TraceParent.from_string
     ) as wrapped_from_string:
         response = client.get(
             "/",

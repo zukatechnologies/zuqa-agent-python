@@ -35,11 +35,11 @@ pytest.importorskip("requests")  # isort:skip
 import requests
 from requests.exceptions import InvalidURL, MissingSchema
 
-from elasticapm.conf import constants
-from elasticapm.conf.constants import TRANSACTION
-from elasticapm.traces import capture_span
-from elasticapm.utils import compat
-from elasticapm.utils.disttracing import TraceParent
+from zuqa.conf import constants
+from zuqa.conf.constants import TRANSACTION
+from zuqa.traces import capture_span
+from zuqa.utils import compat
+from zuqa.utils.disttracing import TraceParent
 
 pytestmark = pytest.mark.requests
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
-elasticapm
+zuqa
 ======
 
-elastic-apm is a Python client for `Elastic APM <https://elastic.co/apm>`_. It provides
+zuqa is a Python client for `zuQA Kit <https://zuqa.io>`_. It provides
 full out-of-the-box support for many of the popular frameworks, including
 `Django <djangoproject.com>`_, `Flask <http://flask.pocoo.org/>`_, and `Pylons
-<http://www.pylonsproject.org/>`_. elastic-apm also includes drop-in support for any
+<http://www.pylonsproject.org/>`_. zuqa also includes drop-in support for any
 `WSGI <http://wsgi.readthedocs.org/>`_-compatible web application.
 """
 
@@ -86,11 +86,11 @@ class optional_build_ext(build_ext):
 
 def get_version():
     """
-    Get version without importing from elasticapm. This avoids any side effects
+    Get version without importing from zuqa. This avoids any side effects
     from importing while installing and/or building the module
     :return: a string, indicating the version
     """
-    version_file = open(os.path.join("elasticapm", "version.py"), encoding="utf-8")
+    version_file = open(os.path.join("zuqa", "version.py"), encoding="utf-8")
     for line in version_file:
         if line.startswith("__version__"):
             version_tuple = ast.literal_eval(line.split(" = ")[1])
@@ -132,7 +132,6 @@ if sys.version_info[0] == 2:
 else:
     tests_require += ["python3-memcached"]
 
-
 try:
     import __pypy__
 except ImportError:
@@ -165,12 +164,12 @@ class PyTest(TestCommand):
 
 
 setup_kwargs = dict(
-    name="elastic-apm",
+    name="zuqa",
     version=get_version(),
-    author="Elastic, Inc",
+    author="Zuka Technologies, Inc",
     license="BSD",
-    url="https://github.com/elastic/apm-agent-python",
-    description="The official Python module for Elastic APM",
+    url="https://github.com/zukatechnologies/zuqa-agent-python",
+    description="The official Python module for zuQA",
     long_description=open(os.path.join(os.path.dirname(__file__), "README.rst"), encoding="utf-8").read(),
     packages=find_packages(exclude=("tests",)),
     zip_safe=False,
@@ -188,7 +187,7 @@ setup_kwargs = dict(
     cmdclass={"test": PyTest},
     test_suite="tests",
     include_package_data=True,
-    entry_points={"paste.filter_app_factory": ["elasticapm = elasticapm.contrib.paste:filter_factory"]},
+    entry_points={"paste.filter_app_factory": ["zuqa = zuqa.contrib.paste:filter_factory"]},
     classifiers=[
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",
@@ -212,7 +211,7 @@ def run_setup(with_extensions):
 
     if with_extensions:
         setup_kwargs_tmp["ext_modules"] = [
-            Extension("elasticapm.utils.wrapt._wrappers", ["elasticapm/utils/wrapt/_wrappers.c"])
+            Extension("zuqa.utils.wrapt._wrappers", ["zuqa/utils/wrapt/_wrappers.c"])
         ]
         setup_kwargs_tmp["cmdclass"]["build_ext"] = optional_build_ext
 
@@ -221,7 +220,7 @@ def run_setup(with_extensions):
 
 # Figure out if we should build the wrapt C extensions
 
-with_extensions = os.environ.get("ELASTIC_APM_WRAPT_EXTENSIONS", None)
+with_extensions = os.environ.get("ZUQA_AGENT_WRAPT_EXTENSIONS", None)
 
 if with_extensions:
     if with_extensions.lower() == "true":

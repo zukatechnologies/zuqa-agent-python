@@ -32,9 +32,9 @@ import os
 
 import pytest
 
-from elasticapm.conf.constants import TRANSACTION
-from elasticapm.instrumentation.packages.pymssql import get_host_port
-from elasticapm.utils import default_ports
+from zuqa.conf.constants import TRANSACTION
+from zuqa.instrumentation.packages.pymssql import get_host_port
+from zuqa.utils import default_ports
 
 pymssql = pytest.importorskip("pymssql")
 

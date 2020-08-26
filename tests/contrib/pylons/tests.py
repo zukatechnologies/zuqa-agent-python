@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import
 
-from elasticapm.contrib.pylons import ElasticAPM
+from zuqa.contrib.pylons import ElasticAPM
 from tests.fixtures import TempStoreClient
 
 
@@ -41,10 +41,10 @@ def example_app(environ, start_response):
 
 def test_init():
     config = {
-        "elasticapm.server_url": "http://localhost/api/store",
-        "elasticapm.service_name": "p" * 32,
-        "elasticapm.secret_token": "a" * 32,
-        "elasticapm.metrics_interval": "0ms",
+        "zuqa.server_url": "http://localhost/api/store",
+        "zuqa.service_name": "p" * 32,
+        "zuqa.secret_token": "a" * 32,
+        "zuqa.metrics_interval": "0ms",
     }
     middleware = ElasticAPM(example_app, config, client_cls=TempStoreClient)
     assert middleware.client.config.server_url == "http://localhost/api/store"
