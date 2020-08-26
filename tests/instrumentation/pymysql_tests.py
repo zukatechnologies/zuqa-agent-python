@@ -32,7 +32,7 @@ import os
 
 import pytest
 
-from elasticapm.conf.constants import TRANSACTION
+from zuqa.conf.constants import TRANSACTION
 
 pymysql = pytest.importorskip("pymysql")
 

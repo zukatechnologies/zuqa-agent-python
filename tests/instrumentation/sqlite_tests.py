@@ -30,7 +30,7 @@
 
 import sqlite3
 
-from elasticapm.conf.constants import TRANSACTION
+from zuqa.conf.constants import TRANSACTION
 
 
 def test_connect(instrument, elasticapm_client):

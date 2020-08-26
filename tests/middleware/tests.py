@@ -33,8 +33,8 @@ from __future__ import absolute_import
 import pytest
 import webob
 
-from elasticapm.conf.constants import ERROR
-from elasticapm.middleware import ElasticAPM
+from zuqa.conf.constants import ERROR
+from zuqa.middleware import ElasticAPM
 
 
 def example_app(environ, start_response):

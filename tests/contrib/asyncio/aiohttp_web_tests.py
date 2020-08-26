@@ -35,11 +35,11 @@ aiohttp = pytest.importorskip("aiohttp")  # isort:skip
 import mock
 from multidict import MultiDict
 
-from elasticapm import async_capture_span
-from elasticapm.conf import constants
-from elasticapm.contrib.aiohttp import ElasticAPM
-from elasticapm.contrib.aiohttp.middleware import AioHttpTraceParent
-from elasticapm.utils.disttracing import TraceParent
+from zuqa import async_capture_span
+from zuqa.conf import constants
+from zuqa.contrib.aiohttp import ElasticAPM
+from zuqa.contrib.aiohttp.middleware import AioHttpTraceParent
+from zuqa.utils.disttracing import TraceParent
 
 pytestmark = [pytest.mark.aiohttp]
 
@@ -138,7 +138,7 @@ async def test_traceparent_handling(aiohttp_client, aioeapm):
     client = await aiohttp_client(app)
     elasticapm_client = aioeapm.client
     with mock.patch(
-        "elasticapm.contrib.aiohttp.middleware.TraceParent.from_string", wraps=TraceParent.from_string
+        "zuqa.contrib.aiohttp.middleware.TraceParent.from_string", wraps=TraceParent.from_string
     ) as wrapped_from_string:
         resp = await client.get(
             "/boom",

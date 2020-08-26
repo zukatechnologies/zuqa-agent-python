@@ -32,7 +32,7 @@ from __future__ import absolute_import
 
 import pytest
 
-from elasticapm.utils.disttracing import TraceParent
+from zuqa.utils.disttracing import TraceParent
 from tests.utils import assert_any_record_contains
 
 
@@ -59,7 +59,7 @@ def test_trace_parent_to_str():
 
 def test_trace_parent_wrong_version(caplog):
     header = "xx-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-03"
-    with caplog.at_level("DEBUG", "elasticapm.utils"):
+    with caplog.at_level("DEBUG", "zuqa.utils"):
         trace_parent = TraceParent.from_string(header)
     assert trace_parent is None
     assert_any_record_contains(caplog.records, "Invalid version field, value xx")
@@ -68,7 +68,7 @@ def test_trace_parent_wrong_version(caplog):
 def test_trace_parent_wrong_version_255(caplog):
     """Version FF or 255 is explicitly forbidden"""
     header = "ff-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-03"
-    with caplog.at_level("DEBUG", "elasticapm.utils"):
+    with caplog.at_level("DEBUG", "zuqa.utils"):
         trace_parent = TraceParent.from_string(header)
     assert trace_parent is None
     assert_any_record_contains(caplog.records, "Invalid version field, value 255")
@@ -76,7 +76,7 @@ def test_trace_parent_wrong_version_255(caplog):
 
 def test_trace_parent_wrong_trace_options_field(caplog):
     header = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-xx"
-    with caplog.at_level("DEBUG", "elasticapm.utils"):
+    with caplog.at_level("DEBUG", "zuqa.utils"):
         trace_parent = TraceParent.from_string(header)
     assert trace_parent is None
     assert_any_record_contains(caplog.records, "Invalid trace-options field, value xx")
@@ -84,7 +84,7 @@ def test_trace_parent_wrong_trace_options_field(caplog):
 
 def test_trace_parent_wrong_format(caplog):
     header = "00"
-    with caplog.at_level("DEBUG", "elasticapm.utils"):
+    with caplog.at_level("DEBUG", "zuqa.utils"):
         trace_parent = TraceParent.from_string(header)
     assert trace_parent is None
     assert_any_record_contains(caplog.records, "Invalid traceparent header format, value 00")

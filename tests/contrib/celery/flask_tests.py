@@ -35,7 +35,7 @@ celery = pytest.importorskip("celery")  # isort:skip
 
 import mock
 
-from elasticapm.conf.constants import ERROR, TRANSACTION
+from zuqa.conf.constants import ERROR, TRANSACTION
 
 pytestmark = [pytest.mark.celery, pytest.mark.flask]
 

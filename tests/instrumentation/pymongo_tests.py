@@ -33,7 +33,7 @@ import os
 
 import pytest
 
-from elasticapm.conf.constants import TRANSACTION
+from zuqa.conf.constants import TRANSACTION
 
 pymongo = pytest.importorskip("pymongo")
 

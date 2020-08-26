@@ -32,10 +32,10 @@ import time
 
 import pytest
 
-from elasticapm.metrics.base_metrics import MetricsRegistry
-from elasticapm.utils import compat
+from zuqa.metrics.base_metrics import MetricsRegistry
+from zuqa.utils import compat
 
-cpu_psutil = pytest.importorskip("elasticapm.metrics.sets.cpu_psutil")
+cpu_psutil = pytest.importorskip("zuqa.metrics.sets.cpu_psutil")
 pytestmark = pytest.mark.psutil
 
 
@@ -58,7 +58,7 @@ def test_cpu_mem_from_psutil(elasticapm_client):
     assert data["samples"]["system.process.memory.size"]["value"] > 0
 
 
-cpu_linux = pytest.importorskip("elasticapm.metrics.sets.cpu_linux")
+cpu_linux = pytest.importorskip("zuqa.metrics.sets.cpu_linux")
 
 
 @pytest.mark.skip("test is flaky on CI")

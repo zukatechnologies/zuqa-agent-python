@@ -21,7 +21,7 @@ To create a `Client` instance, import it and call its constructor:
 
 [source,python]
 ----
-from elasticapm import Client
+from zuqa import Client
 
 client = Client({'SERVICE_NAME': 'example'}, **defaults)
 ----
@@ -191,9 +191,9 @@ For <<framework-support, supported frameworks>>, this is called automatically. E
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-elasticapm.instrument()
+zuqa.instrument()
 ----
 
 [float]
@@ -206,9 +206,9 @@ and can be overridden using this function. Example:
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-elasticapm.set_transaction_name('myapp.billing_process')
+zuqa.set_transaction_name('myapp.billing_process')
 ----
 
  * `name`: (*required*) A string describing name of the transaction
@@ -225,9 +225,9 @@ and can be overridden using this function. Example:
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-elasticapm.set_transaction_result('SUCCESS')
+zuqa.set_transaction_result('SUCCESS')
 ----
 
  * `result`: (*required*) A string describing the result of the transaction, e.g. `HTTP 2xx` or `SUCCESS`
@@ -243,9 +243,9 @@ Get the id of the current transaction. Example:
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-transaction_id = elasticapm.get_transaction_id()
+transaction_id = zuqa.get_transaction_id()
 ----
 
 
@@ -257,9 +257,9 @@ Get the `trace_id` of the current transaction's trace. Example:
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-trace_id = elasticapm.get_trace_id()
+trace_id = zuqa.get_trace_id()
 ----
 
 
@@ -271,9 +271,9 @@ Get the id of the current span. Example:
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-span_id = elasticapm.get_span_id()
+span_id = zuqa.get_span_id()
 ----
 
 
@@ -292,9 +292,9 @@ Example:
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-elasticapm.set_custom_context({'billing_amount': product.price * item_count})
+zuqa.set_custom_context({'billing_amount': product.price * item_count})
 ----
 
  * `data`: (*required*) A dictionary with the data to be attached. This should be a flat key/value `dict` object.
@@ -315,9 +315,9 @@ Example:
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-elasticapm.set_user_context(username=user.username, email=user.email, user_id=user.id)
+zuqa.set_user_context(username=user.username, email=user.email, user_id=user.id)
 ----
 
  * `username`: The username of the logged in user
@@ -340,13 +340,13 @@ When used as a context manager, a name has to be provided.
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-@elasticapm.capture_span()
+@zuqa.capture_span()
 def coffee_maker(strength):
     fetch_water()
 
-    with elasticapm.capture_span('near-to-machine', labels={"type": "arabica"}):
+    with zuqa.capture_span('near-to-machine', labels={"type": "arabica"}):
         insert_filter()
         for i in range(strength):
             pour_coffee()
@@ -375,13 +375,13 @@ When used as a context manager, a name has to be provided.
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-@elasticapm.async_capture_span()
+@zuqa.async_capture_span()
 async def coffee_maker(strength):
     await fetch_water()
 
-    async with elasticapm.async_capture_span('near-to-machine', labels={"type": "arabica"}):
+    async with zuqa.async_capture_span('near-to-machine', labels={"type": "arabica"}):
         await insert_filter()
         async for i in range(strength):
             await pour_coffee()
@@ -414,9 +414,9 @@ Example:
 
 [source,python]
 ----
-import elasticapm
+import zuqa
 
-elasticapm.label(ecommerce=True, dollar_value=47.12)
+zuqa.label(ecommerce=True, dollar_value=47.12)
 ----
 
 Errors that happen after this call will also have the labels attached to them.

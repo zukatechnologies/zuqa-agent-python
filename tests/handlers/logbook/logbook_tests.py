@@ -32,8 +32,8 @@ import logbook
 import pytest
 from logbook import LogRecord
 
-from elasticapm.conf.constants import ERROR
-from elasticapm.handlers.logbook import LogbookHandler
+from zuqa.conf.constants import ERROR
+from zuqa.handlers.logbook import LogbookHandler
 
 
 @pytest.fixture()
@@ -43,7 +43,7 @@ def logbook_logger():
 
 @pytest.fixture()
 def logbook_handler(elasticapm_client):
-    elasticapm_client.config.include_paths = ["tests", "elasticapm"]
+    elasticapm_client.config.include_paths = ["tests", "zuqa"]
     return LogbookHandler(elasticapm_client)
 
 
@@ -171,7 +171,7 @@ def test_logbook_handler_emit_error(capsys, elasticapm_client):
 
 def test_logbook_handler_dont_emit_elasticapm(capsys, elasticapm_client):
     handler = LogbookHandler(elasticapm_client)
-    handler.emit(LogRecord("elasticapm.errors", 1, "Oops"))
+    handler.emit(LogRecord("zuqa.errors", 1, "Oops"))
     out, err = capsys.readouterr()
     assert "Oops" in err
 

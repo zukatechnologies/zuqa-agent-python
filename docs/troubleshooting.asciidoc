@@ -94,7 +94,7 @@ LOGGING = {
         }
     },
     'loggers': {
-        'elasticapm': {
+        'zuqa': {
             'level': 'DEBUG',
             'handlers': ['console']
         },
@@ -122,7 +122,7 @@ Creating a console Handler and adding it to the `elasticapm` logger is easy:
 ----
 import logging
 
-elastic_apm_logger = logging.getLogger("elasticapm")
+elastic_apm_logger = logging.getLogger("zuqa")
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
 elastic_apm_logger.addHandler(console_handler)

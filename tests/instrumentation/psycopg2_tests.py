@@ -34,9 +34,9 @@ import os
 
 import pytest
 
-from elasticapm.conf.constants import TRANSACTION
-from elasticapm.instrumentation.packages.psycopg2 import PGCursorProxy, extract_signature
-from elasticapm.utils import default_ports
+from zuqa.conf.constants import TRANSACTION
+from zuqa.instrumentation.packages.psycopg2 import PGCursorProxy, extract_signature
+from zuqa.utils import default_ports
 
 psycopg2 = pytest.importorskip("psycopg2")
 
@@ -347,7 +347,7 @@ def test_psycopg2_encrypt_password(instrument, postgres_connection, elasticapm_c
 @pytest.mark.skipif(not has_postgres_configured, reason="PostgresSQL not configured")
 def test_psycopg2_tracing_outside_of_elasticapm_transaction(instrument, postgres_connection, elasticapm_client):
     cursor = postgres_connection.cursor()
-    # check that the cursor is a proxy, even though we're not in an elasticapm
+    # check that the cursor is a proxy, even though we're not in an zuqa
     # transaction
     assert isinstance(cursor, PGCursorProxy)
     cursor.execute("SELECT 1")

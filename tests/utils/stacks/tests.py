@@ -38,10 +38,10 @@ import pkgutil
 import pytest
 from mock import Mock
 
-import elasticapm
-from elasticapm.conf import constants
-from elasticapm.utils import compat, stacks
-from elasticapm.utils.stacks import get_culprit, get_stack_info
+import zuqa
+from zuqa.conf import constants
+from zuqa.utils import compat, stacks
+from zuqa.utils.stacks import get_culprit, get_stack_info
 from tests.utils.stacks import get_me_a_test_frame, get_me_more_test_frames
 
 
@@ -148,7 +148,7 @@ def test_iter_stack_frames_max_frames():
 )
 def test_iter_stack_frames_max_frames_is_dynamic(elasticapm_client):
     def func():
-        with elasticapm.capture_span("yay"):
+        with zuqa.capture_span("yay"):
             pass
 
     elasticapm_client.begin_transaction("foo")

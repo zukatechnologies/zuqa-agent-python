@@ -32,16 +32,16 @@ from asyncio import tasks
 
 import pytest
 
-import elasticapm
-from elasticapm.conf import constants
+import zuqa
+from zuqa.conf import constants
 
 pytestmark = [pytest.mark.asyncio]
 
 
 async def test_async_capture_span(instrument, elasticapm_client):
-    @elasticapm.async_capture_span()
+    @zuqa.async_capture_span()
     async def do_some_work():
-        async with elasticapm.async_capture_span("more-work"):
+        async with zuqa.async_capture_span("more-work"):
             await tasks.sleep(0.1)
 
     elasticapm_client.begin_transaction("test")

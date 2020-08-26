@@ -35,8 +35,8 @@ from __future__ import absolute_import
 import decimal
 import uuid
 
-from elasticapm.utils import compat
-from elasticapm.utils.encoding import enforce_label_format, shorten, transform
+from zuqa.utils import compat
+from zuqa.utils.encoding import enforce_label_format, shorten, transform
 
 
 def test_transform_incorrect_unicode():

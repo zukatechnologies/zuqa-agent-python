@@ -62,7 +62,7 @@ def pytest_configure(config):
                 "django.contrib.sites",
                 "django.contrib.redirects",
                 "django.contrib.contenttypes",
-                "elasticapm.contrib.django",
+                "zuqa.contrib.django",
                 "tests.contrib.django.testapp",
             ],
             ROOT_URLCONF="tests.contrib.django.testapp.urls",

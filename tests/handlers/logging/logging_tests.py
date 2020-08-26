@@ -34,19 +34,19 @@ from logging import LogRecord
 
 import pytest
 
-from elasticapm.conf import Config
-from elasticapm.conf.constants import ERROR
-from elasticapm.handlers.logging import Formatter, LoggingFilter, LoggingHandler
-from elasticapm.handlers.structlog import structlog_processor
-from elasticapm.traces import Tracer, capture_span
-from elasticapm.utils import compat
-from elasticapm.utils.stacks import iter_stack_frames
+from zuqa.conf import Config
+from zuqa.conf.constants import ERROR
+from zuqa.handlers.logging import Formatter, LoggingFilter, LoggingHandler
+from zuqa.handlers.structlog import structlog_processor
+from zuqa.traces import Tracer, capture_span
+from zuqa.utils import compat
+from zuqa.utils.stacks import iter_stack_frames
 from tests.fixtures import TempStoreClient
 
 
 @pytest.fixture()
 def logger(elasticapm_client):
-    elasticapm_client.config.include_paths = ["tests", "elasticapm"]
+    elasticapm_client.config.include_paths = ["tests", "zuqa"]
     handler = LoggingHandler(elasticapm_client)
     logger = logging.getLogger(__name__)
     logger.handlers = []
@@ -239,7 +239,7 @@ def test_logging_handler_emit_error(capsys, elasticapm_client):
 
 def test_logging_handler_dont_emit_elasticapm(capsys, elasticapm_client):
     handler = LoggingHandler(elasticapm_client)
-    handler.emit(LogRecord("elasticapm.errors", 1, "/ab/c/", 10, "Oops", [], None))
+    handler.emit(LogRecord("zuqa.errors", 1, "/ab/c/", 10, "Oops", [], None))
     out, err = capsys.readouterr()
     assert "Oops" in err
 
@@ -343,7 +343,7 @@ def test_formatter():
     record = logging.LogRecord(__name__, logging.DEBUG, __file__, 252, "dummy_msg", [], None)
     formatter = Formatter()
     formatted_record = formatter.format(record)
-    assert "| elasticapm" in formatted_record
+    assert "| zuqa" in formatted_record
     assert hasattr(record, "elasticapm_transaction_id")
     record = logging.LogRecord(__name__, logging.DEBUG, __file__, 252, "dummy_msg", [], None)
     formatted_time = formatter.formatTime(record)

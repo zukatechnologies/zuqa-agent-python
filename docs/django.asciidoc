@@ -35,7 +35,7 @@ Set up the Elastic APM agent in Django with these two steps:
 ----
 INSTALLED_APPS = (
    # ...
-   'elasticapm.contrib.django',
+   'zuqa.contrib.django',
 )
 ----
 
@@ -216,9 +216,9 @@ LOGGING = {
         },
     },
     'handlers': {
-        'elasticapm': {
+        'zuqa': {
             'level': 'WARNING',
-            'class': 'elasticapm.contrib.django.handlers.LoggingHandler',
+            'class': 'zuqa.contrib.django.handlers.LoggingHandler',
         },
         'console': {
             'level': 'DEBUG',
@@ -234,11 +234,11 @@ LOGGING = {
         },
         'mysite': {
             'level': 'WARNING',
-            'handlers': ['elasticapm'],
+            'handlers': ['zuqa'],
             'propagate': False,
         },
         # Log errors from the Elastic APM module to the console (recommended)
-        'elasticapm.errors': {
+        'zuqa.errors': {
             'level': 'ERROR',
             'handlers': ['console'],
             'propagate': False,
@@ -314,7 +314,7 @@ these errors, add
 ----
 MIDDLEWARE = (
     # ...
-    'elasticapm.contrib.django.middleware.Catch404Middleware',
+    'zuqa.contrib.django.middleware.Catch404Middleware',
     # ...
 )
 ----

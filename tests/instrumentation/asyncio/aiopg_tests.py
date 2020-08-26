@@ -34,7 +34,7 @@ aiopg = pytest.importorskip("aiopg")  # isort:skip
 
 import os
 
-from elasticapm.conf import constants
+from zuqa.conf import constants
 
 try:
     from psycopg2 import sql

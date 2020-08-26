@@ -36,7 +36,7 @@ pip install opentracing>=2.0.0
 
 [source,python]
 ----
-from elasticapm.contrib.opentracing import Tracer
+from zuqa.contrib.opentracing import Tracer
 
 tracer = Tracer();
 ----

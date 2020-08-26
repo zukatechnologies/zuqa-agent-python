@@ -35,7 +35,7 @@ To initialize the agent for your application using environment variables:
 ----
 from aiohttp import web
 
-from elasticapm.contrib.aiohttp import ElasticAPM
+from zuqa.contrib.aiohttp import ElasticAPM
 
 app = web.Application()
 
@@ -48,7 +48,7 @@ To configure the agent using `ELASTIC_APM` in your application's settings:
 ----
 from aiohttp import web
 
-from elasticapm.contrib.aiohttp import ElasticAPM
+from zuqa.contrib.aiohttp import ElasticAPM
 
 app = web.Application()
 

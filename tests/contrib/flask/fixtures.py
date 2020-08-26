@@ -35,8 +35,8 @@ import pytest
 from flask import Flask, Response, make_response, render_template, signals
 from pytest_localserver.http import WSGIServer
 
-import elasticapm
-from elasticapm.contrib.flask import ElasticAPM
+import zuqa
+from zuqa.contrib.flask import ElasticAPM
 
 
 @pytest.fixture()
@@ -63,7 +63,7 @@ def flask_app():
     def streaming():
         def generator():
             for i in range(5):
-                with elasticapm.capture_span("generator"):
+                with zuqa.capture_span("generator"):
                     time.sleep(0.01)
                     yield str(i)
 
@@ -71,8 +71,8 @@ def flask_app():
 
     @app.route("/transaction-name/", methods=["GET"])
     def transaction_name():
-        elasticapm.set_transaction_name("foo")
-        elasticapm.set_transaction_result("okydoky")
+        zuqa.set_transaction_name("foo")
+        zuqa.set_transaction_result("okydoky")
         return Response("")
 
     return app

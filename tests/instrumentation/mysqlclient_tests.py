@@ -34,8 +34,8 @@ import os
 
 import pytest
 
-from elasticapm.conf.constants import TRANSACTION
-from elasticapm.instrumentation.packages.mysql import extract_signature
+from zuqa.conf.constants import TRANSACTION
+from zuqa.instrumentation.packages.mysql import extract_signature
 
 mysqldb = pytest.importorskip("MySQLdb")
 

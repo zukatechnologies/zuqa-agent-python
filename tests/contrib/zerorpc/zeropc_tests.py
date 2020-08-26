@@ -36,8 +36,8 @@ import tempfile
 
 import pytest
 
-from elasticapm.conf.constants import ERROR
-from elasticapm.contrib.zerorpc import Middleware
+from zuqa.conf.constants import ERROR
+from zuqa.contrib.zerorpc import Middleware
 
 pytestmark = [
     pytest.mark.zerorpc,

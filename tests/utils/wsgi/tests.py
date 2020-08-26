@@ -30,7 +30,7 @@
 
 from __future__ import absolute_import
 
-from elasticapm.utils.wsgi import get_environ, get_headers, get_host
+from zuqa.utils.wsgi import get_environ, get_headers, get_host
 
 
 def test_get_headers_tuple_as_key():

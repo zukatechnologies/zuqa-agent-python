@@ -31,7 +31,7 @@ import time
 
 import mock
 
-from elasticapm.utils.threading import IntervalTimer
+from zuqa.utils.threading import IntervalTimer
 
 
 def test_interval_timer():
