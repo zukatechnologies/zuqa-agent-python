@@ -50,7 +50,7 @@ from zuqa.utils.disttracing import trace_parent_from_headers, trace_parent_from_
 __all__ = ("VERSION", "Client")
 
 try:
-    VERSION = __import__("pkg_resources").get_distribution("elastic-apm").version
+    VERSION = __import__("pkg_resources").get_distribution("zuqa").version
 except Exception:
     VERSION = "unknown"
 

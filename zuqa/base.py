@@ -192,7 +192,7 @@ class Client(object):
             self._metrics.register(path)
         if self.config.breakdown_metrics:
             self._metrics.register("zuqa.metrics.sets.breakdown.BreakdownMetricSet")
-        # self._thread_managers["metrics"] = self._metrics
+        self._thread_managers["metrics"] = self._metrics
         compat.atexit_register(self.close)
         if self.config.central_config:
             self._thread_managers["config"] = self.config
@@ -274,7 +274,7 @@ class Client(object):
         :param start: override the start timestamp, mostly useful for testing
         :return: the started transaction object
         """
-        self._metrics.start_thread(self)
+        self._metrics.collect_actively = True
         if self.config.is_recording:
             return self.tracer.begin_transaction(transaction_type, trace_parent=trace_parent, start=start)
 
@@ -287,8 +287,8 @@ class Client(object):
         :return: the ended transaction object
         """
         transaction = self.tracer.end_transaction(result, name, duration=duration)
-        if transaction != "":
-            self._metrics.stop_thread(transaction.name.split(" ")[1])
+        self._metrics.last_transaction_name = transaction.name
+        self._metrics.collect_actively = False
         return transaction
 
     def close(self):
