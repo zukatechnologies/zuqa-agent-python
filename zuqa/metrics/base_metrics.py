@@ -28,13 +28,11 @@
 #  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import json
 import threading
 import time
 from collections import defaultdict
 
-import urllib3
-
+from zuqa.conf import constants
 from zuqa.utils import compat
 from zuqa.utils.logging import get_logger
 from zuqa.utils.module_import import import_string
@@ -44,13 +42,8 @@ logger = get_logger("zuqa.metrics")
 
 DISTINCT_LABEL_LIMIT = 1000
 
-http = urllib3.PoolManager()
-
 
 class MetricsRegistry(ThreadManager):
-    metric_data = []
-    time_ms = 0
-
     def __init__(self, client, tags=None):
         """
         Creates a new metric registry
@@ -62,6 +55,9 @@ class MetricsRegistry(ThreadManager):
         self._metricsets = {}
         self._tags = tags or {}
         self._collect_timer = None
+        self.collect_actively = False  # for transaction specific metrics
+        self.last_transaction_name = None  # for transaction specific metrics
+        self.transaction_metrics_data = []  # for transaction specific metrics
         super(MetricsRegistry, self).__init__()
 
     def register(self, class_path):
@@ -89,19 +85,20 @@ class MetricsRegistry(ThreadManager):
         Collect metrics from all registered metric sets and queues them for sending
         :return:
         """
-        if self.client.config.is_recording:
-            logger.debug("Collecting metrics")
-            for _, metricset in compat.iteritems(self._metricsets):
-                for data in metricset.collect():
-                    samples = data['samples']
-                    if samples.__len__() >= 3:
-                        samples['time_ms'] = self.time_ms
-                        self.time_ms += self.collect_interval
-                        self.metric_data.append(data)
+        if self.collect_actively:
+            if self.client.config.is_recording:
+                logger.debug("Collecting metrics")
+                for _, metricset in compat.iteritems(self._metricsets):
+                    for data in metricset.collect():
+                        self.transaction_metrics_data.append(data)
+        elif len(self.transaction_metrics_data) > 0:
+            self.client.queue(constants.TRANSACTION_METRICSET, {
+                "url": self.last_transaction_name,
+                "metricsets": self.transaction_metrics_data
+            }, flush=True)
+            self.transaction_metrics_data = []
 
     def start_thread(self, pid=None):
-        self.time_ms = 0
-        self.metric_data = []
         super(MetricsRegistry, self).start_thread(pid=pid)
         if self.client.config.metrics_interval:
             self._collect_timer = IntervalTimer(
@@ -110,22 +107,11 @@ class MetricsRegistry(ThreadManager):
             logger.debug("Starting metrics collect timer")
             self._collect_timer.start()
 
-    def stop_thread(self, url):
+    def stop_thread(self):
         if self._collect_timer and self._collect_timer.is_alive():
             logger.debug("Cancelling collect timer")
             self._collect_timer.cancel()
             self._collect_timer = None
-            self.send_metrics_to_apm(metricset=str(self.metric_data), url=url)
-
-    def send_metrics_to_apm(self, metricset, url):
-        data = dict(metricset=metricset, url=url)
-        json_data = json.dumps(data)
-        encode_json_data = json_data.encode('utf-8')
-        result = http.request("POST", "http://0.0.0.0:8200/v1/metrics/save", data=encode_json_data, headers={
-            "Content-Type": "application/json; charset=utf-8",
-            "Content-Length": len(encode_json_data)
-        })
-        print(result.readlines())
 
     @property
     def collect_interval(self):

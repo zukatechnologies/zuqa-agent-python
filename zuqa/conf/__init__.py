@@ -296,8 +296,8 @@ class Config(_ConfigBase):
     metrics_interval = _ConfigValue(
         "METRICS_INTERVAL",
         type=int,
-        validators=[duration_validator, ExcludeRangeValidator(1, 999, "{range_start} - {range_end} ms")],
-        default=400,
+        validators=[duration_validator, ExcludeRangeValidator(1, 99, "{range_start} - {range_end} ms")],
+        default=200,
     )
     breakdown_metrics = _BoolConfigValue("BREAKDOWN_METRICS", default=True)
     disable_metrics = _ListConfigValue("DISABLE_METRICS", type=starmatch_to_regex, default=[])

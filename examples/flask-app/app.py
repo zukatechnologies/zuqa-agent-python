@@ -15,6 +15,7 @@ app.config['ZUQA'] = {
     'SECRET_TOKEN': '',
     # Set custom APM Server URL (default: http://localhost:8200)
     'SERVER_URL': 'http://localhost:8200',
+    'METRICS_INTERVAL': '200ms',
 }
 
 apm = ZUQA(app)
@@ -23,5 +24,5 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/hello')
 def hello_world():
-    time.sleep(4)
+    time.sleep(1)
     return 'Hello, World!'
