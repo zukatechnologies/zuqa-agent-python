@@ -12,10 +12,10 @@ Install the ZUQA agent using pip:
 
 [source,bash]
 ----
-$ pip install elastic-apm
+$ pip install zuqa
 ----
 
-or add `elastic-apm` to your project's `requirements.txt` file.
+or add `zuqa` to your project's `requirements.txt` file.
 
 
 [float]

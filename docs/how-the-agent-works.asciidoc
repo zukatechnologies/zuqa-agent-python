@@ -4,8 +4,7 @@
 To gather APM events (called Transactions and Spans), errors and metrics,
 the Python agent instruments your application in a few different ways.
 These events, are then sent to the APM Server.
-The APM Server converts them to a format suitable for Elasticsearch, and sends them to an Elasticsearch cluster.
-You can then use the APM app in Kibana to gain insight into latency issues and error culprits within your application.
+The APM Server converts them to a format suitable for zuQA Kit.
 
 Broadly, we differentiate between three different approaches to collect the necessary data:
 framework integration, instrumentation, and background collection.

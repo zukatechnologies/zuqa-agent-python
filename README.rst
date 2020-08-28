@@ -6,7 +6,7 @@ elastic-apm -- ZUQA agent for Python
     :alt: Build Status
 
 .. image:: https://img.shields.io/pypi/v/elastic-apm.svg?style=flat
-    :target: https://pypi.python.org/pypi/elastic-apm/
+    :target: https://pypi.python.org/pypi/zuqa/
     :alt: Latest Version
 
 .. image:: https://img.shields.io/pypi/pyversions/elastic-apm.svg?style=flat
