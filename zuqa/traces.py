@@ -650,7 +650,7 @@ class capture_span(object):
                 span = transaction.end_span(self.skip_frames, duration=self.duration)
                 if exc_val and not isinstance(span, DroppedSpan):
                     try:
-                        exc_val._elastic_apm_span_id = span.id
+                        exc_val._zuqa_span_id = span.id
                     except AttributeError:
                         # could happen if the exception has __slots__
                         pass

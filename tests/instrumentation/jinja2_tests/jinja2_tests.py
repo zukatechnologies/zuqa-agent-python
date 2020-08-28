@@ -44,14 +44,14 @@ def jinja_env():
     return Environment(loader=loader)
 
 
-def test_from_file(instrument, jinja_env, elasticapm_client):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_from_file(instrument, jinja_env, zuqa_client):
+    zuqa_client.begin_transaction("transaction.test")
     template = jinja_env.get_template("mytemplate.html")
     template.render()
-    elasticapm_client.end_transaction("MyView")
+    zuqa_client.end_transaction("MyView")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     expected_signatures = {"mytemplate.html"}
 
@@ -63,14 +63,14 @@ def test_from_file(instrument, jinja_env, elasticapm_client):
     assert spans[0]["action"] == "render"
 
 
-def test_from_string(instrument, elasticapm_client):
-    elasticapm_client.begin_transaction("transaction.test")
+def test_from_string(instrument, zuqa_client):
+    zuqa_client.begin_transaction("transaction.test")
     template = Template("<html></html")
     template.render()
-    elasticapm_client.end_transaction("test")
+    zuqa_client.end_transaction("test")
 
-    transactions = elasticapm_client.events[TRANSACTION]
-    spans = elasticapm_client.spans_for_transaction(transactions[0])
+    transactions = zuqa_client.events[TRANSACTION]
+    spans = zuqa_client.spans_for_transaction(transactions[0])
 
     expected_signatures = {"<template>"}
 

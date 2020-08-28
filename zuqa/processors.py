@@ -65,7 +65,7 @@ def remove_http_request_body(client, event):
     """
     Removes request.body from context
 
-    :param client: an ElasticAPM client
+    :param client: an ZUQA client
     :param event: a transaction or error event
     :return: The modified event
     """
@@ -79,7 +79,7 @@ def remove_stacktrace_locals(client, event):
     """
     Removes local variables from any frames.
 
-    :param client: an ElasticAPM client
+    :param client: an ZUQA client
     :param event: a transaction or error event
     :return: The modified event
     """
@@ -92,7 +92,7 @@ def sanitize_stacktrace_locals(client, event):
     """
     Sanitizes local variables in all frames
 
-    :param client: an ElasticAPM client
+    :param client: an ZUQA client
     :param event: a transaction or error event
     :return: The modified event
     """
@@ -109,7 +109,7 @@ def sanitize_http_request_cookies(client, event):
     """
     Sanitizes http request cookies
 
-    :param client: an ElasticAPM client
+    :param client: an ZUQA client
     :param event: a transaction or error event
     :return: The modified event
     """
@@ -134,7 +134,7 @@ def sanitize_http_request_cookies(client, event):
 def sanitize_http_response_cookies(client, event):
     """
     Sanitizes the set-cookie header of the response
-    :param client: an ElasticAPM client
+    :param client: an ZUQA client
     :param event: a transaction or error event
     :return: The modified event
     """
@@ -151,7 +151,7 @@ def sanitize_http_headers(client, event):
     """
     Sanitizes http request/response headers
 
-    :param client: an ElasticAPM client
+    :param client: an ZUQA client
     :param event: a transaction or error event
     :return: The modified event
     """
@@ -177,7 +177,7 @@ def sanitize_http_wsgi_env(client, event):
     """
     Sanitizes WSGI environment variables
 
-    :param client: an ElasticAPM client
+    :param client: an ZUQA client
     :param event: a transaction or error event
     :return: The modified event
     """
@@ -194,7 +194,7 @@ def sanitize_http_request_querystring(client, event):
     """
     Sanitizes http request query string
 
-    :param client: an ElasticAPM client
+    :param client: an ZUQA client
     :param event: a transaction or error event
     :return: The modified event
     """
@@ -217,7 +217,7 @@ def sanitize_http_request_body(client, event):
     is a query-encoded string. Other types (e.g. JSON) are not handled by
     this sanitizer.
 
-    :param client: an ElasticAPM client
+    :param client: an ZUQA client
     :param event: a transaction or error event
     :return: The modified event
     """

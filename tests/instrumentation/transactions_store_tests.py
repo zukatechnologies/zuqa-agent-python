@@ -259,25 +259,25 @@ def test_label_with_not_allowed_non_string_value():
     assert t.labels == {"foo": "ok"}
 
 
-def test_labels_merge(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_labels_merge(zuqa_client):
+    zuqa_client.begin_transaction("test")
     zuqa.label(foo=1, bar="baz")
     zuqa.label(bar=3, boo="biz")
-    elasticapm_client.end_transaction("test", "OK")
-    transactions = elasticapm_client.events[TRANSACTION]
+    zuqa_client.end_transaction("test", "OK")
+    transactions = zuqa_client.events[TRANSACTION]
 
     assert transactions[0]["context"]["tags"] == {"foo": 1, "bar": 3, "boo": "biz"}
 
 
-def test_labels_dedot(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_labels_dedot(zuqa_client):
+    zuqa_client.begin_transaction("test")
     zuqa.label(**{"d.o.t": "dot"})
     zuqa.label(**{"s*t*a*r": "star"})
     zuqa.label(**{'q"u"o"t"e': "quote"})
 
-    elasticapm_client.end_transaction("test_name", 200)
+    zuqa_client.end_transaction("test_name", 200)
 
-    transactions = elasticapm_client.events[TRANSACTION]
+    transactions = zuqa_client.events[TRANSACTION]
 
     assert transactions[0]["context"]["tags"] == {"d_o_t": "dot", "s_t_a_r": "star", "q_u_o_t_e": "quote"}
 
@@ -285,12 +285,12 @@ def test_labels_dedot(elasticapm_client):
 ### TESTING DEPRECATED TAGGING START ###
 
 
-def test_tagging_is_deprecated(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_tagging_is_deprecated(zuqa_client):
+    zuqa_client.begin_transaction("test")
     with pytest.warns(DeprecationWarning, match="Call to deprecated function tag. Use zuqa.label instead"):
         zuqa.tag(foo="bar")
-    elasticapm_client.end_transaction("test", "OK")
-    transactions = elasticapm_client.events[TRANSACTION]
+    zuqa_client.end_transaction("test", "OK")
+    transactions = zuqa_client.events[TRANSACTION]
 
     assert transactions[0]["context"]["tags"] == {"foo": "bar"}
 
@@ -323,25 +323,25 @@ def test_tag_with_non_string_value():
     assert t.labels == {"foo": "1"}
 
 
-def test_tags_merge(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_tags_merge(zuqa_client):
+    zuqa_client.begin_transaction("test")
     zuqa.tag(foo=1, bar="baz")
     zuqa.tag(bar=3, boo="biz")
-    elasticapm_client.end_transaction("test", "OK")
-    transactions = elasticapm_client.events[TRANSACTION]
+    zuqa_client.end_transaction("test", "OK")
+    transactions = zuqa_client.events[TRANSACTION]
 
     assert transactions[0]["context"]["tags"] == {"foo": "1", "bar": "3", "boo": "biz"}
 
 
-def test_tags_dedot(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_tags_dedot(zuqa_client):
+    zuqa_client.begin_transaction("test")
     zuqa.tag(**{"d.o.t": "dot"})
     zuqa.tag(**{"s*t*a*r": "star"})
     zuqa.tag(**{'q"u"o"t"e': "quote"})
 
-    elasticapm_client.end_transaction("test_name", 200)
+    zuqa_client.end_transaction("test_name", 200)
 
-    transactions = elasticapm_client.events[TRANSACTION]
+    transactions = zuqa_client.events[TRANSACTION]
 
     assert transactions[0]["context"]["tags"] == {"d_o_t": "dot", "s_t_a_r": "star", "q_u_o_t_e": "quote"}
 
@@ -349,120 +349,120 @@ def test_tags_dedot(elasticapm_client):
 ### TESTING DEPRECATED TAGGING END ###
 
 
-def test_dedot_is_not_run_when_unsampled(elasticapm_client):
+def test_dedot_is_not_run_when_unsampled(zuqa_client):
     for sampled in (True, False):
-        t = elasticapm_client.begin_transaction("test")
+        t = zuqa_client.begin_transaction("test")
         t.is_sampled = sampled
         zuqa.set_context(lambda: {"a.b": "b"})
-        elasticapm_client.end_transaction("x", "OK")
-    sampled_transaction, unsampled_transaction = elasticapm_client.events[TRANSACTION]
+        zuqa_client.end_transaction("x", "OK")
+    sampled_transaction, unsampled_transaction = zuqa_client.events[TRANSACTION]
     assert "a_b" in sampled_transaction["context"]["custom"]
     assert "context" not in unsampled_transaction
 
 
-def test_set_transaction_name(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
-    elasticapm_client.end_transaction("test_name", 200)
+def test_set_transaction_name(zuqa_client):
+    zuqa_client.begin_transaction("test")
+    zuqa_client.end_transaction("test_name", 200)
 
-    elasticapm_client.begin_transaction("test")
+    zuqa_client.begin_transaction("test")
 
     zuqa.set_transaction_name("another_name")
 
-    elasticapm_client.end_transaction("test_name", 200)
+    zuqa_client.end_transaction("test_name", 200)
 
-    transactions = elasticapm_client.events[TRANSACTION]
+    transactions = zuqa_client.events[TRANSACTION]
     assert transactions[0]["name"] == "test_name"
     assert transactions[1]["name"] == "another_name"
 
 
-def test_set_transaction_custom_data(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_set_transaction_custom_data(zuqa_client):
+    zuqa_client.begin_transaction("test")
 
     zuqa.set_custom_context({"foo": "bar"})
 
-    elasticapm_client.end_transaction("foo", 200)
-    transactions = elasticapm_client.events[TRANSACTION]
+    zuqa_client.end_transaction("foo", 200)
+    transactions = zuqa_client.events[TRANSACTION]
 
     assert transactions[0]["context"]["custom"] == {"foo": "bar"}
 
 
-def test_set_transaction_custom_data_merge(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_set_transaction_custom_data_merge(zuqa_client):
+    zuqa_client.begin_transaction("test")
 
     zuqa.set_custom_context({"foo": "bar", "bar": "baz"})
     zuqa.set_custom_context({"bar": "bie", "boo": "biz"})
 
-    elasticapm_client.end_transaction("foo", 200)
-    transactions = elasticapm_client.events[TRANSACTION]
+    zuqa_client.end_transaction("foo", 200)
+    transactions = zuqa_client.events[TRANSACTION]
 
     assert transactions[0]["context"]["custom"] == {"foo": "bar", "bar": "bie", "boo": "biz"}
 
 
-def test_set_user_context(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_set_user_context(zuqa_client):
+    zuqa_client.begin_transaction("test")
 
     zuqa.set_user_context(username="foo", email="foo@example.com", user_id=42)
 
-    elasticapm_client.end_transaction("foo", 200)
-    transactions = elasticapm_client.events[TRANSACTION]
+    zuqa_client.end_transaction("foo", 200)
+    transactions = zuqa_client.events[TRANSACTION]
 
     assert transactions[0]["context"]["user"] == {"username": "foo", "email": "foo@example.com", "id": 42}
 
 
-def test_set_user_context_merge(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_set_user_context_merge(zuqa_client):
+    zuqa_client.begin_transaction("test")
 
     zuqa.set_user_context(username="foo", email="bar@example.com")
     zuqa.set_user_context(email="foo@example.com", user_id=42)
 
-    elasticapm_client.end_transaction("foo", 200)
-    transactions = elasticapm_client.events[TRANSACTION]
+    zuqa_client.end_transaction("foo", 200)
+    transactions = zuqa_client.events[TRANSACTION]
 
     assert transactions[0]["context"]["user"] == {"username": "foo", "email": "foo@example.com", "id": 42}
 
 
-def test_callable_context_ignored_when_not_sampled(elasticapm_client):
+def test_callable_context_ignored_when_not_sampled(zuqa_client):
     callable_data = mock.Mock()
     callable_data.return_value = {"a": "b"}
-    transaction = elasticapm_client.begin_transaction("test")
+    transaction = zuqa_client.begin_transaction("test")
     transaction.is_sampled = False
     zuqa.set_context({"c": "d"})
     zuqa.set_context(callable_data)
-    elasticapm_client.end_transaction("test", "OK")
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    zuqa_client.end_transaction("test", "OK")
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert callable_data.call_count == 0
     assert "context" not in transaction
 
 
-def test_dedot_context_keys(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_dedot_context_keys(zuqa_client):
+    zuqa_client.begin_transaction("test")
     zuqa.set_context({"d.o.t": "d_o_t", "s*t*a*r": "s_t_a_r", "q*u*o*t*e": "q_u_o_t_e"})
-    elasticapm_client.end_transaction("foo", 200)
-    transaction = elasticapm_client.events[TRANSACTION][0]
+    zuqa_client.end_transaction("foo", 200)
+    transaction = zuqa_client.events[TRANSACTION][0]
     assert transaction["context"]["custom"] == {"s_t_a_r": "s_t_a_r", "q_u_o_t_e": "q_u_o_t_e", "d_o_t": "d_o_t"}
 
 
-def test_transaction_name_none_is_converted_to_empty_string(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
-    transaction = elasticapm_client.end_transaction(None, 200)
+def test_transaction_name_none_is_converted_to_empty_string(zuqa_client):
+    zuqa_client.begin_transaction("test")
+    transaction = zuqa_client.end_transaction(None, 200)
     assert transaction.name == ""
 
 
-def test_transaction_without_name_result(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
-    transaction = elasticapm_client.end_transaction()
+def test_transaction_without_name_result(zuqa_client):
+    zuqa_client.begin_transaction("test")
+    transaction = zuqa_client.end_transaction()
     assert transaction.name == ""
 
 
-def test_dotted_span_type_conversion(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_dotted_span_type_conversion(zuqa_client):
+    zuqa_client.begin_transaction("test")
     with capture_span("foo", "type"):
         with capture_span("bar", "type.subtype"):
             with capture_span("baz", "type.subtype.action"):
                 with capture_span("bazzinga", "type.subtype.action.more"):
                     pass
-    elasticapm_client.end_transaction("test", "OK")
-    spans = elasticapm_client.events[SPAN]
+    zuqa_client.end_transaction("test", "OK")
+    spans = zuqa_client.events[SPAN]
 
     assert spans[0]["name"] == "bazzinga"
     assert spans[0]["type"] == "type"
@@ -485,18 +485,18 @@ def test_dotted_span_type_conversion(elasticapm_client):
     assert spans[3]["action"] is None
 
 
-def test_span_labelling(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_span_labelling(zuqa_client):
+    zuqa_client.begin_transaction("test")
     with zuqa.capture_span("test", labels={"foo": "bar", "ba.z": "baz.zinga"}) as span:
         span.tag(lorem="ipsum")
-    elasticapm_client.end_transaction("test", "OK")
-    span = elasticapm_client.events[SPAN][0]
+    zuqa_client.end_transaction("test", "OK")
+    span = zuqa_client.events[SPAN][0]
     assert span["context"]["tags"] == {"foo": "bar", "ba_z": "baz.zinga", "lorem": "ipsum"}
 
 
-def test_span_tagging_raises_deprecation_warning(elasticapm_client):
-    elasticapm_client.begin_transaction("test")
+def test_span_tagging_raises_deprecation_warning(zuqa_client):
+    zuqa_client.begin_transaction("test")
     with pytest.warns(DeprecationWarning, match="The tags argument to capture_span is deprecated"):
         with zuqa.capture_span("test", tags={"foo": "bar", "ba.z": "baz.zinga"}) as span:
             span.tag(lorem="ipsum")
-    elasticapm_client.end_transaction("test", "OK")
+    zuqa_client.end_transaction("test", "OK")

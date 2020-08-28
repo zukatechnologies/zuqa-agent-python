@@ -73,7 +73,7 @@ class LoggingHandler(logging.Handler):
         try:
             return self._emit(record)
         except Exception:
-            sys.stderr.write("Top level ElasticAPM exception caught - failed creating log record.\n")
+            sys.stderr.write("Top level ZUQA exception caught - failed creating log record.\n")
             sys.stderr.write(to_unicode(record.msg + "\n"))
             sys.stderr.write(to_unicode(traceback.format_exc() + "\n"))
 
@@ -163,15 +163,15 @@ class LoggingFilter(logging.Filter):
     This filter doesn't actually do any "filtering" -- rather, it just adds
     three new attributes to any "filtered" LogRecord objects:
 
-    * elasticapm_transaction_id
-    * elasticapm_trace_id
-    * elasticapm_span_id
+    * zuqa_transaction_id
+    * zuqa_trace_id
+    * zuqa_span_id
 
     These attributes can then be incorporated into your handlers and formatters,
     so that you can tie log messages to transactions in elasticsearch.
 
     This filter also adds these fields to a dictionary attribute,
-    `elasticapm_labels`, using the official tracing fields names as documented
+    `zuqa_labels`, using the official tracing fields names as documented
     here: https://www.elastic.co/guide/en/ecs/current/ecs-tracing.html
 
     Note that if you're using Python 3.2+, by default we will add a
@@ -211,16 +211,16 @@ def _add_attributes_to_log_record(record):
     transaction = execution_context.get_transaction()
 
     transaction_id = transaction.id if transaction else None
-    record.elasticapm_transaction_id = transaction_id
+    record.zuqa_transaction_id = transaction_id
 
     trace_id = transaction.trace_parent.trace_id if transaction and transaction.trace_parent else None
-    record.elasticapm_trace_id = trace_id
+    record.zuqa_trace_id = trace_id
 
     span = execution_context.get_span()
     span_id = span.id if span else None
-    record.elasticapm_span_id = span_id
+    record.zuqa_span_id = span_id
 
-    record.elasticapm_labels = {"transaction.id": transaction_id, "trace.id": trace_id, "span.id": span_id}
+    record.zuqa_labels = {"transaction.id": transaction_id, "trace.id": trace_id, "span.id": span_id}
 
     return record
 
@@ -234,9 +234,9 @@ class Formatter(logging.Formatter):
 
         formatstring = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         formatstring = formatstring + " | zuqa " \
-                                      "transaction.id=%(elasticapm_transaction_id)s " \
-                                      "trace.id=%(elasticapm_trace_id)s " \
-                                      "span.id=%(elasticapm_span_id)s"
+                                      "transaction.id=%(zuqa_transaction_id)s " \
+                                      "trace.id=%(zuqa_trace_id)s " \
+                                      "span.id=%(zuqa_span_id)s"
     """
 
     def __init__(self, fmt=None, datefmt=None, style="%"):
@@ -244,9 +244,9 @@ class Formatter(logging.Formatter):
             fmt = "%(message)s"
         fmt = (
             fmt + " | zuqa "
-            "transaction.id=%(elasticapm_transaction_id)s "
-            "trace.id=%(elasticapm_trace_id)s "
-            "span.id=%(elasticapm_span_id)s"
+            "transaction.id=%(zuqa_transaction_id)s "
+            "trace.id=%(zuqa_trace_id)s "
+            "span.id=%(zuqa_span_id)s"
         )
         if compat.PY3:
             super(Formatter, self).__init__(fmt=fmt, datefmt=datefmt, style=style)
@@ -254,15 +254,15 @@ class Formatter(logging.Formatter):
             super(Formatter, self).__init__(fmt=fmt, datefmt=datefmt)
 
     def format(self, record):
-        if not hasattr(record, "elasticapm_transaction_id"):
-            record.elasticapm_transaction_id = None
-            record.elasticapm_trace_id = None
-            record.elasticapm_span_id = None
+        if not hasattr(record, "zuqa_transaction_id"):
+            record.zuqa_transaction_id = None
+            record.zuqa_trace_id = None
+            record.zuqa_span_id = None
         return super(Formatter, self).format(record=record)
 
     def formatTime(self, record, datefmt=None):
-        if not hasattr(record, "elasticapm_transaction_id"):
-            record.elasticapm_transaction_id = None
-            record.elasticapm_trace_id = None
-            record.elasticapm_span_id = None
+        if not hasattr(record, "zuqa_transaction_id"):
+            record.zuqa_transaction_id = None
+            record.zuqa_trace_id = None
+            record.zuqa_span_id = None
         return super(Formatter, self).formatTime(record=record, datefmt=datefmt)

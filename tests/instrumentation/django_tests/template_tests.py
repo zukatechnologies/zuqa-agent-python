@@ -58,7 +58,7 @@ TEMPLATES = (
 )
 
 
-def test_template_rendering(instrument, django_elasticapm_client, client):
+def test_template_rendering(instrument, django_zuqa_client, client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
@@ -66,10 +66,10 @@ def test_template_rendering(instrument, django_elasticapm_client, client):
         client.get(reverse("render-heavy-template"))
         client.get(reverse("render-heavy-template"))
 
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
 
     assert len(transactions) == 3
-    spans = django_elasticapm_client.spans_for_transaction(transactions[0])
+    spans = django_zuqa_client.spans_for_transaction(transactions[0])
     assert len(spans) == 2, [t["name"] for t in spans]
 
     kinds = ["code", "template"]
@@ -87,7 +87,7 @@ def test_template_rendering(instrument, django_elasticapm_client, client):
 
 
 @pytest.mark.skipif(django.VERSION < (1, 8), reason="Jinja2 support introduced with Django 1.8")
-def test_template_rendering_django18_jinja2(instrument, django_elasticapm_client, client):
+def test_template_rendering_django18_jinja2(instrument, django_zuqa_client, client):
     with override_settings(
         TEMPLATES=TEMPLATES,
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
@@ -96,10 +96,10 @@ def test_template_rendering_django18_jinja2(instrument, django_elasticapm_client
         client.get(reverse("render-jinja2-template"))
         client.get(reverse("render-jinja2-template"))
 
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
 
     assert len(transactions) == 3
-    spans = django_elasticapm_client.spans_for_transaction(transactions[0])
+    spans = django_zuqa_client.spans_for_transaction(transactions[0])
     assert len(spans) == 1, [t["name"] for t in spans]
 
     kinds = ["template"]

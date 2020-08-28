@@ -73,7 +73,7 @@ def exception_handler(client, request=None, **kwargs):
     def actually_do_stuff(request=None, **kwargs):
         exc_info = sys.exc_info()
         try:
-            if (django_settings.DEBUG and not client.config.debug) or getattr(exc_info[1], "skip_elasticapm", False):
+            if (django_settings.DEBUG and not client.config.debug) or getattr(exc_info[1], "skip_zuqa", False):
                 return
 
             client.capture("Exception", exc_info=exc_info, request=request, handled=False)

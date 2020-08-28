@@ -88,7 +88,7 @@ Inactive:        5468500 kB
 
 
 @pytest.mark.parametrize("proc_stat_template", [TEMPLATE_PROC_STAT_DEBIAN, TEMPLATE_PROC_STAT_RHEL])
-def test_cpu_mem_from_proc(elasticapm_client, proc_stat_template, tmpdir):
+def test_cpu_mem_from_proc(zuqa_client, proc_stat_template, tmpdir):
     proc_stat_self = os.path.join(tmpdir.strpath, "self-stat")
     proc_stat = os.path.join(tmpdir.strpath, "stat")
     proc_meminfo = os.path.join(tmpdir.strpath, "meminfo")
@@ -101,7 +101,7 @@ def test_cpu_mem_from_proc(elasticapm_client, proc_stat_template, tmpdir):
         with open(path, mode="w") as f:
             f.write(content)
     metricset = CPUMetricSet(
-        MetricsRegistry(elasticapm_client),
+        MetricsRegistry(zuqa_client),
         sys_stats_file=proc_stat,
         process_stats_file=proc_stat_self,
         memory_stats_file=proc_meminfo,
@@ -125,7 +125,7 @@ def test_cpu_mem_from_proc(elasticapm_client, proc_stat_template, tmpdir):
     assert data["samples"]["system.process.memory.size"]["value"] == 3686981632
 
 
-def test_mem_free_from_memfree_when_memavailable_not_mentioned(elasticapm_client, tmpdir):
+def test_mem_free_from_memfree_when_memavailable_not_mentioned(zuqa_client, tmpdir):
     proc_stat_self = os.path.join(tmpdir.strpath, "self-stat")
     proc_stat = os.path.join(tmpdir.strpath, "stat")
     proc_meminfo = os.path.join(tmpdir.strpath, "meminfo")
@@ -138,7 +138,7 @@ def test_mem_free_from_memfree_when_memavailable_not_mentioned(elasticapm_client
         with open(path, mode="w") as f:
             f.write(content)
     metricset = CPUMetricSet(
-        MetricsRegistry(elasticapm_client),
+        MetricsRegistry(zuqa_client),
         sys_stats_file=proc_stat,
         process_stats_file=proc_stat_self,
         memory_stats_file=proc_meminfo,
@@ -157,7 +157,7 @@ def test_mem_free_from_memfree_when_memavailable_not_mentioned(elasticapm_client
     assert data["samples"]["system.memory.actual.free"]["value"] == mem_free_expected
 
 
-def test_cpu_usage_when_cpu_total_is_zero(elasticapm_client, tmpdir):
+def test_cpu_usage_when_cpu_total_is_zero(zuqa_client, tmpdir):
     proc_stat_self = os.path.join(tmpdir.strpath, "self-stat")
     proc_stat = os.path.join(tmpdir.strpath, "stat")
     proc_meminfo = os.path.join(tmpdir.strpath, "meminfo")
@@ -170,7 +170,7 @@ def test_cpu_usage_when_cpu_total_is_zero(elasticapm_client, tmpdir):
         with open(path, mode="w") as f:
             f.write(content)
     metricset = CPUMetricSet(
-        MetricsRegistry(elasticapm_client),
+        MetricsRegistry(zuqa_client),
         sys_stats_file=proc_stat,
         process_stats_file=proc_stat_self,
         memory_stats_file=proc_meminfo,

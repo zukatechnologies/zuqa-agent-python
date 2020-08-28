@@ -38,7 +38,7 @@ from zuqa.utils.logging import get_logger
 logger = get_logger("zuqa.instrument")
 
 
-class ElasticAPMFunctionWrapper(wrapt.FunctionWrapper):
+class ZuqaFunctionWrapper(wrapt.FunctionWrapper):
     # used to differentiate between our own function wrappers and 1st/3rd party wrappers
     pass
 
@@ -141,11 +141,11 @@ class AbstractInstrumentedModule(object):
                     # We jump through hoop here to get the original
                     # `module`/`method` in the call to `call_if_sampling`
                     parent, attribute, original = wrapt.resolve_path(module, method)
-                    if isinstance(original, ElasticAPMFunctionWrapper):
+                    if isinstance(original, ZuqaFunctionWrapper):
                         logger.debug("%s.%s already instrumented, skipping", module, method)
                         continue
                     self.originals[(module, method)] = original
-                    wrapper = ElasticAPMFunctionWrapper(
+                    wrapper = ZuqaFunctionWrapper(
                         original, functools.partial(self.call_if_sampling, module, method)
                     )
                     wrapt.apply_patch(parent, attribute, wrapper)

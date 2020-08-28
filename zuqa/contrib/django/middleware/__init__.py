@@ -63,7 +63,7 @@ def _is_ignorable_404(uri):
     return any(pattern.search(uri) for pattern in urls)
 
 
-class ElasticAPMClientMiddlewareMixin(object):
+class ZuqaClientMiddlewareMixin(object):
     @property
     def client(self):
         try:
@@ -73,7 +73,7 @@ class ElasticAPMClientMiddlewareMixin(object):
             return get_client()
 
 
-class Catch404Middleware(MiddlewareMixin, ElasticAPMClientMiddlewareMixin):
+class Catch404Middleware(MiddlewareMixin, ZuqaClientMiddlewareMixin):
     def process_response(self, request, response):
         if response.status_code != 404 or _is_ignorable_404(request.get_full_path()):
             return response
@@ -87,7 +87,7 @@ class Catch404Middleware(MiddlewareMixin, ElasticAPMClientMiddlewareMixin):
             logger_name="http404",
             level=logging.INFO,
         )
-        request._elasticapm = {"service_name": data.get("service_name", self.client.config.service_name), "id": result}
+        request._zuqa = {"service_name": data.get("service_name", self.client.config.service_name), "id": result}
         return response
 
 
@@ -117,7 +117,7 @@ def process_response_wrapper(wrapped, instance, args, kwargs):
         # if there's no view_func on the request, and this middleware created
         # a new response object, it's logged as the responsible transaction
         # name
-        if not hasattr(request, "_elasticapm_view_func") and response is not original_response:
+        if not hasattr(request, "_zuqa_view_func") and response is not original_response:
             zuqa.set_transaction_name(
                 build_name_with_http_method_prefix(get_name_from_middleware(wrapped, instance), request)
             )
@@ -125,19 +125,19 @@ def process_response_wrapper(wrapped, instance, args, kwargs):
         return response
 
 
-class TracingMiddleware(MiddlewareMixin, ElasticAPMClientMiddlewareMixin):
-    _elasticapm_instrumented = False
+class TracingMiddleware(MiddlewareMixin, ZuqaClientMiddlewareMixin):
+    _zuqa_instrumented = False
     _instrumenting_lock = threading.Lock()
 
     def __init__(self, *args, **kwargs):
         super(TracingMiddleware, self).__init__(*args, **kwargs)
-        if not self._elasticapm_instrumented:
+        if not self._zuqa_instrumented:
             with self._instrumenting_lock:
-                if not self._elasticapm_instrumented:
+                if not self._zuqa_instrumented:
                     if self.client.config.instrument_django_middleware:
                         self.instrument_middlewares()
 
-                    TracingMiddleware._elasticapm_instrumented = True
+                    TracingMiddleware._zuqa_instrumented = True
 
     def instrument_middlewares(self):
         middlewares = getattr(django_settings, "MIDDLEWARE", None) or getattr(
@@ -160,7 +160,7 @@ class TracingMiddleware(MiddlewareMixin, ElasticAPMClientMiddlewareMixin):
                     client.logger.info("Can't instrument middleware %s", middleware_path)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        request._elasticapm_view_func = view_func
+        request._zuqa_view_func = view_func
 
     def process_response(self, request, response):
         if django_settings.DEBUG and not self.client.config.debug:
@@ -170,8 +170,8 @@ class TracingMiddleware(MiddlewareMixin, ElasticAPMClientMiddlewareMixin):
                 transaction_name = None
                 if self.client.config.django_transaction_name_from_route and hasattr(request.resolver_match, "route"):
                     transaction_name = request.resolver_match.route
-                elif getattr(request, "_elasticapm_view_func", False):
-                    transaction_name = get_name_from_func(request._elasticapm_view_func)
+                elif getattr(request, "_zuqa_view_func", False):
+                    transaction_name = get_name_from_func(request._zuqa_view_func)
                 if transaction_name:
                     transaction_name = build_name_with_http_method_prefix(transaction_name, request)
                     zuqa.set_transaction_name(transaction_name, override=False)
@@ -191,14 +191,14 @@ class TracingMiddleware(MiddlewareMixin, ElasticAPMClientMiddlewareMixin):
 
 class ErrorIdMiddleware(MiddlewareMixin):
     """
-    Appends the X-ElasticAPM-ErrorId response header for referencing a message within
-    the ElasticAPM datastore.
+    Appends the X-ZUQA-ErrorId response header for referencing a message within
+    the ZUQA datastore.
     """
 
     def process_response(self, request, response):
-        if not getattr(request, "_elasticapm", None):
+        if not getattr(request, "_zuqa", None):
             return response
-        response["X-ElasticAPM-ErrorId"] = request._elasticapm["id"]
+        response["X-ZUQA-ErrorId"] = request._zuqa["id"]
         return response
 
 

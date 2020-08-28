@@ -2,7 +2,7 @@
 == Supported Technologies
 
 [[framework-support]]
-The Elastic APM Python Agent comes with support for the following frameworks:
+The ZUQA Python Agent comes with support for the following frameworks:
 
  * <<django-support,Django>>
  * <<flask-support,Flask>>
@@ -25,7 +25,7 @@ The following Python versions are supported:
  * 3.8
 
 WARNING: Python 2.7 reached End of Life on January 1, 2020.
-The Elastic APM agent will stop supporting Python 2.7 starting in 6.0.0.
+The ZUQA agent will stop supporting Python 2.7 starting in 6.0.0.
 
 [float]
 [[supported-django]]

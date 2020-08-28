@@ -46,7 +46,7 @@ if "POSTGRES_DB" not in os.environ:
 @pytest.yield_fixture(scope="function")
 def pyodbc_postgres_connection(request):
     conn_str = ("DRIVER={PostgreSQL Unicode};" "DATABASE=%s;" "UID=%s;" "PASSWORD=%s;" "SERVER=%s;" "PORT=%s;") % (
-        os.environ.get("POSTGRES_DB", "elasticapm_test"),
+        os.environ.get("POSTGRES_DB", "zuqa_test"),
         os.environ.get("POSTGRES_USER", "postgres"),
         os.environ.get("POSTGRES_PASSWORD", "postgres"),
         os.environ.get("POSTGRES_HOST", None),
@@ -66,18 +66,18 @@ def pyodbc_postgres_connection(request):
 
 
 @pytest.mark.integrationtest
-def test_pyodbc_select(instrument, pyodbc_postgres_connection, elasticapm_client):
+def test_pyodbc_select(instrument, pyodbc_postgres_connection, zuqa_client):
     cursor = pyodbc_postgres_connection.cursor()
     query = "SELECT * FROM test WHERE name LIKE 't%'"
 
     try:
-        elasticapm_client.begin_transaction("web.django")
+        zuqa_client.begin_transaction("web.django")
         cursor.execute(query)
         cursor.fetchall()
-        elasticapm_client.end_transaction(None, "test-transaction")
+        zuqa_client.end_transaction(None, "test-transaction")
     finally:
-        transactions = elasticapm_client.events[TRANSACTION]
-        spans = elasticapm_client.spans_for_transaction(transactions[0])
+        transactions = zuqa_client.events[TRANSACTION]
+        spans = zuqa_client.spans_for_transaction(transactions[0])
         span = spans[0]
         assert span["name"] == "SELECT FROM test"
         assert span["type"] == "db"
@@ -89,18 +89,18 @@ def test_pyodbc_select(instrument, pyodbc_postgres_connection, elasticapm_client
 
 
 @pytest.mark.integrationtest
-def test_psycopg2_rows_affected(instrument, pyodbc_postgres_connection, elasticapm_client):
+def test_psycopg2_rows_affected(instrument, pyodbc_postgres_connection, zuqa_client):
     cursor = pyodbc_postgres_connection.cursor()
     try:
-        elasticapm_client.begin_transaction("web.django")
+        zuqa_client.begin_transaction("web.django")
         cursor.execute("INSERT INTO test VALUES (4, 'four')")
         cursor.execute("SELECT * FROM test")
         cursor.execute("UPDATE test SET name = 'five' WHERE  id = 4")
         cursor.execute("DELETE FROM test WHERE  id = 4")
-        elasticapm_client.end_transaction(None, "test-transaction")
+        zuqa_client.end_transaction(None, "test-transaction")
     finally:
-        transactions = elasticapm_client.events[TRANSACTION]
-        spans = elasticapm_client.spans_for_transaction(transactions[0])
+        transactions = zuqa_client.events[TRANSACTION]
+        spans = zuqa_client.spans_for_transaction(transactions[0])
 
         assert spans[0]["name"] == "INSERT INTO test"
         assert spans[0]["context"]["db"]["rows_affected"] == 1

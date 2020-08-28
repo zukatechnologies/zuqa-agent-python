@@ -8,7 +8,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: 'postgres'
-      POSTGRES_DB: 'elasticapm_test'
+      POSTGRES_DB: 'zuqa_test'
       POSTGRES_PASSWORD: 'postgres'
     volumes:
       - pypgdata:/var/lib/postgresql/data

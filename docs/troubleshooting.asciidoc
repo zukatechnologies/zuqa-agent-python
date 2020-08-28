@@ -28,13 +28,13 @@ not collect traces if the app is in debug mode by default.
 You can override this behavior with the <<config-debug,`DEBUG`>> configuration.
 
 Note that configuration of the agent should occur before creation of any
-`ElasticAPM` objects:
+`ZUQA` objects:
 
 [source,python]
 ----
 app = Flask(__name__)
-app.config["ELASTIC_APM"] = {"DEBUG": True}
-apm = ElasticAPM(app, service_name="flask-app")
+app.config["ZUQA"] = {"DEBUG": True}
+apm = ZUQA(app, service_name="flask-app")
 ----
 
 [float]
@@ -75,14 +75,14 @@ for more information.
 
 To get the agent to log more data, all that is needed is a
 https://docs.python.org/3/library/logging.html#handler-objects[Handler] which
-is attached either to the `elasticapm` logger or to the root logger.
+is attached either to the `zuqa` logger or to the root logger.
 
 [float]
 [[django-agent-logging]]
 ==== Django
 
 The simplest way to log more data from the agent is to add a console logging
-Handler to the `elasticapm` logger. Here's a (very simplified) example:
+Handler to the `zuqa` logger. Here's a (very simplified) example:
 
 [source,python]
 ----
@@ -116,16 +116,16 @@ Otherwise, you can use the <<generic-agent-logging,generic instructions below>>.
 [[generic-agent-logging]]
 ==== Generic instructions
 
-Creating a console Handler and adding it to the `elasticapm` logger is easy:
+Creating a console Handler and adding it to the `zuqa` logger is easy:
 
 [source,python]
 ----
 import logging
 
-elastic_apm_logger = logging.getLogger("zuqa")
+zuqa_logger = logging.getLogger("zuqa")
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
-elastic_apm_logger.addHandler(console_handler)
+zuqa_logger.addHandler(console_handler)
 ----
 
 You can also just add the console Handler to the root logger. This will apply

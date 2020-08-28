@@ -54,17 +54,17 @@ _client = (None, None)
 
 def get_client(client=None):
     """
-    Get an ElasticAPM client.
+    Get an ZUQA client.
 
     :param client:
     :return:
-    :rtype: elasticapm.base.Client
+    :rtype: zuqa.base.Client
     """
     global _client
 
     tmp_client = client is not None
     if not tmp_client:
-        config = getattr(django_settings, "ELASTIC_APM", {})
+        config = getattr(django_settings, "ZUQA", {})
         client = config.get("CLIENT", default_client_class)
 
     if _client[0] != client:
@@ -81,7 +81,7 @@ class DjangoClient(Client):
 
     def __init__(self, config=None, **inline):
         if config is None:
-            config = getattr(django_settings, "ELASTIC_APM", {})
+            config = getattr(django_settings, "ZUQA", {})
         if "framework_name" not in inline:
             inline["framework_name"] = "django"
             inline["framework_version"] = django.get_version()
@@ -197,7 +197,7 @@ class DjangoClient(Client):
 
         if is_http_request:
             # attach the zuqa object to the request
-            request._elasticapm = {"service_name": self.config.service_name, "id": result}
+            request._zuqa = {"service_name": self.config.service_name, "id": result}
 
         return result
 

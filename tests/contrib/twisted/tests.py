@@ -40,8 +40,8 @@ from zuqa.contrib.twisted import LogObserver
 pytestmark = pytest.mark.twisted
 
 
-def test_twisted_log_observer(elasticapm_client):
-    observer = LogObserver(client=elasticapm_client)
+def test_twisted_log_observer(zuqa_client):
+    observer = LogObserver(client=zuqa_client)
     failure = None
     try:
         1 / 0
@@ -50,6 +50,6 @@ def test_twisted_log_observer(elasticapm_client):
     event = dict(log_failure=failure)
     observer(event)
 
-    cli_event = elasticapm_client.events[ERROR][0]
+    cli_event = zuqa_client.events[ERROR][0]
     assert cli_event["exception"]["type"] == "ZeroDivisionError"
     assert cli_event["exception"]["handled"] is False

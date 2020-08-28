@@ -42,9 +42,9 @@ def logbook_logger():
 
 
 @pytest.fixture()
-def logbook_handler(elasticapm_client):
-    elasticapm_client.config.include_paths = ["tests", "zuqa"]
-    return LogbookHandler(elasticapm_client)
+def logbook_handler(zuqa_client):
+    zuqa_client.config.include_paths = ["tests", "zuqa"]
+    return LogbookHandler(zuqa_client)
 
 
 def test_logbook_logger_error_level(logbook_logger, logbook_handler):
@@ -140,14 +140,14 @@ def test_logger_param_message(logbook_logger, logbook_handler):
     assert event["log"]["param_message"] == "This is a test of %s"
 
 
-def test_client_arg(elasticapm_client):
-    handler = LogbookHandler(elasticapm_client)
-    assert handler.client == elasticapm_client
+def test_client_arg(zuqa_client):
+    handler = LogbookHandler(zuqa_client)
+    assert handler.client == zuqa_client
 
 
-def test_client_kwarg(elasticapm_client):
-    handler = LogbookHandler(client=elasticapm_client)
-    assert handler.client == elasticapm_client
+def test_client_kwarg(zuqa_client):
+    handler = LogbookHandler(client=zuqa_client)
+    assert handler.client == zuqa_client
 
 
 def test_invalid_first_arg_type():
@@ -160,23 +160,23 @@ def test_missing_client_arg():
         LogbookHandler()
 
 
-def test_logbook_handler_emit_error(capsys, elasticapm_client):
-    handler = LogbookHandler(elasticapm_client)
+def test_logbook_handler_emit_error(capsys, zuqa_client):
+    handler = LogbookHandler(zuqa_client)
     handler._emit = lambda: 1 / 0
     handler.emit(LogRecord("x", 1, "Oops"))
     out, err = capsys.readouterr()
-    assert "Top level ElasticAPM exception caught" in err
+    assert "Top level ZUQA exception caught" in err
     assert "Oops" in err
 
 
-def test_logbook_handler_dont_emit_elasticapm(capsys, elasticapm_client):
-    handler = LogbookHandler(elasticapm_client)
+def test_logbook_handler_dont_emit_zuqa(capsys, zuqa_client):
+    handler = LogbookHandler(zuqa_client)
     handler.emit(LogRecord("zuqa.errors", 1, "Oops"))
     out, err = capsys.readouterr()
     assert "Oops" in err
 
 
-def test_arbitrary_object(elasticapm_client, logbook_logger, logbook_handler):
+def test_arbitrary_object(zuqa_client, logbook_logger, logbook_handler):
     with logbook_handler.applicationbound():
         logbook_logger.info(["a", "list", "of", "strings"])
     assert len(logbook_handler.client.events) == 1

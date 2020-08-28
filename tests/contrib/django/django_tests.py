@@ -59,10 +59,10 @@ import mock
 from zuqa.base import Client
 from zuqa.conf import constants
 from zuqa.conf.constants import ERROR, SPAN, TRANSACTION
-from zuqa.contrib.django.apps import ElasticAPMConfig
+from zuqa.contrib.django.apps import ZuqaConfig
 from zuqa.contrib.django.client import client, get_client
 from zuqa.contrib.django.handlers import LoggingHandler
-from zuqa.contrib.django.middleware.wsgi import ElasticAPM
+from zuqa.contrib.django.middleware.wsgi import ZUQA
 from zuqa.utils import compat
 from zuqa.utils.disttracing import TraceParent
 from tests.contrib.django.conftest import BASE_TEMPLATE_DIR
@@ -94,7 +94,7 @@ class MockClientHandler(_TestClientHandler):
         return super(MockClientHandler, self).__call__(environ)
 
 
-class MockMiddleware(ElasticAPM):
+class MockMiddleware(ZUQA):
     def __call__(self, environ, start_response=[]):
         # this pretends doesnt require start_response
         return list(super(MockMiddleware, self).__call__(environ, start_response))
@@ -104,17 +104,17 @@ def test_proxy_responds_as_client():
     assert get_client() == client
 
 
-def test_basic(django_elasticapm_client):
+def test_basic(django_zuqa_client):
     config = {"APP_ID": "key", "ORGANIZATION_ID": "org", "SECRET_TOKEN": "99"}
-    with override_settings(ELASTIC_APM=config):
-        django_elasticapm_client.capture("Message", message="foo")
-        assert len(django_elasticapm_client.events[ERROR]) == 1
+    with override_settings(ZUQA=config):
+        django_zuqa_client.capture("Message", message="foo")
+        assert len(django_zuqa_client.events[ERROR]) == 1
 
 
-def test_basic_django(django_elasticapm_client):
-    django_elasticapm_client.capture("Message", message="foo")
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+def test_basic_django(django_zuqa_client):
+    django_zuqa_client.capture("Message", message="foo")
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     log = event["log"]
     assert "message" in log
 
@@ -123,14 +123,14 @@ def test_basic_django(django_elasticapm_client):
     assert log["param_message"] == "foo"
 
 
-def test_signal_integration(django_elasticapm_client):
+def test_signal_integration(django_zuqa_client):
     try:
         int("hello")
     except ValueError:
         got_request_exception.send(sender=None, request=None)
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert "exception" in event
     exc = event["exception"]
     assert exc["type"] == "ValueError"
@@ -139,12 +139,12 @@ def test_signal_integration(django_elasticapm_client):
     assert event["culprit"] == "tests.contrib.django.django_tests.test_signal_integration"
 
 
-def test_view_exception(django_elasticapm_client, client):
+def test_view_exception(django_zuqa_client, client):
     with pytest.raises(Exception):
         client.get(reverse("zuqa-raise-exc"))
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert "exception" in event
     exc = event["exception"]
     assert exc["type"] == "MyException"
@@ -153,24 +153,24 @@ def test_view_exception(django_elasticapm_client, client):
     assert event["culprit"] == "tests.contrib.django.testapp.views.raise_exc"
 
 
-def test_view_exception_debug(django_elasticapm_client, client):
-    django_elasticapm_client.config.debug = False
+def test_view_exception_debug(django_zuqa_client, client):
+    django_zuqa_client.config.debug = False
     with override_settings(DEBUG=True):
         with pytest.raises(Exception):
             client.get(reverse("zuqa-raise-exc"))
-    assert len(django_elasticapm_client.events) == 0
+    assert len(django_zuqa_client.events) == 0
 
 
-def test_view_exception_elasticapm_debug(django_elasticapm_client, client):
-    django_elasticapm_client.config.debug = True
+def test_view_exception_zuqa_debug(django_zuqa_client, client):
+    django_zuqa_client.config.debug = True
     with override_settings(DEBUG=True):
         with pytest.raises(Exception):
             client.get(reverse("zuqa-raise-exc"))
-    assert len(django_elasticapm_client.events[ERROR]) == 1
+    assert len(django_zuqa_client.events[ERROR]) == 1
 
 
 @pytest.mark.django_db
-def test_user_info(django_elasticapm_client, client):
+def test_user_info(django_zuqa_client, client):
     user = User(username="admin", email="admin@example.com")
     user.set_password("admin")
     user.save()
@@ -178,8 +178,8 @@ def test_user_info(django_elasticapm_client, client):
     with pytest.raises(Exception):
         client.get(reverse("zuqa-raise-exc"))
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert "user" in event["context"]
     user_info = event["context"]["user"]
     assert "is_authenticated" in user_info
@@ -192,8 +192,8 @@ def test_user_info(django_elasticapm_client, client):
     with pytest.raises(Exception):
         client.get(reverse("zuqa-raise-exc"))
 
-    assert len(django_elasticapm_client.events[ERROR]) == 2
-    event = django_elasticapm_client.events[ERROR][1]
+    assert len(django_zuqa_client.events[ERROR]) == 2
+    event = django_zuqa_client.events[ERROR][1]
     assert "user" in event["context"]
     user_info = event["context"]["user"]
     assert "is_authenticated" in user_info
@@ -205,7 +205,7 @@ def test_user_info(django_elasticapm_client, client):
 
 
 @pytest.mark.django_db
-def test_user_info_raises_database_error(django_elasticapm_client, client):
+def test_user_info_raises_database_error(django_zuqa_client, client):
     user = User(username="admin", email="admin@example.com")
     user.set_password("admin")
     user.save()
@@ -217,15 +217,15 @@ def test_user_info_raises_database_error(django_elasticapm_client, client):
         with pytest.raises(Exception):
             client.get(reverse("zuqa-raise-exc"))
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert "user" in event["context"]
     user_info = event["context"]["user"]
     assert user_info == {}
 
 
 @pytest.mark.django_db
-def test_user_info_with_custom_user(django_elasticapm_client, client):
+def test_user_info_with_custom_user(django_zuqa_client, client):
     with override_settings(AUTH_USER_MODEL="testapp.MyUser"):
         from django.contrib.auth import get_user_model
 
@@ -237,8 +237,8 @@ def test_user_info_with_custom_user(django_elasticapm_client, client):
         with pytest.raises(Exception):
             client.get(reverse("zuqa-raise-exc"))
 
-        assert len(django_elasticapm_client.events[ERROR]) == 1
-        event = django_elasticapm_client.events[ERROR][0]
+        assert len(django_zuqa_client.events[ERROR]) == 1
+        event = django_zuqa_client.events[ERROR][0]
         assert "user" in event["context"]
         user_info = event["context"]["user"]
         assert "is_authenticated" in user_info
@@ -249,7 +249,7 @@ def test_user_info_with_custom_user(django_elasticapm_client, client):
 
 
 @pytest.mark.django_db
-def test_user_info_with_custom_user_non_string_username(django_elasticapm_client, client):
+def test_user_info_with_custom_user_non_string_username(django_zuqa_client, client):
     with override_settings(AUTH_USER_MODEL="testapp.MyIntUser"):
         from django.contrib.auth import get_user_model
 
@@ -261,8 +261,8 @@ def test_user_info_with_custom_user_non_string_username(django_elasticapm_client
         with pytest.raises(Exception):
             client.get(reverse("zuqa-raise-exc"))
 
-        assert len(django_elasticapm_client.events[ERROR]) == 1
-        event = django_elasticapm_client.events[ERROR][0]
+        assert len(django_zuqa_client.events[ERROR]) == 1
+        event = django_zuqa_client.events[ERROR][0]
         assert "user" in event["context"]
         user_info = event["context"]["user"]
         assert "username" in user_info
@@ -271,7 +271,7 @@ def test_user_info_with_custom_user_non_string_username(django_elasticapm_client
 
 
 @pytest.mark.skipif(django.VERSION > (1, 9), reason="MIDDLEWARE_CLASSES removed in Django 2.0")
-def test_user_info_with_non_django_auth(django_elasticapm_client, client):
+def test_user_info_with_non_django_auth(django_zuqa_client, client):
     with override_settings(
         INSTALLED_APPS=[app for app in settings.INSTALLED_APPS if app != "django.contrib.auth"]
     ) and override_settings(
@@ -282,13 +282,13 @@ def test_user_info_with_non_django_auth(django_elasticapm_client, client):
         with pytest.raises(Exception):
             resp = client.get(reverse("zuqa-raise-exc"))
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert event["context"]["user"] == {}
 
 
 @pytest.mark.skipif(django.VERSION < (1, 10), reason="MIDDLEWARE new in Django 1.10")
-def test_user_info_with_non_django_auth_django_2(django_elasticapm_client, client):
+def test_user_info_with_non_django_auth_django_2(django_zuqa_client, client):
     with override_settings(
         INSTALLED_APPS=[app for app in settings.INSTALLED_APPS if app != "django.contrib.auth"]
     ) and override_settings(
@@ -298,13 +298,13 @@ def test_user_info_with_non_django_auth_django_2(django_elasticapm_client, clien
         with pytest.raises(Exception):
             resp = client.get(reverse("zuqa-raise-exc"))
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert event["context"]["user"] == {}
 
 
 @pytest.mark.skipif(django.VERSION > (1, 9), reason="MIDDLEWARE_CLASSES removed in Django 2.0")
-def test_user_info_without_auth_middleware(django_elasticapm_client, client):
+def test_user_info_without_auth_middleware(django_zuqa_client, client):
     with override_settings(
         MIDDLEWARE_CLASSES=[
             m for m in settings.MIDDLEWARE_CLASSES if m != "django.contrib.auth.middleware.AuthenticationMiddleware"
@@ -312,33 +312,33 @@ def test_user_info_without_auth_middleware(django_elasticapm_client, client):
     ):
         with pytest.raises(Exception):
             client.get(reverse("zuqa-raise-exc"))
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert event["context"]["user"] == {}
 
 
 @pytest.mark.skipif(django.VERSION < (1, 10), reason="MIDDLEWARE new in Django 1.10")
-def test_user_info_without_auth_middleware_django_2(django_elasticapm_client, client):
+def test_user_info_without_auth_middleware_django_2(django_zuqa_client, client):
     with override_settings(
         MIDDLEWARE_CLASSES=None,
         MIDDLEWARE=[m for m in settings.MIDDLEWARE if m != "django.contrib.auth.middleware.AuthenticationMiddleware"],
     ):
         with pytest.raises(Exception):
             client.get(reverse("zuqa-raise-exc"))
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert event["context"]["user"] == {}
 
 
-def test_request_middleware_exception(django_elasticapm_client, client):
+def test_request_middleware_exception(django_zuqa_client, client):
     with override_settings(
         **middleware_setting(django.VERSION, ["tests.contrib.django.testapp.middleware.BrokenRequestMiddleware"])
     ):
         with pytest.raises(ImportError):
             client.get(reverse("zuqa-raise-exc"))
 
-        assert len(django_elasticapm_client.events[ERROR]) == 1
-        event = django_elasticapm_client.events[ERROR][0]
+        assert len(django_zuqa_client.events[ERROR]) == 1
+        event = django_zuqa_client.events[ERROR][0]
 
         assert "exception" in event
         exc = event["exception"]
@@ -348,7 +348,7 @@ def test_request_middleware_exception(django_elasticapm_client, client):
         assert event["culprit"] == "tests.contrib.django.testapp.middleware.process_request"
 
 
-def test_response_middlware_exception(django_elasticapm_client, client):
+def test_response_middlware_exception(django_zuqa_client, client):
     if django.VERSION[:2] < (1, 3):
         return
     with override_settings(
@@ -357,8 +357,8 @@ def test_response_middlware_exception(django_elasticapm_client, client):
         with pytest.raises(ImportError):
             client.get(reverse("zuqa-no-error"))
 
-        assert len(django_elasticapm_client.events[ERROR]) == 1
-        event = django_elasticapm_client.events[ERROR][0]
+        assert len(django_zuqa_client.events[ERROR]) == 1
+        event = django_zuqa_client.events[ERROR][0]
 
         assert "exception" in event
         exc = event["exception"]
@@ -368,7 +368,7 @@ def test_response_middlware_exception(django_elasticapm_client, client):
         assert event["culprit"] == "tests.contrib.django.testapp.middleware.process_response"
 
 
-def test_broken_500_handler_with_middleware(django_elasticapm_client, client):
+def test_broken_500_handler_with_middleware(django_zuqa_client, client):
     with override_settings(BREAK_THAT_500=True):
         client.handler = MockMiddleware(MockClientHandler())
 
@@ -376,9 +376,9 @@ def test_broken_500_handler_with_middleware(django_elasticapm_client, client):
             with pytest.raises(Exception):
                 client.get(reverse("zuqa-raise-exc"))
 
-        assert len(django_elasticapm_client.events[ERROR]) == 2
+        assert len(django_zuqa_client.events[ERROR]) == 2
 
-        event = django_elasticapm_client.events[ERROR][0]
+        event = django_zuqa_client.events[ERROR][0]
 
         assert "exception" in event
         exc = event["exception"]
@@ -386,7 +386,7 @@ def test_broken_500_handler_with_middleware(django_elasticapm_client, client):
         assert exc["message"] == "MyException: view exception"
         assert event["culprit"] == "tests.contrib.django.testapp.views.raise_exc"
 
-        event = django_elasticapm_client.events[ERROR][1]
+        event = django_zuqa_client.events[ERROR][1]
 
         assert "exception" in event
         exc = event["exception"]
@@ -396,15 +396,15 @@ def test_broken_500_handler_with_middleware(django_elasticapm_client, client):
         assert event["culprit"] == "tests.contrib.django.testapp.urls.handler500"
 
 
-def test_view_middleware_exception(django_elasticapm_client, client):
+def test_view_middleware_exception(django_zuqa_client, client):
     with override_settings(
         **middleware_setting(django.VERSION, ["tests.contrib.django.testapp.middleware.BrokenViewMiddleware"])
     ):
         with pytest.raises(ImportError):
             client.get(reverse("zuqa-raise-exc"))
 
-        assert len(django_elasticapm_client.events[ERROR]) == 1
-        event = django_elasticapm_client.events[ERROR][0]
+        assert len(django_zuqa_client.events[ERROR]) == 1
+        event = django_zuqa_client.events[ERROR][0]
 
         assert "exception" in event
         exc = event["exception"]
@@ -414,37 +414,37 @@ def test_view_middleware_exception(django_elasticapm_client, client):
         assert event["culprit"] == "tests.contrib.django.testapp.middleware.process_view"
 
 
-def test_exclude_modules_view(django_elasticapm_client, client):
-    django_elasticapm_client.config.exclude_paths = ["tests.views.decorated_raise_exc"]
+def test_exclude_modules_view(django_zuqa_client, client):
+    django_zuqa_client.config.exclude_paths = ["tests.views.decorated_raise_exc"]
     with pytest.raises(Exception):
         client.get(reverse("zuqa-raise-exc-decor"))
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1, django_elasticapm_client.events
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1, django_zuqa_client.events
+    event = django_zuqa_client.events[ERROR][0]
 
     assert event["culprit"] == "tests.contrib.django.testapp.views.raise_exc"
 
 
-def test_include_modules(django_elasticapm_client, client):
-    django_elasticapm_client.config.include_paths = ["django.shortcuts.get_object_or_404"]
+def test_include_modules(django_zuqa_client, client):
+    django_zuqa_client.config.include_paths = ["django.shortcuts.get_object_or_404"]
 
     with pytest.raises(Exception):
         client.get(reverse("zuqa-django-exc"))
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
 
     assert event["culprit"] == "django.shortcuts.get_object_or_404"
 
 
-def test_ignored_exception_is_ignored(django_elasticapm_client, client):
+def test_ignored_exception_is_ignored(django_zuqa_client, client):
     with pytest.raises(IgnoredException):
         client.get(reverse("zuqa-ignored-exception"))
-    assert len(django_elasticapm_client.events[ERROR]) == 0
+    assert len(django_zuqa_client.events[ERROR]) == 0
 
 
 @pytest.mark.skipif(compat.PY3, reason="see Python bug #10805")
-def test_record_none_exc_info(django_elasticapm_client):
+def test_record_none_exc_info(django_zuqa_client):
     # sys.exc_info can return (None, None, None) if no exception is being
     # handled anywhere on the stack. See:
     #  http://docs.python.org/library/sys.html#sys.exc_info
@@ -454,8 +454,8 @@ def test_record_none_exc_info(django_elasticapm_client):
     handler = LoggingHandler()
     handler.emit(record)
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
 
     assert event["log"]["param_message"] == "test"
     assert event["log"]["logger_name"] == "foo"
@@ -463,15 +463,15 @@ def test_record_none_exc_info(django_elasticapm_client):
     assert "exception" not in event
 
 
-def test_404_middleware(django_elasticapm_client, client):
+def test_404_middleware(django_zuqa_client, client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.Catch404Middleware"])
     ):
         resp = client.get("/non-existant-page")
         assert resp.status_code == 404
 
-        assert len(django_elasticapm_client.events[ERROR]) == 1
-        event = django_elasticapm_client.events[ERROR][0]
+        assert len(django_zuqa_client.events[ERROR]) == 1
+        event = django_zuqa_client.events[ERROR][0]
 
         assert event["log"]["level"] == "info"
         assert event["log"]["logger_name"] == "http404"
@@ -483,17 +483,17 @@ def test_404_middleware(django_elasticapm_client, client):
         assert "body" not in request
 
 
-def test_404_middleware_with_debug(django_elasticapm_client, client):
-    django_elasticapm_client.config.debug = False
+def test_404_middleware_with_debug(django_zuqa_client, client):
+    django_zuqa_client.config.debug = False
     with override_settings(
         DEBUG=True, **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.Catch404Middleware"])
     ):
         resp = client.get("/non-existant-page")
         assert resp.status_code == 404
-        assert len(django_elasticapm_client.events) == 0
+        assert len(django_zuqa_client.events) == 0
 
 
-def test_response_error_id_middleware(django_elasticapm_client, client):
+def test_response_error_id_middleware(django_zuqa_client, client):
     with override_settings(
         **middleware_setting(
             django.VERSION,
@@ -506,14 +506,14 @@ def test_response_error_id_middleware(django_elasticapm_client, client):
         resp = client.get("/non-existant-page")
         assert resp.status_code == 404
         headers = dict(resp.items())
-        assert "X-ElasticAPM-ErrorId" in headers
-        assert len(django_elasticapm_client.events[ERROR]) == 1
-        event = django_elasticapm_client.events[ERROR][0]
-        assert event["id"] == headers["X-ElasticAPM-ErrorId"]
+        assert "X-ZUQA-ErrorId" in headers
+        assert len(django_zuqa_client.events[ERROR]) == 1
+        event = django_zuqa_client.events[ERROR][0]
+        assert event["id"] == headers["X-ZUQA-ErrorId"]
 
 
-def test_get_client(django_elasticapm_client):
-    with mock.patch.dict("os.environ", {"ELASTIC_APM_METRICS_INTERVAL": "0ms"}):
+def test_get_client(django_zuqa_client):
+    with mock.patch.dict("os.environ", {"ZUQA_METRICS_INTERVAL": "0ms"}):
         client2 = get_client("zuqa.base.Client")
         try:
             assert get_client() is get_client()
@@ -523,8 +523,8 @@ def test_get_client(django_elasticapm_client):
             client2.close()
 
 
-@pytest.mark.parametrize("django_elasticapm_client", [{"capture_body": "errors"}], indirect=True)
-def test_raw_post_data_partial_read(django_elasticapm_client):
+@pytest.mark.parametrize("django_zuqa_client", [{"capture_body": "errors"}], indirect=True)
+def test_raw_post_data_partial_read(django_zuqa_client):
     v = compat.b('{"foo": "bar"}')
     request = WSGIRequest(
         environ={
@@ -539,10 +539,10 @@ def test_raw_post_data_partial_read(django_elasticapm_client):
     )
     request.read(1)
 
-    django_elasticapm_client.capture("Message", message="foo", request=request)
+    django_zuqa_client.capture("Message", message="foo", request=request)
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
 
     assert "request" in event["context"]
     request = event["context"]["request"]
@@ -551,11 +551,11 @@ def test_raw_post_data_partial_read(django_elasticapm_client):
 
 
 @pytest.mark.parametrize(
-    "django_elasticapm_client",
+    "django_zuqa_client",
     [{"capture_body": "errors"}, {"capture_body": "all"}, {"capture_body": "off"}],
     indirect=True,
 )
-def test_post_data(django_elasticapm_client):
+def test_post_data(django_zuqa_client):
     request = WSGIRequest(
         environ={
             "wsgi.input": compat.BytesIO(),
@@ -567,26 +567,26 @@ def test_post_data(django_elasticapm_client):
         }
     )
     request.POST = QueryDict("x=1&y=2&y=3")
-    django_elasticapm_client.capture("Message", message="foo", request=request)
+    django_zuqa_client.capture("Message", message="foo", request=request)
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
 
     assert "request" in event["context"]
     request = event["context"]["request"]
     assert request["method"] == "POST"
-    if django_elasticapm_client.config.capture_body in (constants.ERROR, "all"):
+    if django_zuqa_client.config.capture_body in (constants.ERROR, "all"):
         assert request["body"] == {"x": "1", "y": ["2", "3"]}
     else:
         assert request["body"] == "[REDACTED]"
 
 
 @pytest.mark.parametrize(
-    "django_elasticapm_client",
+    "django_zuqa_client",
     [{"capture_body": "errors"}, {"capture_body": "all"}, {"capture_body": "off"}],
     indirect=True,
 )
-def test_post_raw_data(django_elasticapm_client):
+def test_post_raw_data(django_zuqa_client):
     request = WSGIRequest(
         environ={
             "wsgi.input": compat.BytesIO(compat.b("foobar")),
@@ -599,22 +599,22 @@ def test_post_raw_data(django_elasticapm_client):
             "CONTENT_LENGTH": "6",
         }
     )
-    django_elasticapm_client.capture("Message", message="foo", request=request)
+    django_zuqa_client.capture("Message", message="foo", request=request)
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
 
     assert "request" in event["context"]
     request = event["context"]["request"]
     assert request["method"] == "POST"
-    if django_elasticapm_client.config.capture_body in (constants.ERROR, "all"):
+    if django_zuqa_client.config.capture_body in (constants.ERROR, "all"):
         assert request["body"] == compat.b("foobar")
     else:
         assert request["body"] == "[REDACTED]"
 
 
-@pytest.mark.parametrize("django_elasticapm_client", [{"capture_body": "errors"}], indirect=True)
-def test_post_read_error_logging(django_elasticapm_client, caplog, rf):
+@pytest.mark.parametrize("django_zuqa_client", [{"capture_body": "errors"}], indirect=True)
+def test_post_read_error_logging(django_zuqa_client, caplog, rf):
     request = rf.post("/test", data="{}", content_type="application/json")
 
     def read():
@@ -622,13 +622,13 @@ def test_post_read_error_logging(django_elasticapm_client, caplog, rf):
 
     request.read = read
     with caplog.at_level(logging.DEBUG):
-        django_elasticapm_client.get_data_from_request(request, constants.ERROR)
+        django_zuqa_client.get_data_from_request(request, constants.ERROR)
     record = caplog.records[0]
     assert record.message == "Can't capture request body: foobar"
 
 
 @pytest.mark.skipif(django.VERSION < (1, 9), reason="get-raw-uri-not-available")
-def test_disallowed_hosts_error_django_19(django_elasticapm_client):
+def test_disallowed_hosts_error_django_19(django_zuqa_client):
     request = WSGIRequest(
         environ={
             "wsgi.input": compat.BytesIO(),
@@ -642,13 +642,13 @@ def test_disallowed_hosts_error_django_19(django_elasticapm_client):
     )
     with override_settings(ALLOWED_HOSTS=["example.com"]):
         # this should not raise a DisallowedHost exception
-        django_elasticapm_client.capture("Message", message="foo", request=request)
-    event = django_elasticapm_client.events[ERROR][0]
+        django_zuqa_client.capture("Message", message="foo", request=request)
+    event = django_zuqa_client.events[ERROR][0]
     assert event["context"]["request"]["url"]["full"] == "http://testserver/"
 
 
 @pytest.mark.skipif(django.VERSION >= (1, 9), reason="get-raw-uri-available")
-def test_disallowed_hosts_error_django_18(django_elasticapm_client):
+def test_disallowed_hosts_error_django_18(django_zuqa_client):
     request = WSGIRequest(
         environ={
             "wsgi.input": compat.BytesIO(),
@@ -662,17 +662,17 @@ def test_disallowed_hosts_error_django_18(django_elasticapm_client):
     )
     with override_settings(ALLOWED_HOSTS=["example.com"]):
         # this should not raise a DisallowedHost exception
-        django_elasticapm_client.capture("Message", message="foo", request=request)
-    event = django_elasticapm_client.events[ERROR][0]
+        django_zuqa_client.capture("Message", message="foo", request=request)
+    event = django_zuqa_client.events[ERROR][0]
     assert event["context"]["request"]["url"] == {"full": "DisallowedHost"}
 
 
 @pytest.mark.parametrize(
-    "django_elasticapm_client",
+    "django_zuqa_client",
     [{"capture_body": "errors"}, {"capture_body": "all"}, {"capture_body": "off"}],
     indirect=True,
 )
-def test_request_capture(django_elasticapm_client):
+def test_request_capture(django_zuqa_client):
     request = WSGIRequest(
         environ={
             "wsgi.input": compat.BytesIO(),
@@ -685,15 +685,15 @@ def test_request_capture(django_elasticapm_client):
     )
     request.read(1)
 
-    django_elasticapm_client.capture("Message", message="foo", request=request)
+    django_zuqa_client.capture("Message", message="foo", request=request)
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
 
     assert "request" in event["context"]
     request = event["context"]["request"]
     assert request["method"] == "POST"
-    if django_elasticapm_client.config.capture_body in (constants.ERROR, "all"):
+    if django_zuqa_client.config.capture_body in (constants.ERROR, "all"):
         assert request["body"] == "<unavailable>"
     else:
         assert request["body"] == "[REDACTED]"
@@ -708,13 +708,13 @@ def test_request_capture(django_elasticapm_client):
     assert env["SERVER_PORT"] == "80"
 
 
-def test_transaction_request_response_data(django_elasticapm_client, client):
+def test_transaction_request_response_data(django_zuqa_client, client):
     client.cookies = SimpleCookie({"foo": "bar"})
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.get(reverse("zuqa-no-error"))
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
     assert len(transactions) == 1
     transaction = transactions[0]
     assert transaction["result"] == "HTTP 2xx"
@@ -742,15 +742,15 @@ def test_transaction_request_response_data(django_elasticapm_client, client):
         assert response["headers"]["My-Header"] == "foo"
 
 
-def test_transaction_metrics(django_elasticapm_client, client):
+def test_transaction_metrics(django_zuqa_client, client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
-        assert len(django_elasticapm_client.events[TRANSACTION]) == 0
+        assert len(django_zuqa_client.events[TRANSACTION]) == 0
         client.get(reverse("zuqa-no-error"))
-        assert len(django_elasticapm_client.events[TRANSACTION]) == 1
+        assert len(django_zuqa_client.events[TRANSACTION]) == 1
 
-        transactions = django_elasticapm_client.events[TRANSACTION]
+        transactions = django_zuqa_client.events[TRANSACTION]
 
         assert len(transactions) == 1
         transaction = transactions[0]
@@ -759,34 +759,34 @@ def test_transaction_metrics(django_elasticapm_client, client):
         assert transaction["name"] == "GET tests.contrib.django.testapp.views.no_error"
 
 
-def test_transaction_metrics_debug(django_elasticapm_client, client):
+def test_transaction_metrics_debug(django_zuqa_client, client):
     with override_settings(
         DEBUG=True, **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
-        assert len(django_elasticapm_client.events[TRANSACTION]) == 0
+        assert len(django_zuqa_client.events[TRANSACTION]) == 0
         client.get(reverse("zuqa-no-error"))
-        assert len(django_elasticapm_client.events[TRANSACTION]) == 0
+        assert len(django_zuqa_client.events[TRANSACTION]) == 0
 
 
-@pytest.mark.parametrize("django_elasticapm_client", [{"debug": True}], indirect=True)
-def test_transaction_metrics_debug_and_client_debug(django_elasticapm_client, client):
-    assert django_elasticapm_client.config.debug is True
+@pytest.mark.parametrize("django_zuqa_client", [{"debug": True}], indirect=True)
+def test_transaction_metrics_debug_and_client_debug(django_zuqa_client, client):
+    assert django_zuqa_client.config.debug is True
 
     with override_settings(
         DEBUG=True, **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
-        assert len(django_elasticapm_client.events[TRANSACTION]) == 0
+        assert len(django_zuqa_client.events[TRANSACTION]) == 0
         client.get(reverse("zuqa-no-error"))
-        assert len(django_elasticapm_client.events[TRANSACTION]) == 1
+        assert len(django_zuqa_client.events[TRANSACTION]) == 1
 
 
-def test_request_metrics_301_append_slash(django_elasticapm_client, client):
+def test_request_metrics_301_append_slash(django_zuqa_client, client):
     # enable middleware wrapping
-    django_elasticapm_client.config.instrument_django_middleware = True
+    django_zuqa_client.config.instrument_django_middleware = True
 
     from zuqa.contrib.django.middleware import TracingMiddleware
 
-    TracingMiddleware._elasticapm_instrumented = False
+    TracingMiddleware._zuqa_instrumented = False
 
     with override_settings(
         APPEND_SLASH=True,
@@ -796,7 +796,7 @@ def test_request_metrics_301_append_slash(django_elasticapm_client, client):
         )
     ):
         client.get(reverse("zuqa-no-error-slash")[:-1])
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
     assert transactions[0]["name"] in (
         # django <= 1.8
         "GET django.middleware.common.CommonMiddleware.process_request",
@@ -806,13 +806,13 @@ def test_request_metrics_301_append_slash(django_elasticapm_client, client):
     assert transactions[0]["result"] == "HTTP 3xx"
 
 
-def test_request_metrics_301_prepend_www(django_elasticapm_client, client):
+def test_request_metrics_301_prepend_www(django_zuqa_client, client):
     # enable middleware wrapping
-    django_elasticapm_client.config.instrument_django_middleware = True
+    django_zuqa_client.config.instrument_django_middleware = True
 
     from zuqa.contrib.django.middleware import TracingMiddleware
 
-    TracingMiddleware._elasticapm_instrumented = False
+    TracingMiddleware._zuqa_instrumented = False
 
     with override_settings(
         PREPEND_WWW=True,
@@ -822,18 +822,18 @@ def test_request_metrics_301_prepend_www(django_elasticapm_client, client):
         )
     ):
         client.get(reverse("zuqa-no-error"))
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
     assert transactions[0]["name"] == "GET django.middleware.common.CommonMiddleware.process_request"
     assert transactions[0]["result"] == "HTTP 3xx"
 
 
 @pytest.mark.django_db
-def test_request_metrics_contrib_redirect(django_elasticapm_client, client):
+def test_request_metrics_contrib_redirect(django_zuqa_client, client):
     # enable middleware wrapping
-    django_elasticapm_client.config.instrument_django_middleware = True
+    django_zuqa_client.config.instrument_django_middleware = True
     from zuqa.contrib.django.middleware import TracingMiddleware
 
-    TracingMiddleware._elasticapm_instrumented = False
+    TracingMiddleware._zuqa_instrumented = False
 
     s = Site.objects.get(pk=1)
     Redirect.objects.create(site=s, old_path="/redirect/me/", new_path="/here/")
@@ -849,44 +849,44 @@ def test_request_metrics_contrib_redirect(django_elasticapm_client, client):
     ):
         response = client.get("/redirect/me/")
 
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
     assert (
         transactions[0]["name"] == "GET django.contrib.redirects.middleware.RedirectFallbackMiddleware.process_response"
     )
     assert transactions[0]["result"] == "HTTP 3xx"
 
 
-def test_request_metrics_404_resolve_error(django_elasticapm_client, client):
+def test_request_metrics_404_resolve_error(django_zuqa_client, client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.get("/i-dont-exist/")
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
     assert transactions[0]["name"] == ""
 
 
 @pytest.mark.django_db
-def test_request_metrics_streaming(django_elasticapm_client, client):
+def test_request_metrics_streaming(django_zuqa_client, client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         resp = client.get(reverse("zuqa-streaming-view"))
         assert list(resp.streaming_content) == [b"0", b"1", b"2", b"3", b"4"]
         resp.close()
-    transaction = django_elasticapm_client.events[TRANSACTION][0]
+    transaction = django_zuqa_client.events[TRANSACTION][0]
     assert transaction["result"] == "HTTP 2xx"
     assert transaction["duration"] >= 50
 
-    spans = django_elasticapm_client.events[SPAN]
+    spans = django_zuqa_client.events[SPAN]
     assert len(spans) == 5
 
 
-def test_request_metrics_name_override(django_elasticapm_client, client):
+def test_request_metrics_name_override(django_zuqa_client, client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.get(reverse("zuqa-name-override"))
-    transaction = django_elasticapm_client.events[TRANSACTION][0]
+    transaction = django_zuqa_client.events[TRANSACTION][0]
     assert transaction["name"] == "foo"
     assert transaction["result"] == "okydoky"
 
@@ -894,7 +894,7 @@ def test_request_metrics_name_override(django_elasticapm_client, client):
 @pytest.mark.parametrize("middleware_attr", ["MIDDLEWARE", "MIDDLEWARE_CLASSES"])
 def test_tracing_middleware_autoinsertion_list(middleware_attr):
     settings = mock.Mock(spec=[middleware_attr], **{middleware_attr: ["a", "b", "c"]})
-    ElasticAPMConfig.insert_middleware(settings)
+    ZuqaConfig.insert_middleware(settings)
     middleware_list = getattr(settings, middleware_attr)
     assert len(middleware_list) == 4
     assert middleware_list[0] == "zuqa.contrib.django.middleware.TracingMiddleware"
@@ -904,7 +904,7 @@ def test_tracing_middleware_autoinsertion_list(middleware_attr):
 @pytest.mark.parametrize("middleware_attr", ["MIDDLEWARE", "MIDDLEWARE_CLASSES"])
 def test_tracing_middleware_autoinsertion_tuple(middleware_attr):
     settings = mock.Mock(spec=[middleware_attr], **{middleware_attr: ("a", "b", "c")})
-    ElasticAPMConfig.insert_middleware(settings)
+    ZuqaConfig.insert_middleware(settings)
     middleware_list = getattr(settings, middleware_attr)
     assert len(middleware_list) == 4
     assert middleware_list[0] == "zuqa.contrib.django.middleware.TracingMiddleware"
@@ -913,7 +913,7 @@ def test_tracing_middleware_autoinsertion_tuple(middleware_attr):
 
 def test_tracing_middleware_autoinsertion_no_middleware_setting(caplog):
     with caplog.at_level(logging.DEBUG, logger="zuqa.traces"):
-        ElasticAPMConfig.insert_middleware(object())
+        ZuqaConfig.insert_middleware(object())
     record = caplog.records[-1]
     assert "not autoinserting" in record.message
 
@@ -922,13 +922,13 @@ def test_tracing_middleware_autoinsertion_no_middleware_setting(caplog):
 def test_tracing_middleware_autoinsertion_wrong_type(middleware_attr, caplog):
     settings = mock.Mock(spec=[middleware_attr], **{middleware_attr: {"a", "b", "c"}})
     with caplog.at_level(logging.DEBUG, logger="zuqa.traces"):
-        ElasticAPMConfig.insert_middleware(settings)
+        ZuqaConfig.insert_middleware(settings)
     record = caplog.records[-1]
     assert "not of type list or tuple" in record.message
 
 
 @pytest.mark.parametrize("header_name", [constants.TRACEPARENT_HEADER_NAME, constants.TRACEPARENT_LEGACY_HEADER_NAME])
-def test_traceparent_header_handling(django_elasticapm_client, client, header_name):
+def test_traceparent_header_handling(django_zuqa_client, client, header_name):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ), mock.patch(
@@ -942,96 +942,96 @@ def test_traceparent_header_handling(django_elasticapm_client, client, header_na
             wsgi_tracestate_name: "foo=bar,baz=bazzinga",
         }
         client.get(reverse("zuqa-no-error"), **kwargs)
-        transaction = django_elasticapm_client.events[TRANSACTION][0]
+        transaction = django_zuqa_client.events[TRANSACTION][0]
         assert transaction["trace_id"] == "0af7651916cd43dd8448eb211c80319c"
         assert transaction["parent_id"] == "b7ad6b7169203331"
         assert "foo=bar,baz=bazzinga" in wrapped_from_string.call_args[0]
 
 
-def test_get_service_info(django_elasticapm_client):
-    app_info = django_elasticapm_client.get_service_info()
+def test_get_service_info(django_zuqa_client):
+    app_info = django_zuqa_client.get_service_info()
     assert django.get_version() == app_info["framework"]["version"]
     assert app_info["framework"]["name"] == "django"
-    assert django_elasticapm_client.config.framework_name == "django"
+    assert django_zuqa_client.config.framework_name == "django"
 
 
 @pytest.mark.parametrize(
-    "django_sending_elasticapm_client",
+    "django_sending_zuqa_client",
     [{"filter_exception_types": ["KeyError", "tests.contrib.django.fake1.FakeException"]}],
     indirect=True,
 )
-def test_filter_no_match(django_sending_elasticapm_client):
+def test_filter_no_match(django_sending_zuqa_client):
     try:
         raise ValueError("foo")
     except ValueError:
-        django_sending_elasticapm_client.capture("Exception", handled=False)
-    django_sending_elasticapm_client.close()
-    assert len(django_sending_elasticapm_client.httpserver.requests) == 1
+        django_sending_zuqa_client.capture("Exception", handled=False)
+    django_sending_zuqa_client.close()
+    assert len(django_sending_zuqa_client.httpserver.requests) == 1
 
 
 @pytest.mark.parametrize(
-    "django_sending_elasticapm_client",
+    "django_sending_zuqa_client",
     [{"filter_exception_types": ["KeyError", "tests.contrib.django.fake1.FakeException"]}],
     indirect=True,
 )
-def test_filter_matches_type(django_sending_elasticapm_client):
+def test_filter_matches_type(django_sending_zuqa_client):
     try:
         raise KeyError("foo")
     except KeyError:
-        django_sending_elasticapm_client.capture("Exception")
-    django_sending_elasticapm_client.close()
-    assert len(django_sending_elasticapm_client.httpserver.requests) == 0
+        django_sending_zuqa_client.capture("Exception")
+    django_sending_zuqa_client.close()
+    assert len(django_sending_zuqa_client.httpserver.requests) == 0
 
 
 @pytest.mark.parametrize(
-    "django_sending_elasticapm_client",
+    "django_sending_zuqa_client",
     [{"filter_exception_types": ["KeyError", "tests.contrib.django.fake1.FakeException"]}],
     indirect=True,
 )
-def test_filter_matches_type_but_not_module(django_sending_elasticapm_client):
+def test_filter_matches_type_but_not_module(django_sending_zuqa_client):
     from tests.contrib.django.fake2 import FakeException
 
     try:
         raise FakeException("foo")
     except FakeException:
-        django_sending_elasticapm_client.capture("Exception", handled=False)
-    django_sending_elasticapm_client.close()
-    assert len(django_sending_elasticapm_client.httpserver.requests) == 1
+        django_sending_zuqa_client.capture("Exception", handled=False)
+    django_sending_zuqa_client.close()
+    assert len(django_sending_zuqa_client.httpserver.requests) == 1
 
 
 @pytest.mark.parametrize(
-    "django_sending_elasticapm_client",
+    "django_sending_zuqa_client",
     [{"filter_exception_types": ["KeyError", "tests.contrib.django.fake1.FakeException"]}],
     indirect=True,
 )
-def test_filter_matches_type_and_module(django_sending_elasticapm_client):
+def test_filter_matches_type_and_module(django_sending_zuqa_client):
     from tests.contrib.django.fake1 import FakeException
 
     try:
         raise FakeException("foo")
     except FakeException:
-        django_sending_elasticapm_client.capture("Exception", handled=False)
-    django_sending_elasticapm_client.close()
-    assert len(django_sending_elasticapm_client.httpserver.requests) == 0
+        django_sending_zuqa_client.capture("Exception", handled=False)
+    django_sending_zuqa_client.close()
+    assert len(django_sending_zuqa_client.httpserver.requests) == 0
 
 
 @pytest.mark.parametrize(
-    "django_sending_elasticapm_client",
+    "django_sending_zuqa_client",
     [{"filter_exception_types": ["KeyError", "tests.contrib.django.fake1.FakeException"]}],
     indirect=True,
 )
-def test_filter_matches_module_only(django_sending_elasticapm_client):
+def test_filter_matches_module_only(django_sending_zuqa_client):
     from tests.contrib.django.fake1 import OtherFakeException
 
     try:
         raise OtherFakeException("foo")
     except OtherFakeException:
-        django_sending_elasticapm_client.capture("Exception", handled=False)
-    django_sending_elasticapm_client.close()
-    assert len(django_sending_elasticapm_client.httpserver.requests) == 1
+        django_sending_zuqa_client.capture("Exception", handled=False)
+    django_sending_zuqa_client.close()
+    assert len(django_sending_zuqa_client.httpserver.requests) == 1
 
 
-def test_django_logging_request_kwarg(django_elasticapm_client):
+def test_django_logging_request_kwarg(django_zuqa_client):
     handler = LoggingHandler()
 
     logger = logging.getLogger(__name__)
@@ -1054,14 +1054,14 @@ def test_django_logging_request_kwarg(django_elasticapm_client):
         },
     )
 
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert "request" in event["context"]
     request = event["context"]["request"]
     assert request["method"] == "POST"
 
 
-def test_django_logging_middleware(django_elasticapm_client, client):
+def test_django_logging_middleware(django_zuqa_client, client):
     handler = LoggingHandler()
 
     logger = logging.getLogger("logmiddleware")
@@ -1073,8 +1073,8 @@ def test_django_logging_middleware(django_elasticapm_client, client):
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.LogMiddleware"])
     ):
         client.get(reverse("zuqa-logging"))
-    assert len(django_elasticapm_client.events[ERROR]) == 1
-    event = django_elasticapm_client.events[ERROR][0]
+    assert len(django_zuqa_client.events[ERROR]) == 1
+    event = django_zuqa_client.events[ERROR][0]
     assert "request" in event["context"]
     assert event["context"]["request"]["url"]["pathname"] == reverse("zuqa-logging")
 
@@ -1083,7 +1083,7 @@ def client_get(client, url):
     return client.get(url)
 
 
-def test_stacktraces_have_templates(client, django_elasticapm_client):
+def test_stacktraces_have_templates(client, django_zuqa_client):
     # only Django 1.9+ have the necessary information stored on Node/Template
     # instances when TEMPLATE_DEBUG = False
 
@@ -1099,11 +1099,11 @@ def test_stacktraces_have_templates(client, django_elasticapm_client):
         resp = client.get(reverse("render-heavy-template"))
     assert resp.status_code == 200
 
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
     assert len(transactions) == 1
     transaction = transactions[0]
     assert transaction["result"] == "HTTP 2xx"
-    spans = django_elasticapm_client.events[SPAN]
+    spans = django_zuqa_client.events[SPAN]
     assert len(spans) == 2, [t["name"] for t in spans]
 
     expected_names = {"list_users.html", "something_expensive"}
@@ -1122,16 +1122,16 @@ def test_stacktraces_have_templates(client, django_elasticapm_client):
         assert False is True, "Template was not found"
 
 
-def test_stacktrace_filtered_for_elasticapm(client, django_elasticapm_client):
+def test_stacktrace_filtered_for_zuqa(client, django_zuqa_client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         resp = client.get(reverse("render-heavy-template"))
     assert resp.status_code == 200
 
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
     assert transactions[0]["result"] == "HTTP 2xx"
-    spans = django_elasticapm_client.events[SPAN]
+    spans = django_zuqa_client.events[SPAN]
 
     expected_signatures = ["transaction", "list_users.html", "something_expensive"]
 
@@ -1162,7 +1162,7 @@ def test_subcommand_not_known(argv_mock):
 
 def test_settings_missing():
     stdout = compat.StringIO()
-    with override_settings(ELASTIC_APM={}):
+    with override_settings(ZUQA={}):
         call_command("zuqa", "check", stdout=stdout)
     output = stdout.getvalue()
     assert "Configuration errors detected" in output
@@ -1172,7 +1172,7 @@ def test_settings_missing():
 
 def test_settings_missing_secret_token_no_https():
     stdout = compat.StringIO()
-    with override_settings(ELASTIC_APM={"SERVER_URL": "http://foo"}):
+    with override_settings(ZUQA={"SERVER_URL": "http://foo"}):
         call_command("zuqa", "check", stdout=stdout)
     output = stdout.getvalue()
     assert "optional SECRET_TOKEN not set" in output
@@ -1180,7 +1180,7 @@ def test_settings_missing_secret_token_no_https():
 
 def test_settings_secret_token_https():
     stdout = compat.StringIO()
-    with override_settings(ELASTIC_APM={"SECRET_TOKEN": "foo", "SERVER_URL": "https://foo"}):
+    with override_settings(ZUQA={"SECRET_TOKEN": "foo", "SERVER_URL": "https://foo"}):
         call_command("zuqa", "check", stdout=stdout)
     output = stdout.getvalue()
     assert "SECRET_TOKEN not set" not in output
@@ -1214,7 +1214,7 @@ def test_middleware_not_first():
 
 def test_settings_server_url_default():
     stdout = compat.StringIO()
-    with override_settings(ELASTIC_APM={}):
+    with override_settings(ZUQA={}):
         call_command("zuqa", "check", stdout=stdout)
     output = stdout.getvalue()
     assert "SERVER_URL http://localhost:8200 looks fine" in output
@@ -1222,7 +1222,7 @@ def test_settings_server_url_default():
 
 def test_settings_server_url_is_empty_string():
     stdout = compat.StringIO()
-    with override_settings(ELASTIC_APM={"SERVER_URL": ""}):
+    with override_settings(ZUQA={"SERVER_URL": ""}):
         call_command("zuqa", "check", stdout=stdout)
     output = stdout.getvalue()
     assert "Configuration errors detected" in output
@@ -1231,7 +1231,7 @@ def test_settings_server_url_is_empty_string():
 
 def test_settings_server_url_not_http_nor_https():
     stdout = compat.StringIO()
-    with override_settings(ELASTIC_APM={"SERVER_URL": "xhttp://dev.brwnppr.com:8000/"}):
+    with override_settings(ZUQA={"SERVER_URL": "xhttp://dev.brwnppr.com:8000/"}):
         call_command("zuqa", "check", stdout=stdout)
     output = stdout.getvalue()
     assert "Configuration errors detected" in output
@@ -1240,7 +1240,7 @@ def test_settings_server_url_not_http_nor_https():
 
 def test_settings_server_url_uppercase_http():
     stdout = compat.StringIO()
-    with override_settings(ELASTIC_APM={"SERVER_URL": "HTTP://dev.brwnppr.com:8000/"}):
+    with override_settings(ZUQA={"SERVER_URL": "HTTP://dev.brwnppr.com:8000/"}):
         call_command("zuqa", "check", stdout=stdout)
     output = stdout.getvalue()
     assert "SERVER_URL HTTP://dev.brwnppr.com:8000/ looks fine" in output
@@ -1248,7 +1248,7 @@ def test_settings_server_url_uppercase_http():
 
 def test_settings_server_url_with_at():
     stdout = compat.StringIO()
-    with override_settings(ELASTIC_APM={"SERVER_URL": "http://y@dev.brwnppr.com:8000/"}):
+    with override_settings(ZUQA={"SERVER_URL": "http://y@dev.brwnppr.com:8000/"}):
         call_command("zuqa", "check", stdout=stdout)
     output = stdout.getvalue()
     assert "Configuration errors detected" in output
@@ -1257,7 +1257,7 @@ def test_settings_server_url_with_at():
 
 def test_settings_server_url_with_credentials():
     stdout = compat.StringIO()
-    with override_settings(ELASTIC_APM={"SERVER_URL": "http://x:y@dev.brwnppr.com:8000/"}):
+    with override_settings(ZUQA={"SERVER_URL": "http://x:y@dev.brwnppr.com:8000/"}):
         call_command("zuqa", "check", stdout=stdout)
     output = stdout.getvalue()
     assert "Configuration errors detected" in output
@@ -1291,176 +1291,176 @@ def test_test_exception(urlopen_mock):
     assert "Success! We tracked the error successfully!" in output
 
 
-def test_tracing_middleware_uses_test_client(client, django_elasticapm_client):
+def test_tracing_middleware_uses_test_client(client, django_zuqa_client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.get("/")
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
     assert len(transactions) == 1
     assert transactions[0]["context"]["request"]["url"]["pathname"] == "/"
 
 
 @pytest.mark.parametrize(
-    "django_elasticapm_client",
+    "django_zuqa_client",
     [{"capture_body": "errors"}, {"capture_body": "transactions"}, {"capture_body": "all"}, {"capture_body": "off"}],
     indirect=True,
 )
-def test_capture_post_errors_dict(client, django_elasticapm_client):
+def test_capture_post_errors_dict(client, django_zuqa_client):
     with pytest.raises(MyException):
         client.post(reverse("zuqa-raise-exc"), {"username": "john", "password": "smith"})
-    error = django_elasticapm_client.events[ERROR][0]
-    if django_elasticapm_client.config.capture_body in (constants.ERROR, "all"):
+    error = django_zuqa_client.events[ERROR][0]
+    if django_zuqa_client.config.capture_body in (constants.ERROR, "all"):
         assert error["context"]["request"]["body"] == {"username": "john", "password": "smith"}
     else:
         assert error["context"]["request"]["body"] == "[REDACTED]"
 
 
-def test_capture_body_config_is_dynamic_for_errors(client, django_elasticapm_client):
-    django_elasticapm_client.config.update(version="1", capture_body="all")
+def test_capture_body_config_is_dynamic_for_errors(client, django_zuqa_client):
+    django_zuqa_client.config.update(version="1", capture_body="all")
     with pytest.raises(MyException):
         client.post(reverse("zuqa-raise-exc"), {"username": "john", "password": "smith"})
-    error = django_elasticapm_client.events[ERROR][0]
+    error = django_zuqa_client.events[ERROR][0]
     assert error["context"]["request"]["body"] == {"username": "john", "password": "smith"}
 
-    django_elasticapm_client.config.update(version="1", capture_body="off")
+    django_zuqa_client.config.update(version="1", capture_body="off")
     with pytest.raises(MyException):
         client.post(reverse("zuqa-raise-exc"), {"username": "john", "password": "smith"})
-    error = django_elasticapm_client.events[ERROR][1]
+    error = django_zuqa_client.events[ERROR][1]
     assert error["context"]["request"]["body"] == "[REDACTED]"
 
 
-def test_capture_body_config_is_dynamic_for_transactions(client, django_elasticapm_client):
-    django_elasticapm_client.config.update(version="1", capture_body="all")
+def test_capture_body_config_is_dynamic_for_transactions(client, django_zuqa_client):
+    django_zuqa_client.config.update(version="1", capture_body="all")
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.post(reverse("zuqa-no-error"), {"username": "john", "password": "smith"})
-    transaction = django_elasticapm_client.events[TRANSACTION][0]
+    transaction = django_zuqa_client.events[TRANSACTION][0]
     assert transaction["context"]["request"]["body"] == {"username": "john", "password": "smith"}
 
-    django_elasticapm_client.config.update(version="1", capture_body="off")
+    django_zuqa_client.config.update(version="1", capture_body="off")
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.post(reverse("zuqa-no-error"), {"username": "john", "password": "smith"})
-    transaction = django_elasticapm_client.events[TRANSACTION][1]
+    transaction = django_zuqa_client.events[TRANSACTION][1]
     assert transaction["context"]["request"]["body"] == "[REDACTED]"
 
 
-def test_capture_headers_config_is_dynamic_for_errors(client, django_elasticapm_client):
-    django_elasticapm_client.config.update(version="1", capture_headers=True)
+def test_capture_headers_config_is_dynamic_for_errors(client, django_zuqa_client):
+    django_zuqa_client.config.update(version="1", capture_headers=True)
     with pytest.raises(MyException):
         client.post(reverse("zuqa-raise-exc"))
-    error = django_elasticapm_client.events[ERROR][0]
+    error = django_zuqa_client.events[ERROR][0]
     assert error["context"]["request"]["headers"]
 
-    django_elasticapm_client.config.update(version="1", capture_headers=False)
+    django_zuqa_client.config.update(version="1", capture_headers=False)
     with pytest.raises(MyException):
         client.post(reverse("zuqa-raise-exc"))
-    error = django_elasticapm_client.events[ERROR][1]
+    error = django_zuqa_client.events[ERROR][1]
     assert "headers" not in error["context"]["request"]
 
 
-def test_capture_headers_config_is_dynamic_for_transactions(client, django_elasticapm_client):
-    django_elasticapm_client.config.update(version="1", capture_headers=True)
+def test_capture_headers_config_is_dynamic_for_transactions(client, django_zuqa_client):
+    django_zuqa_client.config.update(version="1", capture_headers=True)
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.post(reverse("zuqa-no-error"))
-    transaction = django_elasticapm_client.events[TRANSACTION][0]
+    transaction = django_zuqa_client.events[TRANSACTION][0]
     assert transaction["context"]["request"]["headers"]
 
-    django_elasticapm_client.config.update(version="1", capture_headers=False)
+    django_zuqa_client.config.update(version="1", capture_headers=False)
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.post(reverse("zuqa-no-error"))
-    transaction = django_elasticapm_client.events[TRANSACTION][1]
+    transaction = django_zuqa_client.events[TRANSACTION][1]
     assert "headers" not in transaction["context"]["request"]
 
 
 @pytest.mark.parametrize(
-    "django_elasticapm_client",
+    "django_zuqa_client",
     [{"capture_body": "errors"}, {"capture_body": "transactions"}, {"capture_body": "all"}, {"capture_body": "off"}],
     indirect=True,
 )
-def test_capture_post_errors_multivalue_dict(client, django_elasticapm_client):
+def test_capture_post_errors_multivalue_dict(client, django_zuqa_client):
     with pytest.raises(MyException):
         client.post(
             reverse("zuqa-raise-exc"),
             "key=value1&key=value2&test=test&key=value3",
             content_type="application/x-www-form-urlencoded",
         )
-    error = django_elasticapm_client.events[ERROR][0]
-    if django_elasticapm_client.config.capture_body in (constants.ERROR, "all"):
+    error = django_zuqa_client.events[ERROR][0]
+    if django_zuqa_client.config.capture_body in (constants.ERROR, "all"):
         assert error["context"]["request"]["body"] == {"key": ["value1", "value2", "value3"], "test": "test"}
     else:
         assert error["context"]["request"]["body"] == "[REDACTED]"
 
 
 @pytest.mark.parametrize(
-    "django_sending_elasticapm_client",
+    "django_sending_zuqa_client",
     [{"capture_body": "errors"}, {"capture_body": "transactions"}, {"capture_body": "all"}, {"capture_body": "off"}],
     indirect=True,
 )
-def test_capture_post_errors_raw(client, django_sending_elasticapm_client):
+def test_capture_post_errors_raw(client, django_sending_zuqa_client):
     # use "sending" client to ensure that we encode the payload correctly
     with pytest.raises(MyException):
         client.post(
             reverse("zuqa-raise-exc"), json.dumps({"a": "b"}), content_type="application/json; charset=utf8"
         )
-    django_sending_elasticapm_client.close()
-    error = django_sending_elasticapm_client.httpserver.payloads[0][1]["error"]
-    if django_sending_elasticapm_client.config.capture_body in (constants.ERROR, "all"):
+    django_sending_zuqa_client.close()
+    error = django_sending_zuqa_client.httpserver.payloads[0][1]["error"]
+    if django_sending_zuqa_client.config.capture_body in (constants.ERROR, "all"):
         assert error["context"]["request"]["body"] == '{"a": "b"}'
     else:
         assert error["context"]["request"]["body"] == "[REDACTED]"
 
 
 @pytest.mark.parametrize(
-    "django_elasticapm_client",
+    "django_zuqa_client",
     [{"capture_body": "errors"}, {"capture_body": "transactions"}, {"capture_body": "all"}, {"capture_body": "off"}],
     indirect=True,
 )
-def test_capture_empty_body(client, django_elasticapm_client):
+def test_capture_empty_body(client, django_zuqa_client):
     with pytest.raises(MyException):
         client.post(reverse("zuqa-raise-exc"), data={})
-    error = django_elasticapm_client.events[ERROR][0]
-    if django_elasticapm_client.config.capture_body not in ("error", "all"):
+    error = django_zuqa_client.events[ERROR][0]
+    if django_zuqa_client.config.capture_body not in ("error", "all"):
         assert error["context"]["request"]["body"] == "[REDACTED]"
     else:
         assert error["context"]["request"]["body"] == {}
 
 
 @pytest.mark.parametrize(
-    "django_elasticapm_client",
+    "django_zuqa_client",
     [{"capture_body": "errors"}, {"capture_body": "transactions"}, {"capture_body": "all"}, {"capture_body": "off"}],
     indirect=True,
 )
-def test_capture_files(client, django_elasticapm_client):
+def test_capture_files(client, django_zuqa_client):
     with pytest.raises(MyException), open(os.path.abspath(__file__)) as f:
         client.post(
             reverse("zuqa-raise-exc"), data={"a": "b", "f1": compat.BytesIO(100 * compat.b("1")), "f2": f}
         )
-    error = django_elasticapm_client.events[ERROR][0]
-    if django_elasticapm_client.config.capture_body in (constants.ERROR, "all"):
+    error = django_zuqa_client.events[ERROR][0]
+    if django_zuqa_client.config.capture_body in (constants.ERROR, "all"):
         assert error["context"]["request"]["body"] == {"a": "b", "_files": {"f1": "f1", "f2": "django_tests.py"}}
     else:
         assert error["context"]["request"]["body"] == "[REDACTED]"
 
 
 @pytest.mark.parametrize(
-    "django_elasticapm_client", [{"capture_headers": "true"}, {"capture_headers": "false"}], indirect=True
+    "django_zuqa_client", [{"capture_headers": "true"}, {"capture_headers": "false"}], indirect=True
 )
-def test_capture_headers(client, django_elasticapm_client):
+def test_capture_headers(client, django_zuqa_client):
     with pytest.raises(MyException), override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.post(reverse("zuqa-raise-exc"), **{"HTTP_SOME_HEADER": "foo"})
-    error = django_elasticapm_client.events[ERROR][0]
-    transaction = django_elasticapm_client.events[TRANSACTION][0]
-    if django_elasticapm_client.config.capture_headers:
+    error = django_zuqa_client.events[ERROR][0]
+    transaction = django_zuqa_client.events[TRANSACTION][0]
+    if django_zuqa_client.config.capture_headers:
         assert error["context"]["request"]["headers"]["some-header"] == "foo"
         assert transaction["context"]["request"]["headers"]["some-header"] == "foo"
         assert "headers" in transaction["context"]["response"]
@@ -1470,17 +1470,17 @@ def test_capture_headers(client, django_elasticapm_client):
         assert "headers" not in transaction["context"]["response"]
 
 
-@pytest.mark.parametrize("django_elasticapm_client", [{"capture_body": "transactions"}], indirect=True)
-def test_options_request(client, django_elasticapm_client):
+@pytest.mark.parametrize("django_zuqa_client", [{"capture_body": "transactions"}], indirect=True)
+def test_options_request(client, django_zuqa_client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.options("/")
-    transactions = django_elasticapm_client.events[TRANSACTION]
+    transactions = django_zuqa_client.events[TRANSACTION]
     assert transactions[0]["context"]["request"]["method"] == "OPTIONS"
 
 
-def test_rum_tracing_context_processor(client, django_elasticapm_client):
+def test_rum_tracing_context_processor(client, django_zuqa_client):
     with override_settings(
         TEMPLATES=[
             {
@@ -1489,7 +1489,7 @@ def test_rum_tracing_context_processor(client, django_elasticapm_client):
                 "OPTIONS": {
                     "context_processors": [
                         "django.contrib.auth.context_processors.auth",
-                        "elasticapm.contrib.django.context_processors.rum_tracing",
+                        "zuqa.contrib.django.context_processors.rum_tracing",
                     ],
                     "loaders": ["django.template.loaders.filesystem.Loader"],
                     "debug": False,
@@ -1499,7 +1499,7 @@ def test_rum_tracing_context_processor(client, django_elasticapm_client):
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         response = client.get(reverse("render-heavy-template"))
-        transactions = django_elasticapm_client.events[TRANSACTION]
+        transactions = django_zuqa_client.events[TRANSACTION]
         assert response.context["apm"]["trace_id"] == transactions[0]["trace_id"]
         assert response.context["apm"]["is_sampled"]
         assert response.context["apm"]["is_sampled_js"] == "true"
@@ -1507,22 +1507,22 @@ def test_rum_tracing_context_processor(client, django_elasticapm_client):
 
 
 @pytest.mark.skipif(django.VERSION < (2, 2), reason="ResolverMatch.route attribute is new in Django 2.2")
-@pytest.mark.parametrize("django_elasticapm_client", [{"django_transaction_name_from_route": "true"}], indirect=True)
-def test_transaction_name_from_route(client, django_elasticapm_client):
+@pytest.mark.parametrize("django_zuqa_client", [{"django_transaction_name_from_route": "true"}], indirect=True)
+def test_transaction_name_from_route(client, django_zuqa_client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.get("/route/1/")
-    transaction = django_elasticapm_client.events[TRANSACTION][0]
+    transaction = django_zuqa_client.events[TRANSACTION][0]
     assert transaction["name"] == "GET route/<int:id>/"
 
 
 @pytest.mark.skipif(django.VERSION >= (2, 2), reason="ResolverMatch.route attribute is new in Django 2.2")
-@pytest.mark.parametrize("django_elasticapm_client", [{"django_transaction_name_from_route": "true"}], indirect=True)
-def test_transaction_name_from_route_doesnt_have_effect_in_older_django(client, django_elasticapm_client):
+@pytest.mark.parametrize("django_zuqa_client", [{"django_transaction_name_from_route": "true"}], indirect=True)
+def test_transaction_name_from_route_doesnt_have_effect_in_older_django(client, django_zuqa_client):
     with override_settings(
         **middleware_setting(django.VERSION, ["zuqa.contrib.django.middleware.TracingMiddleware"])
     ):
         client.get("/no-error")
-    transaction = django_elasticapm_client.events[TRANSACTION][0]
+    transaction = django_zuqa_client.events[TRANSACTION][0]
     assert transaction["name"] == "GET tests.contrib.django.testapp.views.no_error"

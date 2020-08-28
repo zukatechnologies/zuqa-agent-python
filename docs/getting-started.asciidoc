@@ -1,7 +1,7 @@
 [[getting-started]]
 == Introduction
 
-The Elastic APM Python agent sends performance metrics and error logs to the APM Server.
+The ZUQA Python agent sends performance metrics and error logs to the APM Server.
 It has built-in support for Django and Flask performance metrics and error logging, as well as generic support of other WSGI frameworks for error logging.
 
 [float]

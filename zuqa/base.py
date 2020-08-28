@@ -57,11 +57,11 @@ __all__ = ("Client",)
 
 class Client(object):
     """
-    The base ElasticAPM client, which handles communication over the
+    The base ZUQA client, which handles communication over the
     HTTP API to the APM Server.
 
     Will read default configuration from the environment variable
-    ``ELASTIC_APM_APP_NAME`` and ``ELASTIC_APM_SECRET_TOKEN``
+    ``ZUQA_APP_NAME`` and ``ZUQA_SECRET_TOKEN``
     if available. ::
 
     >>> from zuqa import Client
@@ -116,7 +116,7 @@ class Client(object):
             record_factory = logging.getLogRecordFactory()
             # Only way to know if it's wrapped is to create a log record
             throwaway_record = record_factory(__name__, logging.DEBUG, __file__, 252, "dummy_msg", [], None)
-            if not hasattr(throwaway_record, "elasticapm_labels"):
+            if not hasattr(throwaway_record, "zuqa_labels"):
                 self.logger.debug("Inserting zuqa log_record_factory into logging")
 
                 # Late import due to circular imports
@@ -192,7 +192,7 @@ class Client(object):
             self._metrics.register(path)
         if self.config.breakdown_metrics:
             self._metrics.register("zuqa.metrics.sets.breakdown.BreakdownMetricSet")
-        # self._thread_managers["metrics"] = self._metrics
+        self._thread_managers["metrics"] = self._metrics
         compat.atexit_register(self.close)
         if self.config.central_config:
             self._thread_managers["config"] = self.config
@@ -274,7 +274,7 @@ class Client(object):
         :param start: override the start timestamp, mostly useful for testing
         :return: the started transaction object
         """
-        self._metrics.start_thread(self)
+        self._metrics.collect_actively = True
         if self.config.is_recording:
             return self.tracer.begin_transaction(transaction_type, trace_parent=trace_parent, start=start)
 
@@ -287,8 +287,8 @@ class Client(object):
         :return: the ended transaction object
         """
         transaction = self.tracer.end_transaction(result, name, duration=duration)
-        if transaction != "":
-            self._metrics.stop_thread(transaction.name.split(" ")[1])
+        self._metrics.last_transaction_name = transaction.name
+        self._metrics.collect_actively = False
         return transaction
 
     def close(self):
@@ -537,13 +537,13 @@ class Client(object):
         if v == (2, 7):
             warnings.warn(
                 (
-                    "The Elastic APM agent will stop supporting Python 2.7 starting in 6.0.0 -- "
+                    "The ZUQA agent will stop supporting Python 2.7 starting in 6.0.0 -- "
                     "Please upgrade to Python 3.5+ to continue to use the latest features."
                 ),
                 PendingDeprecationWarning,
             )
         elif v < (3, 5):
-            warnings.warn("The Elastic APM agent only supports Python 3.5+", DeprecationWarning)
+            warnings.warn("The ZUQA agent only supports Python 3.5+", DeprecationWarning)
 
 
 class DummyClient(Client):

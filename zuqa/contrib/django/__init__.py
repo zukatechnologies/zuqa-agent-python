@@ -30,4 +30,4 @@
 
 from zuqa.contrib.django.client import *  # noqa E401
 
-default_app_config = "zuqa.contrib.django.apps.ElasticAPMConfig"
+default_app_config = "zuqa.contrib.django.apps.ZuqaConfig"

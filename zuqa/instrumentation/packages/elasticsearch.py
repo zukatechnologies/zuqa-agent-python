@@ -40,8 +40,8 @@ from zuqa.utils.logging import get_logger
 logger = get_logger("zuqa.instrument")
 
 
-API_METHOD_KEY_NAME = "__elastic_apm_api_method_name"
-BODY_REF_NAME = "__elastic_apm_body_ref"
+API_METHOD_KEY_NAME = "__zuqa_api_method_name"
+BODY_REF_NAME = "__zuqa_body_ref"
 
 
 class ElasticSearchConnectionMixin(object):
@@ -130,7 +130,7 @@ class ElasticsearchInstrumentation(AbstractInstrumentedModule):
 
     def instrument(self):
         if self.version and not 2 <= self.version < 8:
-            logger.debug("Instrumenting version %s of Elasticsearch is not supported by Elastic APM", self.version)
+            logger.debug("Instrumenting version %s of Elasticsearch is not supported by ZUQA", self.version)
             return
         super(ElasticsearchInstrumentation, self).instrument()
 

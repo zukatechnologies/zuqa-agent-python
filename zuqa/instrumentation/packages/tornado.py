@@ -43,7 +43,7 @@ class TornadoRequestExecuteInstrumentation(AsyncAbstractInstrumentedModule):
     instrument_list = [("tornado.web", "RequestHandler._execute")]
 
     async def call(self, module, method, wrapped, instance, args, kwargs):
-        if not hasattr(instance.application, "elasticapm_client"):
+        if not hasattr(instance.application, "zuqa_client"):
             # If tornado was instrumented but not as the main framework
             # (i.e. in Flower), we should skip it.
             return await wrapped(*args, **kwargs)
@@ -53,7 +53,7 @@ class TornadoRequestExecuteInstrumentation(AsyncAbstractInstrumentedModule):
 
         request = instance.request
         trace_parent = TraceParent.from_headers(request.headers)
-        client = instance.application.elasticapm_client
+        client = instance.application.zuqa_client
         client.begin_transaction("request", trace_parent=trace_parent)
         zuqa.set_context(
             lambda: get_data_from_request(instance, request, client.config, constants.TRANSACTION), "request"
@@ -79,7 +79,7 @@ class TornadoHandleRequestExceptionInstrumentation(AbstractInstrumentedModule):
     instrument_list = [("tornado.web", "RequestHandler._handle_request_exception")]
 
     def call(self, module, method, wrapped, instance, args, kwargs):
-        if not hasattr(instance.application, "elasticapm_client"):
+        if not hasattr(instance.application, "zuqa_client"):
             # If tornado was instrumented but not as the main framework
             # (i.e. in Flower), we should skip it.
             return wrapped(*args, **kwargs)
@@ -93,7 +93,7 @@ class TornadoHandleRequestExceptionInstrumentation(AbstractInstrumentedModule):
             # Not an error; Finish is an exception that ends a request without an error response
             return wrapped(*args, **kwargs)
 
-        client = instance.application.elasticapm_client
+        client = instance.application.zuqa_client
         request = instance.request
         client.capture_exception(
             context={"request": get_data_from_request(instance, request, client.config, constants.ERROR)}

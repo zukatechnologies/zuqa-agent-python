@@ -51,13 +51,13 @@ TRACEPARENT_LEGACY_HEADER_NAME_WSGI = "HTTP_" + constants.TRACEPARENT_LEGACY_HEA
 TRACESTATE_HEADER_NAME_WSGI = "HTTP_" + constants.TRACESTATE_HEADER_NAME.upper().replace("-", "_")
 
 
-class ElasticAPMConfig(AppConfig):
+class ZuqaConfig(AppConfig):
     name = "zuqa.contrib.django"
     label = "zuqa.contrib.django"
-    verbose_name = "ElasticAPM"
+    verbose_name = "ZUQA"
 
     def __init__(self, *args, **kwargs):
-        super(ElasticAPMConfig, self).__init__(*args, **kwargs)
+        super(ZuqaConfig, self).__init__(*args, **kwargs)
         self.client = None
 
     def ready(self):

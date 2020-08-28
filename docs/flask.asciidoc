@@ -1,14 +1,14 @@
 [[flask-support]]
 === Flask support
 
-Getting Elastic APM set up for your Flask project is easy,
+Getting ZUQA set up for your Flask project is easy,
 and there are various ways you can tweak it to fit to your needs.
 
 [float]
 [[flask-installation]]
 ==== Installation
 
-Install the Elastic APM agent using pip:
+Install the ZUQA agent using pip:
 
 [source,bash]
 ----
@@ -38,33 +38,33 @@ To initialize the agent for your application using environment variables:
 
 [source,python]
 ----
-from zuqa.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ZUQA
 
 app = Flask(__name__)
 
-apm = ElasticAPM(app)
+apm = ZUQA(app)
 ----
 
-To configure the agent using `ELASTIC_APM` in your application's settings:
+To configure the agent using `ZUQA` in your application's settings:
 
 [source,python]
 ----
-from zuqa.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ZUQA
 
-app.config['ELASTIC_APM'] = {
+app.config['ZUQA'] = {
     'SERVICE_NAME': '<SERVICE-NAME>',
     'SECRET_TOKEN': '<SECRET-TOKEN>',
 }
-apm = ElasticAPM(app)
+apm = ZUQA(app)
 ----
 
 The final option is to initialize the agent with the settings as arguments:
 
 [source,python]
 ----
-from zuqa.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ZUQA
 
-apm = ElasticAPM(app, service_name='<APP-ID>', secret_token='<SECRET-TOKEN>')
+apm = ZUQA(app, service_name='<APP-ID>', secret_token='<SECRET-TOKEN>')
 ----
 
 [float]
@@ -75,11 +75,11 @@ Please note that errors and transactions will only be sent to the APM Server if 
 http://flask.pocoo.org/docs/0.12/quickstart/#debug-mode[debug mode].
 
 To force the agent to send data while the app is in debug mode,
-set the value of `DEBUG` in the `ELASTIC_APM` dictionary to `True`:
+set the value of `DEBUG` in the `ZUQA` dictionary to `True`:
 
 [source,python]
 ----
-app.config['ELASTIC_APM'] = {
+app.config['ZUQA'] = {
         'SERVICE_NAME': '<SERVICE-NAME>',
         'SECRET_TOKEN': '<SECRET-TOKEN>',
         'DEBUG': True
@@ -94,8 +94,8 @@ You can use the agent's `init_app` hook for adding the application on the fly:
 
 [source,python]
 ----
-from zuqa.contrib.flask import ElasticAPM
-apm = ElasticAPM()
+from zuqa.contrib.flask import ZUQA
+apm = ZUQA()
 
 def create_app():
     app = Flask(__name__)
@@ -110,7 +110,7 @@ def create_app():
 Once you have configured the agent,
 it will automatically track transactions and capture uncaught exceptions within Flask.
 If you want to send additional events,
-a couple of shortcuts are provided on the ElasticAPM Flask middleware object
+a couple of shortcuts are provided on the ZUQA Flask middleware object
 by raising an exception or logging a generic message.
 
 Capture an arbitrary exception by calling `capture_exception`:
@@ -134,7 +134,7 @@ apm.capture_message('hello, world!')
 [[flask-logging]]
 ==== Logging
 
-Passing `logging=LEVEL` to the ElasticAPM constructor will make the agent automatically log all log messages from Python's built-in `logging` module,
+Passing `logging=LEVEL` to the ZUQA constructor will make the agent automatically log all log messages from Python's built-in `logging` module,
 with the given level or higher.
 `LEVEL` has to be one of the levels defined in the https://docs.python.org/3/library/logging.html#logging-levels[`logging`] module.
 
@@ -142,22 +142,22 @@ with the given level or higher.
 ----
 import logging
 
-from zuqa.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ZUQA
 
-apm = ElasticAPM(app, logging=logging.ERROR)
+apm = ZUQA(app, logging=logging.ERROR)
 ----
 
-To log all messages independent of log levels to Elastic APM, pass `logging=True` to the constructor:
+To log all messages independent of log levels to ZUQA, pass `logging=True` to the constructor:
 
 [source,python]
 ----
-from zuqa.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ZUQA
 
-apm = ElasticAPM(app, logging=True)
+apm = ZUQA(app, logging=True)
 ----
 
-NOTE: using `logging=True` can lead to high number of logs being sent to Elastic APM.
-We recommend to always limit logging with Elastic APM to a high level (`WARNING` or `ERROR`).
+NOTE: using `logging=True` can lead to high number of logs being sent to ZUQA.
+We recommend to always limit logging with ZUQA to a high level (`WARNING` or `ERROR`).
 For shipping of less urgent logs, we recommend to use {filebeat-ref}[filebeat].
 
 For fine-grained control, you can initialize a logging handler and add it,
@@ -167,12 +167,12 @@ just as you would with any other handler.
 ----
 from flask import Flask
 
-from zuqa.contrib.flask import ElasticAPM
+from zuqa.contrib.flask import ZUQA
 from zuqa.handlers.logging import LoggingHandler
 
 app = Flask(__name__)
 
-apm = ElasticAPM(app)
+apm = ZUQA(app)
 
 if __name__ == '__main__':
     # Create a logging handler and attach it.
@@ -222,7 +222,7 @@ def bar():
 [[flask-celery-tasks]]
 ===== Celery tasks
 
-The Elastic APM agent will automatically send errors and performance data from your Celery tasks to the APM Server.
+The ZUQA agent will automatically send errors and performance data from your Celery tasks to the APM Server.
 
 [float]
 [[flask-performance-metrics]]
@@ -240,7 +240,7 @@ The list given should be a list of regular expressions which are matched against
 
 [source,python]
 ----
-app.config['ELASTIC_APM'] = {
+app.config['ZUQA'] = {
     ...
     'TRANSACTIONS_IGNORE_PATTERNS': ['^OPTIONS ', '/api/']
     ...
@@ -259,12 +259,12 @@ To correlate performance measurement in the browser with measurements in your Fl
 you can help the RUM (Real User Monitoring) agent by configuring it with the Trace ID and Span ID of the backend request.
 We provide a handy template context processor which adds all the necessary bits into the context of your templates.
 
-The context processor is installed automatically when you initialize `ElasticAPM`.
+The context processor is installed automatically when you initialize `ZUQA`.
 All that is left to do is to update the call to initialize the RUM agent (which probably happens in your base template) like this:
 
 [source,javascript]
 ----
-elasticApm.init({
+zuqa.init({
     serviceName: "my-frontend-service",
     pageLoadTraceId: "{{ apm["trace_id"] }}",
     pageLoadSpanId: "{{ apm["span_id"]() }}",

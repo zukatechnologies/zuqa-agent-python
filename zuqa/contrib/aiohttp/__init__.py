@@ -33,13 +33,13 @@ import aiohttp
 import zuqa
 from zuqa import Client
 
-CLIENT_KEY = "_elasticapm_client_instance"
+CLIENT_KEY = "_zuqa_client_instance"
 
 
-class ElasticAPM:
+class ZUQA:
     def __init__(self, app, client=None):
         if not client:
-            config = app.get("ELASTIC_APM", {})
+            config = app.get("ZUQA", {})
             config.setdefault("framework_name", "aiohttp")
             config.setdefault("framework_version", aiohttp.__version__)
             client = Client(config=config)

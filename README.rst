@@ -1,4 +1,4 @@
-elastic-apm -- Elastic APM agent for Python
+elastic-apm -- ZUQA agent for Python
 ===========================================
 
 .. image:: https://apm-ci.elastic.co/buildStatus/icon?job=apm-agent-python%2Fapm-agent-python-mbp%2Fmaster
@@ -6,7 +6,7 @@ elastic-apm -- Elastic APM agent for Python
     :alt: Build Status
 
 .. image:: https://img.shields.io/pypi/v/elastic-apm.svg?style=flat
-    :target: https://pypi.python.org/pypi/elastic-apm/
+    :target: https://pypi.python.org/pypi/zuqa/
     :alt: Latest Version
 
 .. image:: https://img.shields.io/pypi/pyversions/elastic-apm.svg?style=flat
@@ -14,13 +14,13 @@ elastic-apm -- Elastic APM agent for Python
     :alt: Supported Python versions
 
 
-This is the official Python module for Elastic APM.
+This is the official Python module for ZUQA.
 
 It provides full out-of-the-box support for many of the popular frameworks,
-including Django, and Flask. Elastic APM is also easy to adapt for most
+including Django, and Flask. ZUQA is also easy to adapt for most
 WSGI-compatible web applications via `custom integrations`_.
 
-Your application doesn't live on the web? No problem! Elastic APM is easy to use in
+Your application doesn't live on the web? No problem! ZUQA is easy to use in
 any Python application.
 
 Read the documentation_.

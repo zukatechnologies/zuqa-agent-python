@@ -38,7 +38,7 @@ from zuqa.base import Client
 @implementer(ILogObserver)
 class LogObserver(object):
     """
-    A twisted log observer for Elastic APM.
+    A twisted log observer for ZUQA.
     Eg.:
 
     from zuqa.base import Client

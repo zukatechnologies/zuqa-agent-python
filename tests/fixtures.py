@@ -147,7 +147,7 @@ class ValidatingWSGIApp(ContentServer):
 
 
 @pytest.fixture()
-def elasticapm_client(request):
+def zuqa_client(request):
     client_config = getattr(request, "param", {})
     client_config.setdefault("service_name", "myapp")
     client_config.setdefault("secret_token", "test_key")
@@ -204,7 +204,7 @@ def validating_httpserver(request):
 
 
 @pytest.fixture()
-def sending_elasticapm_client(request, validating_httpserver):
+def sending_zuqa_client(request, validating_httpserver):
     validating_httpserver.serve_content(code=202, content="", headers={"Location": "http://example.com/foo"})
     client_config = getattr(request, "param", {})
     client_config.setdefault("server_url", validating_httpserver.url)

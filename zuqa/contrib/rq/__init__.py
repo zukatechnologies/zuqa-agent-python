@@ -29,17 +29,17 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-def register_elasticapm(client, worker):
-    """Given an ElasticAPM client and an RQ worker, registers exception handlers
+def register_zuqa(client, worker):
+    """Given an ZUQA client and an RQ worker, registers exception handlers
     with the worker so exceptions are logged to the apm server.
 
     E.g.:
 
     from zuqa.contrib.django.models import client
-    from zuqa.contrib.rq import register_elasticapm
+    from zuqa.contrib.rq import register_zuqa
 
     worker = Worker(map(Queue, listen))
-    register_elasticapm(client, worker)
+    register_zuqa(client, worker)
     worker.work()
 
     """
