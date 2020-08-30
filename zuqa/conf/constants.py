@@ -53,7 +53,7 @@ ERROR = "error"
 TRANSACTION = "transaction"
 SPAN = "span"
 METRICSET = "metricset"
-TRANSACTION_METRICSET = "transaction-metricset"
+TRANSACTION_METRICSET = "transaction_metricset"
 
 LABEL_RE = re.compile('[.*"]')
 
