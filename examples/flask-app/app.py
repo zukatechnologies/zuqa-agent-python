@@ -13,8 +13,8 @@ app.config['ZUQA'] = {
     'SERVICE_NAME': 'HELLO',
     # Use if APM Server requires a token
     'SECRET_TOKEN': '',
-    # Set custom APM Server URL (default: http://localhost:8200)
-    'SERVER_URL': 'http://localhost:8200',
+    # Set custom APM Server URL (default: http://localhost:32140)
+    'SERVER_URL': 'http://localhost:32140',
     'METRICS_INTERVAL': '200ms',
 }
 

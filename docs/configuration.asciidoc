@@ -106,7 +106,7 @@ Your service name must only contain characters from the ASCII alphabet, numbers,
 [options="header"]
 |============
 | Environment              | Django/Flask   | Default
-| `ZUQA_SERVER_URL` | `SERVER_URL`   | `'http://localhost:8200'`
+| `ZUQA_SERVER_URL` | `SERVER_URL`   | `'http://localhost:32140'`
 |============
 
 The URL for your APM Server.

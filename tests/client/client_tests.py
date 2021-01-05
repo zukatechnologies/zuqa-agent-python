@@ -756,12 +756,12 @@ def test_ensure_parent_doesnt_change_existing_id(zuqa_client):
     [
         ({"server_url": "http://localhost"}, "http://localhost/intake/v2/events"),
         ({"server_url": "http://localhost/"}, "http://localhost/intake/v2/events"),
-        ({"server_url": "http://localhost:8200"}, "http://localhost:8200/intake/v2/events"),
-        ({"server_url": "http://localhost:8200/"}, "http://localhost:8200/intake/v2/events"),
+        ({"server_url": "http://localhost:32140"}, "http://localhost:32140/intake/v2/events"),
+        ({"server_url": "http://localhost:32140/"}, "http://localhost:32140/intake/v2/events"),
         ({"server_url": "http://localhost/a"}, "http://localhost/a/intake/v2/events"),
         ({"server_url": "http://localhost/a/"}, "http://localhost/a/intake/v2/events"),
-        ({"server_url": "http://localhost:8200/a"}, "http://localhost:8200/a/intake/v2/events"),
-        ({"server_url": "http://localhost:8200/a/"}, "http://localhost:8200/a/intake/v2/events"),
+        ({"server_url": "http://localhost:32140/a"}, "http://localhost:32140/a/intake/v2/events"),
+        ({"server_url": "http://localhost:32140/a/"}, "http://localhost:32140/a/intake/v2/events"),
     ],
     indirect=["zuqa_client"],
 )

@@ -74,7 +74,7 @@ class ZUQA(BaseHTTPMiddleware):
     >>> zuqa = make_apm_client({
         >>> 'SERVICE_NAME': 'myapp',
         >>> 'DEBUG': True,
-        >>> 'SERVER_URL': 'http://localhost:8200',
+        >>> 'SERVER_URL': 'http://localhost:32140',
         >>> 'CAPTURE_HEADERS': True,
         >>> 'CAPTURE_BODY': 'all'
     >>> })

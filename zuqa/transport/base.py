@@ -142,6 +142,7 @@ class Transport(ThreadManager):
                     buffer.write((self._json_serializer({event_type: data}) + "\n").encode("utf-8"))
                     buffer_written = True
                     self._counts[event_type] += 1
+                    print(event_type, self._counts[event_type])
 
             queue_size = 0 if buffer.fileobj is None else buffer.fileobj.tell()
 

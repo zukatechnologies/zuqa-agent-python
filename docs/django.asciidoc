@@ -362,7 +362,7 @@ Trying to send a test error using these settings:
 
 SERVICE_NAME:      <SERVICE_NAME>
 SECRET_TOKEN:      <SECRET_TOKEN>
-SERVER:            http://localhost:8200
+SERVER:            http://localhost:32140
 
 Success! We tracked the error successfully! You should be able to see it in a few seconds.
 ----
