@@ -297,13 +297,13 @@ class Config(_ConfigBase):
         "METRICS_INTERVAL",
         type=int,
         validators=[duration_validator, ExcludeRangeValidator(1, 99, "{range_start} - {range_end} ms")],
-        default=200,
+        default=100,
     )
     breakdown_metrics = _BoolConfigValue("BREAKDOWN_METRICS", default=True)
     disable_metrics = _ListConfigValue("DISABLE_METRICS", type=starmatch_to_regex, default=[])
     central_config = _BoolConfigValue("CENTRAL_CONFIG", default=True)
     api_request_size = _ConfigValue("API_REQUEST_SIZE", type=int, validators=[size_validator], default=768 * 1024)
-    api_request_time = _ConfigValue("API_REQUEST_TIME", type=int, validators=[duration_validator], default=10 * 1000)
+    api_request_time = _ConfigValue("API_REQUEST_TIME", type=int, validators=[duration_validator], default=1 * 1000)
     transaction_sample_rate = _ConfigValue("TRANSACTION_SAMPLE_RATE", type=float, default=1.0)
     transaction_max_spans = _ConfigValue("TRANSACTION_MAX_SPANS", type=int, default=500)
     stack_trace_limit = _ConfigValue("STACK_TRACE_LIMIT", type=int, default=500)

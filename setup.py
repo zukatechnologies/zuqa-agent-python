@@ -92,9 +92,9 @@ def get_version():
     """
     version_file = open(os.path.join("zuqa", "version.py"), encoding="utf-8")
     for line in version_file:
-        if line.startswith("__version__"):
-            version_tuple = ast.literal_eval(line.split(" = ")[1])
-            return ".".join(map(str, version_tuple))
+        if line.startswith("VERSION"):
+            version_string = ast.literal_eval(line.split(" = ")[1])
+            return version_string
     return "unknown"
 
 
@@ -164,7 +164,7 @@ class PyTest(TestCommand):
 
 
 setup_kwargs = dict(
-    name="zuqa",
+    name="zuqa-agent-python",
     version=get_version(),
     author="Zuka Technologies, Inc",
     license="BSD",
@@ -190,9 +190,9 @@ setup_kwargs = dict(
     entry_points={"paste.filter_app_factory": ["zuqa = zuqa.contrib.paste:filter_factory"]},
     classifiers=[
         "Intended Audience :: Developers",
-        "Intended Audience :: System Administrators",
         "Operating System :: OS Independent",
         "Topic :: Software Development",
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.5",
